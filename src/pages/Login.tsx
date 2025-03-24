@@ -2,7 +2,7 @@
 import React from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { Google, Linkedin, Mail } from 'lucide-react';
+import { Mail, Github, Linkedin } from 'lucide-react';
 import Button from '../components/ui-custom/Button';
 import { Link } from 'react-router-dom';
 
@@ -18,9 +18,9 @@ const Login: React.FC = () => {
             <Button 
               variant="outline" 
               className="w-full justify-center rounded-xl"
-              icon={<Google size={20} />}
+              icon={<Github size={20} />}
             >
-              Continue with Google
+              Continue with Github
             </Button>
             
             <Button 
