@@ -5,11 +5,11 @@ import { CheckCircle } from 'lucide-react';
 
 const About: React.FC = () => {
   const advantages = [
-    "Intuitive design principles for exceptional user experience",
-    "Focused on simplicity without sacrificing functionality",
-    "Attention to detail in every aspect of the product",
-    "Thoughtfully crafted with your needs in mind",
-    "Continuously improved based on user feedback"
+    "Direct artist-to-artist connections without middlemen or gatekeepers",
+    "Opportunities for emerging artists often overlooked by traditional channels",
+    "Community support from fellow creators who understand your craft",
+    "Local collaborations that strengthen your artistic community",
+    "Creative freedom to pursue projects aligned with your artistic vision"
   ];
 
   return (
@@ -25,7 +25,7 @@ const About: React.FC = () => {
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="w-3/4 h-3/4 bg-white rounded-xl shadow-xl p-6 flex items-center justify-center">
                       <span className="text-xl font-semibold text-center text-foreground">
-                        Your Product Vision
+                        Your Creative Community
                       </span>
                     </div>
                   </div>
@@ -39,23 +39,13 @@ const About: React.FC = () => {
               {/* Stats card */}
               <div className="absolute -bottom-6 -right-6 glass-morphism p-6 rounded-xl shadow-lg md:max-w-[240px]">
                 <div className="flex flex-col space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Satisfaction</span>
-                    <span className="text-sm font-medium">98%</span>
-                  </div>
-                  <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
-                    <div className="bg-primary h-full rounded-full" style={{ width: '98%' }}></div>
-                  </div>
+                  <span className="text-sm text-muted-foreground">Active Artists</span>
+                  <span className="text-2xl font-bold">2,400+</span>
                 </div>
                 
                 <div className="flex flex-col space-y-2 mt-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Performance</span>
-                    <span className="text-sm font-medium">95%</span>
-                  </div>
-                  <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
-                    <div className="bg-primary h-full rounded-full" style={{ width: '95%' }}></div>
-                  </div>
+                  <span className="text-sm text-muted-foreground">Projects Launched</span>
+                  <span className="text-2xl font-bold">780+</span>
                 </div>
               </div>
             </div>
@@ -65,25 +55,25 @@ const About: React.FC = () => {
           <div>
             <FadeIn>
               <span className="inline-block text-sm font-medium text-primary bg-primary/10 px-3 py-1 rounded-full mb-3">
-                About Us
+                Our Mission
               </span>
             </FadeIn>
             
             <FadeIn delay={100}>
               <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                Why Choose Our Solution?
+                Empowering Artists Through Community
               </h2>
             </FadeIn>
             
             <FadeIn delay={200}>
               <p className="text-lg text-muted-foreground mb-6">
-                We believe in creating products that are not only functional but also beautiful and intuitive. Our approach focuses on simplicity, clarity, and attention to detail – ensuring that every interaction feels natural and purposeful.
+                We believe that every artist deserves a platform to showcase their talent and connect with opportunities. Capture was born out of frustration with how difficult it is for emerging creatives to find their community and collaborative projects.
               </p>
             </FadeIn>
             
             <FadeIn delay={300}>
               <p className="text-lg text-muted-foreground mb-8">
-                From the very beginning, we've been guided by the principle that technology should enhance human capability without adding complexity. This philosophy informs every aspect of our product design.
+                Our platform is designed by artists, for artists. We've removed the gatekeepers and created a direct line between creative talent and the projects that need them, fostering a supportive ecosystem where artistic collaboration can thrive.
               </p>
             </FadeIn>
             

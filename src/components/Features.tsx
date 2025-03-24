@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BarChart, Layers, Zap, Shield, Lightbulb, LineChart } from 'lucide-react';
+import { Users, Camera, Sparkles, Megaphone, Globe, Heart } from 'lucide-react';
 import FadeIn from './ui-custom/FadeIn';
 
 interface FeatureCardProps {
@@ -27,34 +27,34 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, del
 const Features: React.FC = () => {
   const features = [
     {
-      icon: <Zap size={24} />,
-      title: "Lightning Fast",
-      description: "Our platform is optimized for speed, giving you results in milliseconds rather than seconds."
+      icon: <Users size={24} />,
+      title: "Artist Community",
+      description: "Connect with like-minded creatives who share your passion and vision for collaborative art."
     },
     {
-      icon: <Shield size={24} />,
-      title: "Highly Secure",
-      description: "Enterprise-grade security ensures your data is always protected and compliant."
+      icon: <Camera size={24} />,
+      title: "Showcase Your Work",
+      description: "Build a portfolio that truly represents your artistic vision and creative capabilities."
     },
     {
-      icon: <Layers size={24} />,
-      title: "Seamless Integration",
-      description: "Connects with your existing tools and workflows without complicated setup."
+      icon: <Sparkles size={24} />,
+      title: "Creative Collaborations",
+      description: "Find the perfect collaborators to bring your artistic vision to life, no matter how ambitious."
     },
     {
-      icon: <BarChart size={24} />,
-      title: "Insightful Analytics",
-      description: "Gain valuable insights with our comprehensive analytics dashboard."
+      icon: <Megaphone size={24} />,
+      title: "Visibility Without Gatekeepers",
+      description: "Get your work seen by those who matter without traditional industry barriers."
     },
     {
-      icon: <Lightbulb size={24} />,
-      title: "Smart Automation",
-      description: "Automate repetitive tasks and focus on what matters most to your business."
+      icon: <Globe size={24} />,
+      title: "Local & Global Reach",
+      description: "Connect with artists in your community or collaborate across borders on international projects."
     },
     {
-      icon: <LineChart size={24} />,
-      title: "Scalable Performance",
-      description: "Our infrastructure scales with your needs, from startup to enterprise."
+      icon: <Heart size={24} />,
+      title: "Supportive Network",
+      description: "Build relationships with artists who understand your journey and can help you grow."
     }
   ];
 
@@ -64,19 +64,19 @@ const Features: React.FC = () => {
         <div className="text-center mb-16">
           <FadeIn>
             <span className="inline-block text-sm font-medium text-primary bg-primary/10 px-3 py-1 rounded-full mb-3">
-              Core Features
+              For Creators
             </span>
           </FadeIn>
           
           <FadeIn delay={100}>
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Everything You Need to Succeed
+              The Community Artists Deserve
             </h2>
           </FadeIn>
           
           <FadeIn delay={200}>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Our comprehensive suite of features is designed to help you achieve your goals efficiently and effectively.
+              We're breaking down the barriers that keep creative talent isolated and projects understaffed. Capture connects artists directly to opportunities and to each other.
             </p>
           </FadeIn>
         </div>
