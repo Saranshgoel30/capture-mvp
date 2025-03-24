@@ -1,15 +1,18 @@
 
 import React, { useState, useEffect } from 'react';
-import { Menu, X, User, Search, Settings, Home, Film, LogIn } from 'lucide-react';
+import { Menu, X, User, Search, Settings, Home, Film, LogIn, LogOut } from 'lucide-react';
 import Button from './ui-custom/Button';
 import { cn } from '@/lib/utils';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [visible, setVisible] = useState(true);
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   // Handle scroll direction
   useEffect(() => {
@@ -36,8 +39,11 @@ const Navbar: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY]);
 
-  // Mock logged-in state
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/');
+    setIsMenuOpen(false);
+  };
 
   return (
     <nav 
@@ -72,7 +78,7 @@ const Navbar: React.FC = () => {
               <Search size={18} />
               <span>Find Creators</span>
             </Link>
-            {isLoggedIn ? (
+            {user ? (
               <>
                 <Link to="/profile" className="text-sm font-medium text-foreground transition-all-200 hover:text-primary flex items-center gap-2">
                   <User size={18} />
@@ -91,14 +97,31 @@ const Navbar: React.FC = () => {
             )}
           </div>
           
-          {isLoggedIn ? (
-            <Link to="/profile">
-              <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-foreground overflow-hidden">
-                <User size={20} />
-              </div>
-            </Link>
+          {user ? (
+            <div className="flex items-center gap-4">
+              <Link to="/profile">
+                <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-foreground overflow-hidden">
+                  {user.photoURL ? (
+                    <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    <User size={20} />
+                  )}
+                </div>
+              </Link>
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                onClick={handleLogout}
+                className="rounded-full text-muted-foreground"
+                icon={<LogOut size={16} />}
+              >
+                Logout
+              </Button>
+            </div>
           ) : (
-            <Button size="sm" className="rounded-full">Find Projects</Button>
+            <Button size="sm" className="rounded-full" onClick={() => navigate('/signup')}>
+              Find Projects
+            </Button>
           )}
         </div>
 
@@ -139,7 +162,7 @@ const Navbar: React.FC = () => {
               <Search size={18} />
               <span>Find Creators</span>
             </Link>
-            {isLoggedIn ? (
+            {user ? (
               <>
                 <Link 
                   to="/profile" 
@@ -157,6 +180,13 @@ const Navbar: React.FC = () => {
                   <Settings size={18} />
                   <span>Settings</span>
                 </Link>
+                <button 
+                  className="text-sm font-medium text-foreground hover:text-primary px-2 py-1 flex items-center gap-2 w-full text-left"
+                  onClick={handleLogout}
+                >
+                  <LogOut size={18} />
+                  <span>Logout</span>
+                </button>
               </>
             ) : (
               <Link 
@@ -168,8 +198,12 @@ const Navbar: React.FC = () => {
                 <span>Login</span>
               </Link>
             )}
-            <Button size="sm" className="mt-2 rounded-full" onClick={() => setIsMenuOpen(false)}>
-              Find Projects
+            
+            <Button size="sm" className="mt-2 rounded-full" onClick={() => {
+              navigate(user ? '/projects' : '/signup');
+              setIsMenuOpen(false);
+            }}>
+              {user ? 'Browse Projects' : 'Find Projects'}
             </Button>
           </div>
         </div>

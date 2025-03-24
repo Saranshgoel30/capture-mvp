@@ -4,30 +4,22 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Mail, Github, Linkedin } from 'lucide-react';
 import Button from '../components/ui-custom/Button';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEmailAuth } from '@/hooks/useEmailAuth';
 import { Input } from '@/components/ui/input';
 import { Form, FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form';
 
-const Login: React.FC = () => {
-  const navigate = useNavigate();
-  const { signInWithGoogle, signInWithGithub, signInWithLinkedin, user } = useAuth();
-  const { email, setEmail, password, setPassword, isLoading, handleLogin } = useEmailAuth();
-
-  // Redirect if user is already logged in
-  React.useEffect(() => {
-    if (user) {
-      navigate('/projects');
-    }
-  }, [user, navigate]);
+const Signup: React.FC = () => {
+  const { signInWithGoogle, signInWithGithub, signInWithLinkedin } = useAuth();
+  const { email, setEmail, password, setPassword, isLoading, handleSignup } = useEmailAuth();
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="pt-32 pb-24 px-6 md:px-12 flex justify-center items-center">
         <div className="max-w-md w-full p-8 bg-secondary/40 backdrop-blur-md rounded-2xl">
-          <h1 className="text-4xl font-bebas tracking-wider mb-6 text-center">LOGIN</h1>
+          <h1 className="text-4xl font-bebas tracking-wider mb-6 text-center">SIGN UP</h1>
           
           <div className="space-y-4">
             <Button 
@@ -48,15 +40,6 @@ const Login: React.FC = () => {
               Continue with LinkedIn
             </Button>
             
-            <Button 
-              variant="outline" 
-              className="w-full justify-center rounded-xl"
-              icon={<Mail size={20} />}
-              onClick={() => signInWithGoogle()}
-            >
-              Continue with Google
-            </Button>
-            
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-white/10"></div>
@@ -66,7 +49,7 @@ const Login: React.FC = () => {
               </div>
             </div>
             
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleSignup} className="space-y-4">
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
@@ -88,7 +71,7 @@ const Login: React.FC = () => {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
+                    placeholder="Create a password"
                     className="bg-background/50"
                     required
                   />
@@ -99,14 +82,15 @@ const Login: React.FC = () => {
                 type="submit"
                 variant="primary" 
                 className="w-full justify-center rounded-xl mt-4"
+                icon={<Mail size={20} />}
                 isLoading={isLoading}
               >
-                Log in with Email
+                Sign up with Email
               </Button>
             </form>
             
             <div className="mt-6 text-center text-sm text-muted-foreground">
-              <p>Don't have an account? <Link to="/signup" className="text-primary hover:underline">Sign up</Link></p>
+              <p>Already have an account? <Link to="/login" className="text-primary hover:underline">Log in</Link></p>
               <p className="mt-2">
                 <Link to="/projects" className="text-primary hover:underline">Continue as guest</Link>
               </p>
@@ -119,4 +103,4 @@ const Login: React.FC = () => {
   );
 };
 
-export default Login;
+export default Signup;
