@@ -25,8 +25,17 @@ export const useEmailAuth = () => {
     setIsLoading(true);
     try {
       await signInWithEmail(email, password);
-    } catch (error) {
+      toast({
+        title: 'Welcome back!',
+        description: 'You have successfully logged in.',
+      });
+    } catch (error: any) {
       console.error('Login error:', error);
+      toast({
+        title: 'Login failed',
+        description: error.message || 'An error occurred during login.',
+        variant: 'destructive',
+      });
     } finally {
       setIsLoading(false);
     }
@@ -47,8 +56,17 @@ export const useEmailAuth = () => {
     setIsLoading(true);
     try {
       await signUpWithEmail(email, password);
-    } catch (error) {
+      toast({
+        title: 'Account created!',
+        description: 'Your account has been successfully created.',
+      });
+    } catch (error: any) {
       console.error('Signup error:', error);
+      toast({
+        title: 'Signup failed',
+        description: error.message || 'An error occurred during signup.',
+        variant: 'destructive',
+      });
     } finally {
       setIsLoading(false);
     }

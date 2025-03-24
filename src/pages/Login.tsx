@@ -8,7 +8,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEmailAuth } from '@/hooks/useEmailAuth';
 import { Input } from '@/components/ui/input';
-import { Form, FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form';
+import { Label } from '@/components/ui/label';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -67,33 +67,31 @@ const Login: React.FC = () => {
             </div>
             
             <form onSubmit={handleLogin} className="space-y-4">
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
-                    className="bg-background/50"
-                    required
-                  />
-                </FormControl>
-              </FormItem>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  className="bg-background/50"
+                  required
+                />
+              </div>
 
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <Input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
-                    className="bg-background/50"
-                    required
-                  />
-                </FormControl>
-              </FormItem>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  className="bg-background/50"
+                  required
+                />
+              </div>
 
               <Button 
                 type="submit"
