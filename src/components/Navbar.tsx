@@ -1,26 +1,43 @@
 
 import React, { useState, useEffect } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, User, Search, Settings, Home, Film, LogIn } from 'lucide-react';
 import Button from './ui-custom/Button';
 import { cn } from '@/lib/utils';
+import { Link } from 'react-router-dom';
 
 const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const [visible, setVisible] = useState(true);
 
-  // Handle scroll effect
+  // Handle scroll direction
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 10) {
+      const currentScrollY = window.scrollY;
+      
+      if (currentScrollY > 10) {
         setIsScrolled(true);
       } else {
         setIsScrolled(false);
       }
+
+      // Show navbar when scrolling up
+      if (currentScrollY > lastScrollY) {
+        setVisible(false);
+      } else {
+        setVisible(true);
+      }
+      
+      setLastScrollY(currentScrollY);
     };
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [lastScrollY]);
+
+  // Mock logged-in state
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   return (
     <nav 
@@ -28,34 +45,61 @@ const Navbar: React.FC = () => {
         "fixed top-0 left-0 right-0 z-50 transition-all-300 px-6 md:px-12 py-4",
         isScrolled 
           ? "bg-background/80 backdrop-blur-lg shadow-sm" 
-          : "bg-transparent"
+          : "bg-transparent",
+        visible ? "translate-y-0" : "-translate-y-full"
       )}
     >
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         {/* Logo */}
-        <a href="#" className="flex items-center">
-          <span className="font-bold text-xl tracking-tight text-foreground">
-            Startup
+        <Link to="/" className="flex items-center">
+          <span className="font-bebas text-2xl tracking-wider text-foreground">
+            CAPTURE
           </span>
-        </a>
+        </Link>
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center space-x-8">
           <div className="flex items-center space-x-6">
-            <a href="#home" className="text-sm font-medium text-foreground transition-all-200 hover:text-primary">
-              Home
-            </a>
-            <a href="#features" className="text-sm font-medium text-foreground transition-all-200 hover:text-primary">
-              Features
-            </a>
-            <a href="#about" className="text-sm font-medium text-foreground transition-all-200 hover:text-primary">
-              About
-            </a>
-            <a href="#contact" className="text-sm font-medium text-foreground transition-all-200 hover:text-primary">
-              Contact
-            </a>
+            <Link to="/" className="text-sm font-medium text-foreground transition-all-200 hover:text-primary flex items-center gap-2">
+              <Home size={18} />
+              <span>Home</span>
+            </Link>
+            <Link to="/projects" className="text-sm font-medium text-foreground transition-all-200 hover:text-primary flex items-center gap-2">
+              <Film size={18} />
+              <span>Projects</span>
+            </Link>
+            <Link to="/find-creators" className="text-sm font-medium text-foreground transition-all-200 hover:text-primary flex items-center gap-2">
+              <Search size={18} />
+              <span>Find Creators</span>
+            </Link>
+            {isLoggedIn ? (
+              <>
+                <Link to="/profile" className="text-sm font-medium text-foreground transition-all-200 hover:text-primary flex items-center gap-2">
+                  <User size={18} />
+                  <span>Profile</span>
+                </Link>
+                <Link to="/settings" className="text-sm font-medium text-foreground transition-all-200 hover:text-primary flex items-center gap-2">
+                  <Settings size={18} />
+                  <span>Settings</span>
+                </Link>
+              </>
+            ) : (
+              <Link to="/login" className="text-sm font-medium text-foreground transition-all-200 hover:text-primary flex items-center gap-2">
+                <LogIn size={18} />
+                <span>Login</span>
+              </Link>
+            )}
           </div>
-          <Button size="sm">Get Started</Button>
+          
+          {isLoggedIn ? (
+            <Link to="/profile">
+              <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-foreground overflow-hidden">
+                <User size={20} />
+              </div>
+            </Link>
+          ) : (
+            <Button size="sm" className="rounded-full">Find Projects</Button>
+          )}
         </div>
 
         {/* Mobile menu button */}
@@ -71,36 +115,61 @@ const Navbar: React.FC = () => {
       {isMenuOpen && (
         <div className="md:hidden glass-morphism absolute top-full left-0 right-0 p-6 mt-2 mx-4 rounded-lg shadow-lg">
           <div className="flex flex-col space-y-4">
-            <a 
-              href="#home" 
-              className="text-sm font-medium text-foreground hover:text-primary px-2 py-1"
+            <Link 
+              to="/" 
+              className="text-sm font-medium text-foreground hover:text-primary px-2 py-1 flex items-center gap-2"
               onClick={() => setIsMenuOpen(false)}
             >
-              Home
-            </a>
-            <a 
-              href="#features" 
-              className="text-sm font-medium text-foreground hover:text-primary px-2 py-1"
+              <Home size={18} />
+              <span>Home</span>
+            </Link>
+            <Link 
+              to="/projects" 
+              className="text-sm font-medium text-foreground hover:text-primary px-2 py-1 flex items-center gap-2"
               onClick={() => setIsMenuOpen(false)}
             >
-              Features
-            </a>
-            <a 
-              href="#about" 
-              className="text-sm font-medium text-foreground hover:text-primary px-2 py-1"
+              <Film size={18} />
+              <span>Projects</span>
+            </Link>
+            <Link 
+              to="/find-creators" 
+              className="text-sm font-medium text-foreground hover:text-primary px-2 py-1 flex items-center gap-2"
               onClick={() => setIsMenuOpen(false)}
             >
-              About
-            </a>
-            <a 
-              href="#contact" 
-              className="text-sm font-medium text-foreground hover:text-primary px-2 py-1"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Contact
-            </a>
-            <Button size="sm" className="mt-2" onClick={() => setIsMenuOpen(false)}>
-              Get Started
+              <Search size={18} />
+              <span>Find Creators</span>
+            </Link>
+            {isLoggedIn ? (
+              <>
+                <Link 
+                  to="/profile" 
+                  className="text-sm font-medium text-foreground hover:text-primary px-2 py-1 flex items-center gap-2"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <User size={18} />
+                  <span>Profile</span>
+                </Link>
+                <Link 
+                  to="/settings" 
+                  className="text-sm font-medium text-foreground hover:text-primary px-2 py-1 flex items-center gap-2"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Settings size={18} />
+                  <span>Settings</span>
+                </Link>
+              </>
+            ) : (
+              <Link 
+                to="/login" 
+                className="text-sm font-medium text-foreground hover:text-primary px-2 py-1 flex items-center gap-2"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <LogIn size={18} />
+                <span>Login</span>
+              </Link>
+            )}
+            <Button size="sm" className="mt-2 rounded-full" onClick={() => setIsMenuOpen(false)}>
+              Find Projects
             </Button>
           </div>
         </div>

@@ -1,141 +1,42 @@
 
 import React from 'react';
-import { Facebook, Twitter, Instagram, Linkedin, Github } from 'lucide-react';
+import { Instagram } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Footer: React.FC = () => {
-  const currentYear = new Date().getFullYear();
-  
   return (
-    <footer className="bg-secondary pt-16 pb-8 px-6 md:px-12">
+    <footer className="py-12 px-6 md:px-12 bg-secondary/30 backdrop-blur-md">
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 pb-8">
-          {/* Company info */}
-          <div className="space-y-4">
-            <h3 className="text-xl font-bold">Startup</h3>
-            <p className="text-muted-foreground">
-              Creating innovative solutions for tomorrow's challenges.
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+          <div>
+            <Link to="/" className="font-bebas text-2xl tracking-wider">CAPTURE</Link>
+            <p className="text-sm text-muted-foreground mt-2 max-w-md">
+              Connecting creative minds with artistic opportunities. A platform for creatives to find and collaborate on projects.
             </p>
-            <div className="flex space-x-4">
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                <Facebook size={20} />
-              </a>
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                <Twitter size={20} />
-              </a>
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+          </div>
+          
+          <div className="flex flex-col items-center md:items-end">
+            <div className="flex gap-4 mb-4">
+              <Link to="/privacy" className="text-sm text-foreground hover:text-primary transition-all-200">
+                Privacy Policy
+              </Link>
+              <Link to="/contact" className="text-sm text-foreground hover:text-primary transition-all-200">
+                Contact Us
+              </Link>
+            </div>
+            
+            <div className="flex justify-center items-center gap-4">
+              <a href="#" className="text-foreground hover:text-primary transition-all-200">
                 <Instagram size={20} />
-              </a>
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                <Linkedin size={20} />
-              </a>
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                <Github size={20} />
               </a>
             </div>
           </div>
-          
-          {/* Links 1 */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Product</h3>
-            <ul className="space-y-3">
-              <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                  Features
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                  Pricing
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                  Changelog
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                  Roadmap
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                  Documentation
-                </a>
-              </li>
-            </ul>
-          </div>
-          
-          {/* Links 2 */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Company</h3>
-            <ul className="space-y-3">
-              <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                  About
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                  Blog
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                  Careers
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                  Press
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                  Contact
-                </a>
-              </li>
-            </ul>
-          </div>
-          
-          {/* Links 3 */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Resources</h3>
-            <ul className="space-y-3">
-              <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                  Terms of Service
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                  Privacy Policy
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                  Cookie Policy
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                  Support
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                  FAQ
-                </a>
-              </li>
-            </ul>
-          </div>
         </div>
         
-        <div className="pt-8 border-t border-border text-sm text-muted-foreground flex flex-col md:flex-row justify-between items-center">
-          <div>© {currentYear} Startup. All rights reserved.</div>
-          <div className="mt-4 md:mt-0">
-            Made with precision and care for every detail.
-          </div>
+        <div className="mt-8 pt-6 border-t border-white/10 text-center">
+          <p className="text-sm text-muted-foreground">
+            © {new Date().getFullYear()} Capture. All rights reserved.
+          </p>
         </div>
       </div>
     </footer>
