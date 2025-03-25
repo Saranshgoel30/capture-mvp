@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ const Projects: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [isLoading, setIsLoading] = useState(true);
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
+  const navigate = useNavigate();
   
   // Categories for filtering
   const categories = ["All", "Documentary", "Short Film", "Music Video", "Podcast", "Marketing", "Photography"];
@@ -174,7 +176,12 @@ const Projects: React.FC = () => {
                       </div>
                       <span className="text-sm">{project.postedBy}</span>
                     </div>
-                    <Button size="sm">View Details</Button>
+                    <Button 
+                      size="sm"
+                      onClick={() => navigate(`/projects/${project.id}`)}
+                    >
+                      View Details
+                    </Button>
                   </CardFooter>
                 </Card>
               ))}

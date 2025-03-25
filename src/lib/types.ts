@@ -17,6 +17,15 @@ export interface Project {
   createdAt: number;
 }
 
+export interface ProjectApplication {
+  id?: string;
+  projectId: string;
+  userId: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  message?: string;
+  createdAt: number;
+}
+
 export interface UserProfile {
   id?: string;
   userId: string;

@@ -1,6 +1,6 @@
 
 import { db } from './firebase';
-import { collection, addDoc, getDocs, getDoc, doc, updateDoc, deleteDoc, query, where, orderBy, limit, Timestamp, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, getDocs, getDoc, doc, updateDoc, deleteDoc, query, where, orderBy, limit, Timestamp, serverTimestamp, increment } from 'firebase/firestore';
 import { Project, UserProfile, PortfolioProject, CurrentProject } from './types';
 
 // Project Collection
@@ -74,6 +74,46 @@ export const deleteProject = async (projectId: string): Promise<boolean> => {
     return true;
   } catch (error) {
     console.error('Error deleting project:', error);
+    return false;
+  }
+};
+
+// Project Applications
+const applicationsCollection = collection(db, 'applications');
+
+export const applyToProject = async (projectId: string, userId: string): Promise<boolean> => {
+  try {
+    // Check if user has already applied
+    const q = query(
+      applicationsCollection, 
+      where('projectId', '==', projectId),
+      where('userId', '==', userId)
+    );
+    const querySnapshot = await getDocs(q);
+
+    if (!querySnapshot.empty) {
+      // User has already applied
+      console.log('User has already applied to this project');
+      return false;
+    }
+
+    // Create application
+    await addDoc(applicationsCollection, {
+      projectId,
+      userId,
+      status: 'pending',
+      createdAt: Date.now()
+    });
+
+    // Increment applicant count on the project
+    const projectDoc = doc(db, 'projects', projectId);
+    await updateDoc(projectDoc, {
+      applicants: increment(1)
+    });
+
+    return true;
+  } catch (error) {
+    console.error('Error applying to project:', error);
     return false;
   }
 };
