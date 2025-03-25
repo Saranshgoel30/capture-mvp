@@ -33,9 +33,11 @@ const Hero: React.FC = () => {
             
             <FadeIn delay={300}>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button size="lg" icon={<ArrowRight size={18} />} iconPosition="right" className="rounded-full">
-                  Find Projects
-                </Button>
+                <Link to="/projects">
+                  <Button size="lg" icon={<ArrowRight size={18} />} iconPosition="right" className="rounded-full">
+                    Find Projects
+                  </Button>
+                </Link>
                 
                 <Link to="/projects">
                   <Button size="lg" variant="outline" className="rounded-full">
