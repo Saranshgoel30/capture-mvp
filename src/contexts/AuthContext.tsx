@@ -13,6 +13,8 @@ import {
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
+import { fetchUserProfile, createUserProfile } from '@/lib/firestore';
+import { UserProfile } from '@/lib/types';
 
 // We use TwitterAuthProvider as a substitute for LinkedIn since Firebase doesn't directly support LinkedIn
 const googleProvider = new GoogleAuthProvider();
@@ -21,13 +23,16 @@ const linkedinProvider = new TwitterAuthProvider(); // Using Twitter as a substi
 
 type AuthContextType = {
   user: User | null;
+  userProfile: UserProfile | null;
   loading: boolean;
+  profileLoading: boolean;
   signInWithGoogle: () => Promise<void>;
   signInWithGithub: () => Promise<void>;
   signInWithLinkedin: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  createProfile: (profileData: Partial<UserProfile>) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -42,8 +47,31 @@ export const useAuth = () => {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(false);
   const { toast } = useToast();
+
+  // Fetch user profile whenever the user changes
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (user) {
+        setProfileLoading(true);
+        try {
+          const profile = await fetchUserProfile(user.uid);
+          setUserProfile(profile);
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
+        } finally {
+          setProfileLoading(false);
+        }
+      } else {
+        setUserProfile(null);
+      }
+    };
+
+    fetchProfile();
+  }, [user]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -63,13 +91,98 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
+  const createDefaultProfile = async (user: User) => {
+    if (!user.email) return;
+    
+    const defaultProfile: Omit<UserProfile, 'id' | 'createdAt'> = {
+      userId: user.uid,
+      name: user.displayName || user.email.split('@')[0],
+      handle: `@${user.email.split('@')[0]}`,
+      avatar: user.photoURL || undefined,
+      roles: [],
+      skills: [],
+      contact: {
+        email: user.email,
+      },
+      stats: {
+        followers: 0,
+        following: 0,
+        projects: 0,
+      }
+    };
+
+    try {
+      const profileId = await createUserProfile(defaultProfile);
+      if (profileId) {
+        const profile = { ...defaultProfile, id: profileId } as UserProfile;
+        setUserProfile(profile);
+      }
+    } catch (error) {
+      console.error('Error creating default profile:', error);
+    }
+  };
+
+  const createProfile = async (profileData: Partial<UserProfile>) => {
+    if (!user) return;
+    
+    setProfileLoading(true);
+    try {
+      // Check if profile already exists
+      const existingProfile = await fetchUserProfile(user.uid);
+      
+      if (!existingProfile) {
+        const defaultProfile: Omit<UserProfile, 'id' | 'createdAt'> = {
+          userId: user.uid,
+          name: user.displayName || user.email?.split('@')[0] || 'User',
+          handle: `@${user.email?.split('@')[0] || 'user'}`,
+          roles: [],
+          skills: [],
+          contact: {
+            email: user.email || '',
+          },
+          stats: {
+            followers: 0,
+            following: 0,
+            projects: 0,
+          },
+          ...profileData
+        };
+
+        const profileId = await createUserProfile(defaultProfile);
+        if (profileId) {
+          const profile = { ...defaultProfile, id: profileId } as UserProfile;
+          setUserProfile(profile);
+          toast({
+            title: 'Profile created!',
+            description: 'Your profile has been successfully created.',
+          });
+        }
+      }
+    } catch (error: any) {
+      console.error('Error creating profile:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to create profile. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
   const signInWithGoogle = async () => {
     try {
-      await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider);
       toast({
         title: 'Welcome!',
         description: 'You have successfully signed in with Google.',
       });
+      
+      // Check if profile exists, create if not
+      const profile = await fetchUserProfile(result.user.uid);
+      if (!profile) {
+        await createDefaultProfile(result.user);
+      }
     } catch (error: any) {
       handleAuthError(error);
     }
@@ -77,11 +190,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signInWithGithub = async () => {
     try {
-      await signInWithPopup(auth, githubProvider);
+      const result = await signInWithPopup(auth, githubProvider);
       toast({
         title: 'Welcome!',
         description: 'You have successfully signed in with GitHub.',
       });
+      
+      // Check if profile exists, create if not
+      const profile = await fetchUserProfile(result.user.uid);
+      if (!profile) {
+        await createDefaultProfile(result.user);
+      }
     } catch (error: any) {
       handleAuthError(error);
     }
@@ -90,11 +209,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signInWithLinkedin = async () => {
     try {
       // Using Twitter as a substitute for LinkedIn
-      await signInWithPopup(auth, linkedinProvider);
+      const result = await signInWithPopup(auth, linkedinProvider);
       toast({
         title: 'Welcome!',
         description: 'You have successfully signed in with LinkedIn.',
       });
+      
+      // Check if profile exists, create if not
+      const profile = await fetchUserProfile(result.user.uid);
+      if (!profile) {
+        await createDefaultProfile(result.user);
+      }
     } catch (error: any) {
       handleAuthError(error);
     }
@@ -114,11 +239,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUpWithEmail = async (email: string, password: string) => {
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const result = await createUserWithEmailAndPassword(auth, email, password);
       toast({
         title: 'Account created!',
         description: 'Your account has been successfully created.',
       });
+      
+      // Create default profile for new email user
+      await createDefaultProfile(result.user);
     } catch (error: any) {
       handleAuthError(error);
     }
@@ -138,13 +266,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const value = {
     user,
+    userProfile,
     loading,
+    profileLoading,
     signInWithGoogle,
     signInWithGithub,
     signInWithLinkedin,
     signInWithEmail,
     signUpWithEmail,
     signOut,
+    createProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

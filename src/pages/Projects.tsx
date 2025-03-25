@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Button } from "@/components/ui/button";
@@ -7,104 +7,66 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Clock, MapPin, Users, Filter, Search, Plus } from 'lucide-react';
+import { Calendar, Clock, MapPin, Users, Filter, Search, Plus, Loader2 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { fetchProjects } from '@/lib/firestore';
+import { Project } from '@/lib/types';
+import NewProjectForm from '@/components/projects/NewProjectForm';
 
 const Projects: React.FC = () => {
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   
-  // Mock data for projects
-  const projects = [
-    {
-      id: 1,
-      title: "Feature Documentary on Urban Wildlife",
-      type: "Documentary",
-      description: "Looking for a skilled cinematographer and sound recordist to help capture footage of wildlife in urban environments for a documentary about adaptation and coexistence.",
-      location: "New York City",
-      timeline: "Aug - Oct 2023",
-      rolesNeeded: ["Cinematographer", "Sound Recordist", "Editor"],
-      postedBy: "Emma Chen",
-      postedByAvatar: "https://i.pravatar.cc/150?img=5",
-      deadline: "July 30, 2023",
-      applicants: 8
-    },
-    {
-      id: 2,
-      title: "Experimental Short Film",
-      type: "Short Film",
-      description: "Seeking actors and a director of photography for an experimental short exploring themes of isolation and connection in a post-digital world.",
-      location: "Los Angeles",
-      timeline: "Sept 2023",
-      rolesNeeded: ["Actor (2)", "Director of Photography", "Production Designer"],
-      postedBy: "Marcus Liu",
-      postedByAvatar: "https://i.pravatar.cc/150?img=8",
-      deadline: "August 15, 2023",
-      applicants: 12
-    },
-    {
-      id: 3,
-      title: "Music Video for Indie Band",
-      type: "Music Video",
-      description: "Looking for a creative director and choreographer for an indie rock band's music video with a surrealist dance concept.",
-      location: "Austin, TX",
-      timeline: "Aug 15-20, 2023",
-      rolesNeeded: ["Director", "Choreographer", "Dancer (4)"],
-      postedBy: "The Midnight Echo",
-      postedByAvatar: "https://i.pravatar.cc/150?img=12",
-      deadline: "August 5, 2023",
-      applicants: 6
-    },
-    {
-      id: 4,
-      title: "Podcast Series About Local Artists",
-      type: "Podcast",
-      description: "Seeking an audio engineer and producer for a new podcast series featuring interviews with local artists across various disciplines.",
-      location: "Remote",
-      timeline: "Ongoing (weekly)",
-      rolesNeeded: ["Audio Engineer", "Producer", "Graphic Designer"],
-      postedBy: "Alex Rivera",
-      postedByAvatar: "https://i.pravatar.cc/150?img=20",
-      deadline: "Open until filled",
-      applicants: 4
-    },
-    {
-      id: 5,
-      title: "Social Media Campaign for Art Exhibition",
-      type: "Marketing",
-      description: "Looking for photographers and videographers to create content for a major art exhibition's social media campaign.",
-      location: "Chicago",
-      timeline: "Aug - Sept 2023",
-      rolesNeeded: ["Photographer", "Videographer", "Social Media Manager"],
-      postedBy: "Contemporary Arts Center",
-      postedByAvatar: "https://i.pravatar.cc/150?img=23",
-      deadline: "July 25, 2023",
-      applicants: 9
-    },
-    {
-      id: 6,
-      title: "Short Documentary on Local Craftspeople",
-      type: "Documentary",
-      description: "Seeking a director and camera operator for a short documentary series highlighting traditional craftspeople in our community.",
-      location: "Portland, OR",
-      timeline: "Sept - Oct 2023",
-      rolesNeeded: ["Director", "Camera Operator", "Sound Recordist"],
-      postedBy: "Craft Heritage Foundation",
-      postedByAvatar: "https://i.pravatar.cc/150?img=32",
-      deadline: "August 20, 2023",
-      applicants: 3
-    }
-  ];
-
-  // Filter projects based on search query
-  const filteredProjects = projects.filter(project => 
-    project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    project.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    project.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    project.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    project.rolesNeeded.some(role => role.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
-
   // Categories for filtering
   const categories = ["All", "Documentary", "Short Film", "Music Video", "Podcast", "Marketing", "Photography"];
+
+  useEffect(() => {
+    const loadProjects = async () => {
+      setIsLoading(true);
+      try {
+        const fetchedProjects = await fetchProjects();
+        setProjects(fetchedProjects);
+      } catch (error) {
+        console.error('Error loading projects:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadProjects();
+  }, []);
+
+  // Filter projects based on search query and selected category
+  useEffect(() => {
+    let filtered = [...projects];
+    
+    // Apply category filter
+    if (selectedCategory !== 'All') {
+      filtered = filtered.filter(project => project.type === selectedCategory);
+    }
+    
+    // Apply search filter
+    if (searchQuery) {
+      filtered = filtered.filter(project => 
+        project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        project.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        project.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        project.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        project.rolesNeeded.some(role => role.toLowerCase().includes(searchQuery.toLowerCase()))
+      );
+    }
+    
+    setFilteredProjects(filtered);
+  }, [projects, searchQuery, selectedCategory]);
+
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -116,7 +78,10 @@ const Projects: React.FC = () => {
               <h1 className="text-4xl md:text-5xl font-bebas tracking-wider mb-2">PROJECTS</h1>
               <p className="text-muted-foreground">Find your next creative collaboration</p>
             </div>
-            <Button className="mt-4 md:mt-0 rounded-full">
+            <Button 
+              className="mt-4 md:mt-0 rounded-full"
+              onClick={() => setIsNewProjectModalOpen(true)}
+            >
               <Plus size={18} className="mr-2" />
               Post a Project
             </Button>
@@ -140,7 +105,7 @@ const Projects: React.FC = () => {
               </Button>
             </div>
             
-            <Tabs defaultValue="All" className="w-full">
+            <Tabs defaultValue={selectedCategory} className="w-full" onValueChange={handleCategoryChange}>
               <TabsList className="w-full justify-start overflow-x-auto py-2 mb-2">
                 {categories.map(category => (
                   <TabsTrigger key={category} value={category} className="min-w-fit">
@@ -151,63 +116,73 @@ const Projects: React.FC = () => {
             </Tabs>
           </div>
           
+          {/* Loading State */}
+          {isLoading && (
+            <div className="flex flex-col items-center justify-center py-20">
+              <Loader2 className="h-10 w-10 text-primary animate-spin mb-4" />
+              <p className="text-muted-foreground">Loading projects...</p>
+            </div>
+          )}
+          
           {/* Projects Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProjects.map(project => (
-              <Card key={project.id} className="overflow-hidden flex flex-col h-full hover:shadow-md transition-all-200">
-                <CardHeader className="pb-3">
-                  <div className="flex justify-between">
-                    <Badge variant="outline" className="mb-2">{project.type}</Badge>
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <Users size={14} className="mr-1" />
-                      <span>{project.applicants}</span>
+          {!isLoading && filteredProjects.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredProjects.map(project => (
+                <Card key={project.id} className="overflow-hidden flex flex-col h-full hover:shadow-md transition-all-200">
+                  <CardHeader className="pb-3">
+                    <div className="flex justify-between">
+                      <Badge variant="outline" className="mb-2">{project.type}</Badge>
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <Users size={14} className="mr-1" />
+                        <span>{project.applicants}</span>
+                      </div>
                     </div>
-                  </div>
-                  <CardTitle className="text-xl">{project.title}</CardTitle>
-                  <CardDescription className="flex items-center">
-                    <MapPin size={14} className="mr-1" />
-                    {project.location}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="py-2 flex-grow">
-                  <div className="flex items-center text-sm mb-3 text-muted-foreground">
-                    <Clock size={14} className="mr-1" />
-                    <span>{project.timeline}</span>
-                    <span className="mx-2">•</span>
-                    <Calendar size={14} className="mr-1" />
-                    <span>Due {project.deadline}</span>
-                  </div>
-                  <p className="text-sm mb-4 line-clamp-3">{project.description}</p>
-                  <div>
-                    <h4 className="text-sm font-medium mb-2">Roles Needed:</h4>
-                    <div className="flex flex-wrap gap-1.5">
-                      {project.rolesNeeded.map((role, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
-                          {role}
-                        </Badge>
-                      ))}
+                    <CardTitle className="text-xl">{project.title}</CardTitle>
+                    <CardDescription className="flex items-center">
+                      <MapPin size={14} className="mr-1" />
+                      {project.location}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="py-2 flex-grow">
+                    <div className="flex items-center text-sm mb-3 text-muted-foreground">
+                      <Clock size={14} className="mr-1" />
+                      <span>{project.timeline}</span>
+                      <span className="mx-2">•</span>
+                      <Calendar size={14} className="mr-1" />
+                      <span>Due {project.deadline}</span>
                     </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="border-t pt-4 flex justify-between">
-                  <div className="flex items-center">
-                    <div className="w-6 h-6 rounded-full overflow-hidden mr-2">
-                      <img 
-                        src={project.postedByAvatar} 
-                        alt={project.postedBy} 
-                        className="w-full h-full object-cover"
-                      />
+                    <p className="text-sm mb-4 line-clamp-3">{project.description}</p>
+                    <div>
+                      <h4 className="text-sm font-medium mb-2">Roles Needed:</h4>
+                      <div className="flex flex-wrap gap-1.5">
+                        {project.rolesNeeded.map((role, index) => (
+                          <Badge key={index} variant="secondary" className="text-xs">
+                            {role}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
-                    <span className="text-sm">{project.postedBy}</span>
-                  </div>
-                  <Button size="sm">View Details</Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
+                  </CardContent>
+                  <CardFooter className="border-t pt-4 flex justify-between">
+                    <div className="flex items-center">
+                      <div className="w-6 h-6 rounded-full overflow-hidden mr-2">
+                        <img 
+                          src={project.postedByAvatar || 'https://i.pravatar.cc/150?img=5'} 
+                          alt={project.postedBy} 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <span className="text-sm">{project.postedBy}</span>
+                    </div>
+                    <Button size="sm">View Details</Button>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          )}
           
           {/* Empty state */}
-          {filteredProjects.length === 0 && (
+          {!isLoading && filteredProjects.length === 0 && (
             <div className="flex flex-col items-center justify-center py-20">
               <div className="bg-secondary/40 p-6 rounded-full mb-4">
                 <Search className="h-10 w-10 text-muted-foreground" />
@@ -221,6 +196,12 @@ const Projects: React.FC = () => {
         </div>
       </div>
       <Footer />
+      
+      {/* New Project Form Modal */}
+      <NewProjectForm 
+        isOpen={isNewProjectModalOpen} 
+        onClose={() => setIsNewProjectModalOpen(false)} 
+      />
     </div>
   );
 };
