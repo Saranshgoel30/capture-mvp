@@ -40,6 +40,15 @@ const Signup: React.FC = () => {
               Continue with LinkedIn
             </Button>
             
+            <Button 
+              variant="outline" 
+              className="w-full justify-center rounded-xl"
+              icon={<Mail size={20} />}
+              onClick={() => signInWithGoogle()}
+            >
+              Continue with Google
+            </Button>
+            
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-white/10"></div>

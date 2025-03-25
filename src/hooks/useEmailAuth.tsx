@@ -25,10 +25,7 @@ export const useEmailAuth = () => {
     setIsLoading(true);
     try {
       await signInWithEmail(email, password);
-      toast({
-        title: 'Welcome back!',
-        description: 'You have successfully logged in.',
-      });
+      // Toast notification is handled in the signInWithEmail function
     } catch (error: any) {
       console.error('Login error:', error);
       toast({
@@ -56,10 +53,7 @@ export const useEmailAuth = () => {
     setIsLoading(true);
     try {
       await signUpWithEmail(email, password);
-      toast({
-        title: 'Account created!',
-        description: 'Your account has been successfully created.',
-      });
+      // Toast notification is handled in the signUpWithEmail function
     } catch (error: any) {
       console.error('Signup error:', error);
       toast({
