@@ -1,7 +1,6 @@
-
 import { db } from './firebase';
 import { collection, addDoc, getDocs, getDoc, doc, updateDoc, deleteDoc, query, where, orderBy, limit, Timestamp, serverTimestamp, increment } from 'firebase/firestore';
-import { Project, UserProfile, PortfolioProject, CurrentProject } from './types';
+import { Project, UserProfile, PortfolioProject, CurrentProject, ProjectApplication } from './types';
 
 // Project Collection
 const projectsCollection = collection(db, 'projects');
@@ -162,6 +161,24 @@ export const updateUserProfile = async (profileId: string, data: Partial<UserPro
   } catch (error) {
     console.error('Error updating user profile:', error);
     return false;
+  }
+};
+
+export const fetchAllUserProfiles = async (): Promise<UserProfile[]> => {
+  try {
+    const q = query(profilesCollection, orderBy('createdAt', 'desc'));
+    const querySnapshot = await getDocs(q);
+    const profiles: UserProfile[] = [];
+    
+    querySnapshot.forEach((doc) => {
+      const data = doc.data() as Omit<UserProfile, 'id'>;
+      profiles.push({ id: doc.id, ...data });
+    });
+    
+    return profiles;
+  } catch (error) {
+    console.error('Error fetching all user profiles:', error);
+    return [];
   }
 };
 

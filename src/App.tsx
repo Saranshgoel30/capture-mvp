@@ -32,6 +32,7 @@ const App = () => (
             <Route path="/signup" element={<Signup />} />
             <Route path="/find-creators" element={<FindCreators />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/:userId" element={<Profile />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
