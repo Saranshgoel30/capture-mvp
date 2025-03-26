@@ -1,18 +1,26 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Mail, Github } from 'lucide-react';
 import Button from '../components/ui-custom/Button';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEmailAuth } from '@/hooks/useEmailAuth';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 const Signup: React.FC = () => {
-  const { signInWithGoogle, signInWithGithub } = useAuth();
+  const navigate = useNavigate();
+  const { signInWithGoogle, signInWithGithub, user } = useAuth();
   const { email, setEmail, password, setPassword, isLoading, handleSignup } = useEmailAuth();
+
+  // Redirect if user is already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/projects');
+    }
+  }, [user, navigate]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -80,7 +88,6 @@ const Signup: React.FC = () => {
                 type="submit"
                 variant="primary" 
                 className="w-full justify-center rounded-xl mt-4"
-                icon={<Mail size={20} />}
                 isLoading={isLoading}
               >
                 Sign up with Email

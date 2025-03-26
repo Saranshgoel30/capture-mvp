@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Mail, Github } from 'lucide-react';
@@ -16,7 +16,7 @@ const Login: React.FC = () => {
   const { email, setEmail, password, setPassword, isLoading, handleLogin } = useEmailAuth();
 
   // Redirect if user is already logged in
-  React.useEffect(() => {
+  useEffect(() => {
     if (user) {
       navigate('/projects');
     }

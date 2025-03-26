@@ -32,11 +32,6 @@ export const useEmailAuth = () => {
       }
     } catch (error: any) {
       console.error('Login error:', error);
-      toast({
-        title: 'Login failed',
-        description: error.message || 'An error occurred during login.',
-        variant: 'destructive',
-      });
     } finally {
       setIsLoading(false);
     }
@@ -62,11 +57,6 @@ export const useEmailAuth = () => {
       }
     } catch (error: any) {
       console.error('Signup error:', error);
-      toast({
-        title: 'Signup failed',
-        description: error.message || 'An error occurred during signup.',
-        variant: 'destructive',
-      });
     } finally {
       setIsLoading(false);
     }

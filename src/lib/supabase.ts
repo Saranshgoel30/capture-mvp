@@ -1,17 +1,45 @@
 
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '@/integrations/supabase/client';
 
-const supabaseUrl = 'https://mhfukgqkaijaipwpcdi.supabase.co'
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1oZnVrZ3FrYWlqYWlscHdwY2RpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI4ODE2MzksImV4cCI6MjA1ODQ1NzYzOX0.qlpqn-yOrxJsxEhwr6ZALLCWa1tNHD7HM-acE5Fsfw8'
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export { supabase };
 
 export const getCurrentUser = async () => {
-  const { data, error } = await supabase.auth.getSession()
+  const { data, error } = await supabase.auth.getSession();
   
   if (error || !data.session) {
-    return null
+    return null;
   }
   
-  return data.session.user
-}
+  return data.session.user;
+};
+
+export const fetchUserProfile = async (userId: string) => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .single();
+  
+  if (error) {
+    console.error('Error fetching user profile:', error);
+    return null;
+  }
+  
+  return data;
+};
+
+export const updateUserProfile = async (userId: string, updates: any) => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update(updates)
+    .eq('id', userId)
+    .select()
+    .single();
+  
+  if (error) {
+    console.error('Error updating user profile:', error);
+    throw error;
+  }
+  
+  return data;
+};
