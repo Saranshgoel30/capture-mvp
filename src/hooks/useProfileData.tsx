@@ -11,7 +11,7 @@ export const useProfileData = (userId?: string) => {
   const [currentProjectsLoading, setCurrentProjectsLoading] = useState(false);
   const { user } = useAuth();
 
-  const targetUserId = userId || user?.uid;
+  const targetUserId = userId || (user ? user.id : null);
 
   useEffect(() => {
     const loadProfileData = async () => {

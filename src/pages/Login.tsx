@@ -2,7 +2,7 @@
 import React from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { Mail, Github, Linkedin } from 'lucide-react';
+import { Mail, Github } from 'lucide-react';
 import Button from '../components/ui-custom/Button';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { signInWithGoogle, signInWithGithub, signInWithLinkedin, user } = useAuth();
+  const { signInWithGoogle, signInWithGithub, user } = useAuth();
   const { email, setEmail, password, setPassword, isLoading, handleLogin } = useEmailAuth();
 
   // Redirect if user is already logged in
@@ -37,15 +37,6 @@ const Login: React.FC = () => {
               onClick={() => signInWithGithub()}
             >
               Continue with Github
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              className="w-full justify-center rounded-xl"
-              icon={<Linkedin size={20} />}
-              onClick={() => signInWithLinkedin()}
-            >
-              Continue with LinkedIn
             </Button>
             
             <Button 

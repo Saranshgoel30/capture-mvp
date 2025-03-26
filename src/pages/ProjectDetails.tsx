@@ -60,7 +60,7 @@ const ProjectDetails: React.FC = () => {
 
     setIsApplying(true);
     try {
-      await applyToProject(projectId, user.uid);
+      await applyToProject(projectId, user.id);
       toast({
         title: "Application Submitted",
         description: "Your application has been submitted successfully!",

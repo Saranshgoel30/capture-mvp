@@ -2,7 +2,7 @@
 import React from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { Mail, Github, Linkedin } from 'lucide-react';
+import { Mail, Github } from 'lucide-react';
 import Button from '../components/ui-custom/Button';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 const Signup: React.FC = () => {
-  const { signInWithGoogle, signInWithGithub, signInWithLinkedin } = useAuth();
+  const { signInWithGoogle, signInWithGithub } = useAuth();
   const { email, setEmail, password, setPassword, isLoading, handleSignup } = useEmailAuth();
 
   return (
@@ -29,15 +29,6 @@ const Signup: React.FC = () => {
               onClick={() => signInWithGithub()}
             >
               Continue with Github
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              className="w-full justify-center rounded-xl"
-              icon={<Linkedin size={20} />}
-              onClick={() => signInWithLinkedin()}
-            >
-              Continue with LinkedIn
             </Button>
             
             <Button 

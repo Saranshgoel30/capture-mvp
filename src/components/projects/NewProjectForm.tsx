@@ -85,9 +85,9 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ isOpen, onClose }) => {
         location: data.location,
         timeline: data.timeline,
         rolesNeeded: roles,
-        postedBy: userProfile?.name || user.displayName || user.email?.split('@')[0] || 'Anonymous',
-        postedById: user.uid,
-        postedByAvatar: userProfile?.avatar || user.photoURL || undefined,
+        postedBy: userProfile?.name || user.user_metadata?.name || user.email?.split('@')[0] || 'Anonymous',
+        postedById: user.id,
+        postedByAvatar: userProfile?.avatar || user.user_metadata?.avatar_url || undefined,
         deadline: date ? format(date, 'MMMM d, yyyy') : 'Not specified',
         applicants: 0
       };
