@@ -21,7 +21,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { addProject } from '@/lib/firestore';
+import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
 
 interface NewProjectFormProps {
@@ -36,13 +36,17 @@ const projectTypes = [
 
 const NewProjectForm: React.FC<NewProjectFormProps> = ({ isOpen, onClose }) => {
   const { toast } = useToast();
-  const { user, userProfile } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
-  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [startDate, setStartDate] = useState<Date | undefined>(new Date());
+  const [endDate, setEndDate] = useState<Date | undefined>(
+    new Date(new Date().setMonth(new Date().getMonth() + 1))
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedType, setSelectedType] = useState<string>('Documentary');
   const [roles, setRoles] = useState<string[]>([]);
   const [newRole, setNewRole] = useState('');
+  const [datePickerOpen, setDatePickerOpen] = useState<'start' | 'end' | null>(null);
 
   const { register, handleSubmit, formState: { errors }, reset } = useForm();
 
@@ -78,32 +82,34 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ isOpen, onClose }) => {
 
     setIsSubmitting(true);
     try {
-      const projectData = {
-        title: data.title,
-        type: selectedType,
-        description: data.description,
-        location: data.location,
-        timeline: data.timeline,
-        rolesNeeded: roles,
-        postedBy: userProfile?.name || user.user_metadata?.name || user.email?.split('@')[0] || 'Anonymous',
-        postedById: user.id,
-        postedByAvatar: userProfile?.avatar || user.user_metadata?.avatar_url || undefined,
-        deadline: date ? format(date, 'MMMM d, yyyy') : 'Not specified',
-        applicants: 0
-      };
-
-      const projectId = await addProject(projectData);
+      const { data: projectData, error } = await supabase
+        .from('projects')
+        .insert({
+          title: data.title,
+          description: data.description,
+          location: data.location,
+          owner_id: user.id,
+          required_roles: roles,
+          deadline: endDate?.toISOString().split('T')[0]
+        })
+        .select()
+        .single();
       
-      if (projectId) {
-        toast({
-          title: 'Project created!',
-          description: 'Your project has been successfully posted.',
-        });
-        reset();
-        setRoles([]);
-        setDate(new Date());
-        onClose();
-      }
+      if (error) throw error;
+      
+      toast({
+        title: 'Project created!',
+        description: 'Your project has been successfully posted.',
+      });
+      
+      reset();
+      setRoles([]);
+      setStartDate(new Date());
+      setEndDate(new Date(new Date().setMonth(new Date().getMonth() + 1)));
+      onClose();
+      
+      // Navigate to the projects page
+      navigate('/projects');
     } catch (error: any) {
       console.error('Error creating project:', error);
       toast({
@@ -170,7 +176,7 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ isOpen, onClose }) => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="location">Location</Label>
+              <Label htmlFor="location">City</Label>
               <Input 
                 id="location" 
                 {...register("location", { required: true })}
@@ -181,41 +187,70 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ isOpen, onClose }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="timeline">Timeline</Label>
-              <Input 
-                id="timeline" 
-                {...register("timeline", { required: true })}
-                placeholder="e.g., Aug - Oct 2023"
-                className={errors.timeline ? "border-red-500" : ""}
-              />
-              {errors.timeline && <p className="text-red-500 text-sm">Timeline is required</p>}
+              <Label>Project Dates</Label>
+              <div className="flex items-center gap-2">
+                <Popover open={datePickerOpen === 'start'} onOpenChange={(open) => {
+                  if (open) setDatePickerOpen('start');
+                  else setDatePickerOpen(null);
+                }}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !startDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {startDate ? format(startDate, "MMM d, yyyy") : "Start date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={startDate}
+                      onSelect={(date) => {
+                        setStartDate(date);
+                        setDatePickerOpen(null);
+                      }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                
+                <span>-</span>
+                
+                <Popover open={datePickerOpen === 'end'} onOpenChange={(open) => {
+                  if (open) setDatePickerOpen('end');
+                  else setDatePickerOpen(null);
+                }}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !endDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {endDate ? format(endDate, "MMM d, yyyy") : "End date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={endDate}
+                      onSelect={(date) => {
+                        setEndDate(date);
+                        setDatePickerOpen(null);
+                      }}
+                      initialFocus
+                      disabled={(date) => date < (startDate || new Date())}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Application Deadline</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "PPP") : "Select a date"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={setDate}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
           </div>
 
           <div className="space-y-2">
@@ -226,6 +261,12 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ isOpen, onClose }) => {
                 onChange={(e) => setNewRole(e.target.value)}
                 placeholder="e.g., Cinematographer"
                 className="flex-1"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addRole();
+                  }
+                }}
               />
               <Button 
                 type="button" 

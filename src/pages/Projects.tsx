@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Clock, MapPin, Users, Filter, Search, Plus, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { fetchProjects } from '@/lib/firestore';
+import { fetchProjects } from '@/lib/supabase';
 import { Project } from '@/lib/types';
 import NewProjectForm from '@/components/projects/NewProjectForm';
 
@@ -130,7 +130,7 @@ const Projects: React.FC = () => {
           {!isLoading && filteredProjects.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredProjects.map(project => (
-                <Card key={project.id} className="overflow-hidden flex flex-col h-full hover:shadow-md transition-all-200">
+                <Card key={project.id} className="overflow-hidden flex flex-col h-full hover:shadow-md transition-all duration-200">
                   <CardHeader className="pb-3">
                     <div className="flex justify-between">
                       <Badge variant="outline" className="mb-2">{project.type}</Badge>
@@ -172,6 +172,9 @@ const Projects: React.FC = () => {
                           src={project.postedByAvatar || 'https://i.pravatar.cc/150?img=5'} 
                           alt={project.postedBy} 
                           className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src = 'https://i.pravatar.cc/150?img=5';
+                          }}
                         />
                       </div>
                       <span className="text-sm">{project.postedBy}</span>
