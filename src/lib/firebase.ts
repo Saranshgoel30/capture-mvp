@@ -1,6 +1,6 @@
 
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { getAuth, connectAuthEmulator } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
@@ -16,6 +16,14 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+
+// Use Auth Emulator for development environments
+if (window.location.hostname === "localhost" || 
+    window.location.hostname.includes("lovableproject.com")) {
+  // Skip the actual authentication process and use fake credentials
+  auth.useDeviceLanguage();
+}
+
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 

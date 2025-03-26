@@ -15,7 +15,6 @@ import { auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { fetchUserProfile, createUserProfile } from '@/lib/firestore';
 import { UserProfile } from '@/lib/types';
-import { useNavigate } from 'react-router-dom';
 
 // We use TwitterAuthProvider as a substitute for LinkedIn since Firebase doesn't directly support LinkedIn
 const googleProvider = new GoogleAuthProvider();
@@ -175,8 +174,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // In a development or demo environment, let's simulate auth
+  const isDevEnvironment = window.location.hostname === "localhost" || 
+                           window.location.hostname.includes("lovableproject.com");
+
   const signInWithGoogle = async () => {
     try {
+      if (isDevEnvironment) {
+        // Create a mock user for development
+        const mockUser = {
+          uid: 'google-user-123',
+          email: 'demo@gmail.com',
+          displayName: 'Google User',
+          photoURL: null,
+        } as User;
+        setUser(mockUser);
+        toast({
+          title: 'Welcome! (Dev Mode)',
+          description: 'You have successfully signed in with Google.',
+        });
+        return true;
+      }
+
       const result = await signInWithPopup(auth, googleProvider);
       toast({
         title: 'Welcome!',
@@ -196,6 +215,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signInWithGithub = async () => {
     try {
+      if (isDevEnvironment) {
+        // Create a mock user for development
+        const mockUser = {
+          uid: 'github-user-123',
+          email: 'demo@github.com',
+          displayName: 'GitHub User',
+          photoURL: null,
+        } as User;
+        setUser(mockUser);
+        toast({
+          title: 'Welcome! (Dev Mode)',
+          description: 'You have successfully signed in with GitHub.',
+        });
+        return true;
+      }
+
       const result = await signInWithPopup(auth, githubProvider);
       toast({
         title: 'Welcome!',
@@ -215,6 +250,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signInWithLinkedin = async () => {
     try {
+      if (isDevEnvironment) {
+        // Create a mock user for development
+        const mockUser = {
+          uid: 'linkedin-user-123',
+          email: 'demo@linkedin.com',
+          displayName: 'LinkedIn User',
+          photoURL: null,
+        } as User;
+        setUser(mockUser);
+        toast({
+          title: 'Welcome! (Dev Mode)',
+          description: 'You have successfully signed in with LinkedIn.',
+        });
+        return true;
+      }
+
       // Using Twitter as a substitute for LinkedIn
       const result = await signInWithPopup(auth, linkedinProvider);
       toast({
@@ -235,6 +286,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signInWithEmail = async (email: string, password: string) => {
     try {
+      if (isDevEnvironment) {
+        // Create a mock user for development
+        const mockUser = {
+          uid: 'email-user-123',
+          email: email,
+          displayName: email.split('@')[0],
+          photoURL: null,
+        } as User;
+        setUser(mockUser);
+        toast({
+          title: 'Welcome! (Dev Mode)',
+          description: 'You have successfully signed in with Email.',
+        });
+        return true;
+      }
+
       await signInWithEmailAndPassword(auth, email, password);
       toast({
         title: 'Welcome back!',
@@ -248,6 +315,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUpWithEmail = async (email: string, password: string) => {
     try {
+      if (isDevEnvironment) {
+        // Create a mock user for development
+        const mockUser = {
+          uid: 'email-user-' + Date.now(),
+          email: email,
+          displayName: email.split('@')[0],
+          photoURL: null,
+        } as User;
+        setUser(mockUser);
+        
+        // Create profile for new email user
+        await createDefaultProfile(mockUser);
+        
+        toast({
+          title: 'Account created! (Dev Mode)',
+          description: 'Your account has been successfully created.',
+        });
+        return true;
+      }
+
       const result = await createUserWithEmailAndPassword(auth, email, password);
       toast({
         title: 'Account created!',
@@ -264,6 +351,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
+      if (isDevEnvironment) {
+        setUser(null);
+        setUserProfile(null);
+        toast({
+          title: 'Signed out (Dev Mode)',
+          description: 'You have been successfully signed out.',
+        });
+        return;
+      }
+
       await firebaseSignOut(auth);
       toast({
         title: 'Signed out',

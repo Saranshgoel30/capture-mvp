@@ -124,7 +124,7 @@ const Navbar: React.FC = () => {
               </div>
             ) : (
               <Button size="sm" className="rounded-full" onClick={() => navigate('/signup')}>
-                Find Projects
+                Sign Up
               </Button>
             )}
           </div>
@@ -211,7 +211,7 @@ const Navbar: React.FC = () => {
               navigate(user ? '/projects' : '/signup');
               setIsMenuOpen(false);
             }}>
-              {user ? 'Browse Projects' : 'Find Projects'}
+              {user ? 'Browse Projects' : 'Sign Up'}
             </Button>
           </div>
         </div>
