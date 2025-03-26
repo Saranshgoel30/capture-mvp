@@ -75,10 +75,6 @@ const Navbar: React.FC = () => {
               <Film size={18} />
               <span>Projects</span>
             </Link>
-            <Link to="/find-creators" className="text-sm font-medium text-foreground transition-all-200 hover:text-primary flex items-center gap-2">
-              <Search size={18} />
-              <span>Find Creators</span>
-            </Link>
             {user ? (
               <>
                 <Link to="/profile" className="text-sm font-medium text-foreground transition-all-200 hover:text-primary flex items-center gap-2">
@@ -105,8 +101,8 @@ const Navbar: React.FC = () => {
               <div className="flex items-center gap-4">
                 <Link to="/profile">
                   <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-foreground overflow-hidden">
-                    {user.photoURL ? (
-                      <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" />
+                    {user.user_metadata?.avatar_url ? (
+                      <img src={user.user_metadata.avatar_url} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
                       <User size={20} />
                     )}
@@ -161,14 +157,6 @@ const Navbar: React.FC = () => {
             >
               <Film size={18} />
               <span>Projects</span>
-            </Link>
-            <Link 
-              to="/find-creators" 
-              className="text-sm font-medium text-foreground hover:text-primary px-2 py-1 flex items-center gap-2"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <Search size={18} />
-              <span>Find Creators</span>
             </Link>
             {user ? (
               <>

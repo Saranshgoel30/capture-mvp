@@ -30,7 +30,6 @@ export const useEmailAuth = () => {
       if (success) {
         navigate('/projects');
       }
-      // Toast notification is handled in the signInWithEmail function
     } catch (error: any) {
       console.error('Login error:', error);
       toast({
@@ -61,7 +60,6 @@ export const useEmailAuth = () => {
       if (success) {
         navigate('/projects');
       }
-      // Toast notification is handled in the signUpWithEmail function
     } catch (error: any) {
       console.error('Signup error:', error);
       toast({

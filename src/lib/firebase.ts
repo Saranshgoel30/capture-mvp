@@ -1,9 +1,9 @@
-
 import { initializeApp } from "firebase/app";
-import { getAuth, connectAuthEmulator } from "firebase/auth";
+import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
+// Note: We're now using Supabase for auth, but keeping Firebase for other functionality
 const firebaseConfig = {
   apiKey: "AIzaSyACyNdHZNM08sScshHa5CrsU6rqYBQX-1Y",
   authDomain: "capture-f42c1.firebaseapp.com",
@@ -16,14 +16,6 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-
-// Use Auth Emulator for development environments
-if (window.location.hostname === "localhost" || 
-    window.location.hostname.includes("lovableproject.com")) {
-  // Skip the actual authentication process and use fake credentials
-  auth.useDeviceLanguage();
-}
-
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 
