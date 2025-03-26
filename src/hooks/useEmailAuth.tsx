@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 export const useEmailAuth = () => {
   const [email, setEmail] = useState('');
@@ -9,6 +10,7 @@ export const useEmailAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { signInWithEmail, signUpWithEmail } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +26,10 @@ export const useEmailAuth = () => {
     
     setIsLoading(true);
     try {
-      await signInWithEmail(email, password);
+      const success = await signInWithEmail(email, password);
+      if (success) {
+        navigate('/projects');
+      }
       // Toast notification is handled in the signInWithEmail function
     } catch (error: any) {
       console.error('Login error:', error);
@@ -52,7 +57,10 @@ export const useEmailAuth = () => {
     
     setIsLoading(true);
     try {
-      await signUpWithEmail(email, password);
+      const success = await signUpWithEmail(email, password);
+      if (success) {
+        navigate('/projects');
+      }
       // Toast notification is handled in the signUpWithEmail function
     } catch (error: any) {
       console.error('Signup error:', error);

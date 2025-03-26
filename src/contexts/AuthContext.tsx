@@ -15,6 +15,7 @@ import { auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { fetchUserProfile, createUserProfile } from '@/lib/firestore';
 import { UserProfile } from '@/lib/types';
+import { useNavigate } from 'react-router-dom';
 
 // We use TwitterAuthProvider as a substitute for LinkedIn since Firebase doesn't directly support LinkedIn
 const googleProvider = new GoogleAuthProvider();
@@ -26,11 +27,11 @@ type AuthContextType = {
   userProfile: UserProfile | null;
   loading: boolean;
   profileLoading: boolean;
-  signInWithGoogle: () => Promise<void>;
-  signInWithGithub: () => Promise<void>;
-  signInWithLinkedin: () => Promise<void>;
-  signInWithEmail: (email: string, password: string) => Promise<void>;
-  signUpWithEmail: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<boolean>;
+  signInWithGithub: () => Promise<boolean>;
+  signInWithLinkedin: () => Promise<boolean>;
+  signInWithEmail: (email: string, password: string) => Promise<boolean>;
+  signUpWithEmail: (email: string, password: string) => Promise<boolean>;
   signOut: () => Promise<void>;
   createProfile: (profileData: Partial<UserProfile>) => Promise<void>;
 };
@@ -89,6 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       description: error.message || 'Failed to authenticate. Please try again.',
       variant: 'destructive',
     });
+    return false;
   };
 
   const createDefaultProfile = async (user: User) => {
@@ -116,9 +118,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (profileId) {
         const profile = { ...defaultProfile, id: profileId } as UserProfile;
         setUserProfile(profile);
+        return true;
       }
+      return false;
     } catch (error) {
       console.error('Error creating default profile:', error);
+      return false;
     }
   };
 
@@ -183,8 +188,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!profile) {
         await createDefaultProfile(result.user);
       }
+      return true;
     } catch (error: any) {
-      handleAuthError(error);
+      return handleAuthError(error);
     }
   };
 
@@ -201,8 +207,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!profile) {
         await createDefaultProfile(result.user);
       }
+      return true;
     } catch (error: any) {
-      handleAuthError(error);
+      return handleAuthError(error);
     }
   };
 
@@ -220,8 +227,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!profile) {
         await createDefaultProfile(result.user);
       }
+      return true;
     } catch (error: any) {
-      handleAuthError(error);
+      return handleAuthError(error);
     }
   };
 
@@ -232,8 +240,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         title: 'Welcome back!',
         description: 'You have successfully signed in.',
       });
+      return true;
     } catch (error: any) {
-      handleAuthError(error);
+      return handleAuthError(error);
     }
   };
 
@@ -247,8 +256,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Create default profile for new email user
       await createDefaultProfile(result.user);
+      return true;
     } catch (error: any) {
-      handleAuthError(error);
+      return handleAuthError(error);
     }
   };
 

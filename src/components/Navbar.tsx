@@ -5,6 +5,7 @@ import Button from './ui-custom/Button';
 import { cn } from '@/lib/utils';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import ThemeToggle from './ThemeToggle';
 
 const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -97,41 +98,48 @@ const Navbar: React.FC = () => {
             )}
           </div>
           
-          {user ? (
-            <div className="flex items-center gap-4">
-              <Link to="/profile">
-                <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-foreground overflow-hidden">
-                  {user.photoURL ? (
-                    <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" />
-                  ) : (
-                    <User size={20} />
-                  )}
-                </div>
-              </Link>
-              <Button 
-                size="sm" 
-                variant="ghost" 
-                onClick={handleLogout}
-                className="rounded-full text-muted-foreground"
-                icon={<LogOut size={16} />}
-              >
-                Logout
+          <div className="flex items-center gap-4">
+            <ThemeToggle />
+            
+            {user ? (
+              <div className="flex items-center gap-4">
+                <Link to="/profile">
+                  <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-foreground overflow-hidden">
+                    {user.photoURL ? (
+                      <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      <User size={20} />
+                    )}
+                  </div>
+                </Link>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  onClick={handleLogout}
+                  className="rounded-full text-muted-foreground"
+                  icon={<LogOut size={16} />}
+                >
+                  Logout
+                </Button>
+              </div>
+            ) : (
+              <Button size="sm" className="rounded-full" onClick={() => navigate('/signup')}>
+                Find Projects
               </Button>
-            </div>
-          ) : (
-            <Button size="sm" className="rounded-full" onClick={() => navigate('/signup')}>
-              Find Projects
-            </Button>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Mobile menu button */}
-        <button 
-          className="md:hidden text-foreground p-2 rounded-md focus:outline-none"
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-        >
-          {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+        <div className="md:hidden flex items-center gap-2">
+          <ThemeToggle />
+          <button 
+            className="text-foreground p-2 rounded-md focus:outline-none"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          >
+            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Navigation */}
