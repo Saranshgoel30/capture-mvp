@@ -56,7 +56,6 @@ export const addProject = async (projectData: any) => {
       title: projectData.title,
       description: projectData.description,
       location: projectData.location,
-      type: projectData.type,
       required_roles: projectData.roles || [],
       deadline: projectData.deadline
     })
@@ -111,11 +110,15 @@ export const fetchProjects = async () => {
   return projectsData.map((project) => {
     const profile = profilesMap.get(project.owner_id);
     
+    // Determine project type from title or default to "Other"
+    // This is a workaround since 'type' doesn't exist in the database schema
+    const projectType = determineProjectType(project.title);
+    
     return {
       id: project.id,
       title: project.title,
-      // Use a default type if not available
-      type: project.type || 'Other',
+      // Use a derived or default type since it's not in the database
+      type: projectType,
       description: project.description,
       location: project.location,
       // Create a timeline string from the deadline
@@ -158,11 +161,14 @@ export const fetchProjectById = async (projectId: string) => {
     // Continue without profile data
   }
 
+  // Determine project type from title or default to "Other"
+  const projectType = determineProjectType(project.title);
+
   // Transform data to match the expected Project format
   return {
     id: project.id,
     title: project.title,
-    type: project.type || 'Other',
+    type: projectType,
     description: project.description,
     location: project.location,
     timeline: `Until ${new Date(project.deadline).toLocaleDateString()}`,
@@ -175,6 +181,28 @@ export const fetchProjectById = async (projectId: string) => {
     createdAt: new Date(project.created_at).getTime()
   };
 };
+
+// Helper function to determine project type based on title or other data
+// Since 'type' doesn't exist in our database schema, we're deriving it
+function determineProjectType(title: string): string {
+  const titleLower = title.toLowerCase();
+  
+  if (titleLower.includes('film') || titleLower.includes('movie')) {
+    return 'Short Film';
+  } else if (titleLower.includes('music') || titleLower.includes('video')) {
+    return 'Music Video';
+  } else if (titleLower.includes('photo') || titleLower.includes('shoot')) {
+    return 'Photography';
+  } else if (titleLower.includes('podcast')) {
+    return 'Podcast';
+  } else if (titleLower.includes('commercial') || titleLower.includes('marketing')) {
+    return 'Marketing';
+  } else if (titleLower.includes('documentary')) {
+    return 'Documentary';
+  } else {
+    return 'Other';
+  }
+}
 
 // Function to add portfolio item
 export const addPortfolioItem = async (userId: string, itemData: any) => {
