@@ -73,77 +73,106 @@ export const addProject = async (projectData: any) => {
 
 // Improved function to fetch projects with better error handling and consistent data format
 export const fetchProjects = async () => {
-  const { data, error } = await supabase
+  // First, let's fetch all projects
+  const { data: projectsData, error: projectsError } = await supabase
     .from('projects')
-    .select(`
-      *,
-      profiles:owner_id (
-        full_name,
-        avatar_url
-      )
-    `)
-    .order('created_at', { ascending: false });
+    .select('*');
 
-  if (error) {
-    console.error('Error fetching projects:', error);
-    throw error;
+  if (projectsError) {
+    console.error('Error fetching projects:', projectsError);
+    throw projectsError;
   }
 
-  if (!data || data.length === 0) {
+  if (!projectsData || projectsData.length === 0) {
     return [];
   }
 
+  // Now fetch profile data for each project owner
+  const ownerIds = projectsData.map(project => project.owner_id);
+  const { data: profilesData, error: profilesError } = await supabase
+    .from('profiles')
+    .select('id, full_name, avatar_url')
+    .in('id', ownerIds);
+
+  if (profilesError) {
+    console.error('Error fetching profiles:', profilesError);
+    // Continue without profile data rather than failing
+  }
+
+  // Create a lookup map for profiles
+  const profilesMap = new Map();
+  if (profilesData) {
+    profilesData.forEach(profile => {
+      profilesMap.set(profile.id, profile);
+    });
+  }
+
   // Transform data to match the expected Project format
-  return data.map((project: any) => ({
+  return projectsData.map((project) => {
+    const profile = profilesMap.get(project.owner_id);
+    
+    return {
+      id: project.id,
+      title: project.title,
+      // Use a default type if not available
+      type: project.type || 'Other',
+      description: project.description,
+      location: project.location,
+      // Create a timeline string from the deadline
+      timeline: `Until ${new Date(project.deadline).toLocaleDateString()}`,
+      rolesNeeded: project.required_roles || [],
+      postedBy: profile?.full_name || 'Anonymous',
+      postedById: project.owner_id,
+      postedByAvatar: profile?.avatar_url,
+      deadline: new Date(project.deadline).toLocaleDateString(),
+      // Default to 0 if applicants count is not available
+      applicants: 0,
+      createdAt: new Date(project.created_at).getTime()
+    };
+  });
+};
+
+// Function to fetch a single project by ID
+export const fetchProjectById = async (projectId: string) => {
+  // Fetch the project data
+  const { data: project, error: projectError } = await supabase
+    .from('projects')
+    .select('*')
+    .eq('id', projectId)
+    .single();
+
+  if (projectError) {
+    console.error('Error fetching project:', projectError);
+    throw projectError;
+  }
+
+  // Fetch the owner's profile data
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('full_name, avatar_url')
+    .eq('id', project.owner_id)
+    .single();
+
+  if (profileError) {
+    console.error('Error fetching project owner profile:', profileError);
+    // Continue without profile data
+  }
+
+  // Transform data to match the expected Project format
+  return {
     id: project.id,
     title: project.title,
     type: project.type || 'Other',
     description: project.description,
     location: project.location,
-    timeline: project.timeline || `Until ${new Date(project.deadline).toLocaleDateString()}`,
+    timeline: `Until ${new Date(project.deadline).toLocaleDateString()}`,
     rolesNeeded: project.required_roles || [],
-    postedBy: project.profiles?.full_name || 'Anonymous',
+    postedBy: profile?.full_name || 'Anonymous',
     postedById: project.owner_id,
-    postedByAvatar: project.profiles?.avatar_url,
+    postedByAvatar: profile?.avatar_url,
     deadline: new Date(project.deadline).toLocaleDateString(),
-    applicants: project.applicants || 0,
+    applicants: 0, // Default value since we don't have this field yet
     createdAt: new Date(project.created_at).getTime()
-  }));
-};
-
-// Function to fetch a single project by ID
-export const fetchProjectById = async (projectId: string) => {
-  const { data, error } = await supabase
-    .from('projects')
-    .select(`
-      *,
-      profiles:owner_id (
-        full_name,
-        avatar_url
-      )
-    `)
-    .eq('id', projectId)
-    .single();
-
-  if (error) {
-    console.error('Error fetching project:', error);
-    throw error;
-  }
-
-  return {
-    id: data.id,
-    title: data.title,
-    type: data.type || 'Other',
-    description: data.description,
-    location: data.location,
-    timeline: data.timeline || `Until ${new Date(data.deadline).toLocaleDateString()}`,
-    rolesNeeded: data.required_roles || [],
-    postedBy: data.profiles?.full_name || 'Anonymous',
-    postedById: data.owner_id,
-    postedByAvatar: data.profiles?.avatar_url,
-    deadline: new Date(data.deadline).toLocaleDateString(),
-    applicants: data.applicants || 0,
-    createdAt: new Date(data.created_at).getTime()
   };
 };
 
