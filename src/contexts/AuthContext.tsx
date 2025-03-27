@@ -13,6 +13,7 @@ type Profile = {
   city?: string;
   roles?: string[];
   skills?: string[];
+  social_links?: Record<string, string>; // Add this field to support social links
   updated_at?: string;
   created_at?: string;
 };

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { fetchUserProfile } from '@/lib/supabase';
@@ -7,6 +8,7 @@ import Footer from '../components/Footer';
 import { useProfileData } from '@/hooks/useProfileData';
 import { Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button'; // Add missing import
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import PortfolioSection from '@/components/profile/PortfolioSection';
 import CurrentProjectsSection from '@/components/profile/CurrentProjectsSection';

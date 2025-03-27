@@ -13,7 +13,7 @@ import {
   DropdownMenuContent, 
   DropdownMenuItem, 
   DropdownMenuLabel, 
-  DropdownMenuSeparator, // The comma was missing here
+  DropdownMenuSeparator,
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 
@@ -130,7 +130,7 @@ const Navbar: React.FC = () => {
                   <DropdownMenuTrigger asChild>
                     <Button 
                       variant="ghost" 
-                      size="icon" 
+                      size="sm" 
                       className="relative"
                     >
                       <Bell size={20} />
@@ -221,7 +221,7 @@ const Navbar: React.FC = () => {
           {user && (
             <Button 
               variant="ghost" 
-              size="icon" 
+              size="sm" 
               className="relative"
               onClick={() => navigate('/settings')}
             >
