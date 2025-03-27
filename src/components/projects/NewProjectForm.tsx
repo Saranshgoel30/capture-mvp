@@ -1,121 +1,120 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { 
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, X } from 'lucide-react';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
+import { X, Calendar, Plus, Loader2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { addProject } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { Badge } from '@/components/ui/badge';
+import { useNavigate } from 'react-router-dom';
 
 interface NewProjectFormProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const projectTypes = [
-  'Documentary', 'Short Film', 'Feature Film', 'Music Video', 
-  'Podcast', 'Photography', 'Marketing', 'Animation', 'Other'
-];
-
 const NewProjectForm: React.FC<NewProjectFormProps> = ({ isOpen, onClose }) => {
-  const { toast } = useToast();
-  const { user, profile } = useAuth();
-  const navigate = useNavigate();
-  const [startDate, setStartDate] = useState<Date | undefined>(new Date());
-  const [endDate, setEndDate] = useState<Date | undefined>(
-    new Date(new Date().setMonth(new Date().getMonth() + 1))
-  );
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedType, setSelectedType] = useState<string>('Documentary');
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [location, setLocation] = useState('');
+  const [type, setType] = useState('');
+  const [role, setRole] = useState('');
   const [roles, setRoles] = useState<string[]>([]);
-  const [newRole, setNewRole] = useState('');
-  const [datePickerOpen, setDatePickerOpen] = useState<'start' | 'end' | null>(null);
+  const [deadline, setDeadline] = useState<Date | undefined>(undefined);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
-  const { register, handleSubmit, formState: { errors }, reset } = useForm();
-
-  const addRole = () => {
-    if (newRole && !roles.includes(newRole)) {
-      setRoles([...roles, newRole]);
-      setNewRole('');
+  const handleAddRole = () => {
+    if (role && !roles.includes(role)) {
+      setRoles([...roles, role]);
+      setRole('');
     }
   };
 
-  const removeRole = (roleToRemove: string) => {
-    setRoles(roles.filter(role => role !== roleToRemove));
+  const handleRemoveRole = (roleToRemove: string) => {
+    setRoles(roles.filter(r => r !== roleToRemove));
   };
 
-  const onSubmit = async (data: any) => {
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddRole();
+    }
+  };
+
+  const resetForm = () => {
+    setTitle('');
+    setDescription('');
+    setLocation('');
+    setType('');
+    setRole('');
+    setRoles([]);
+    setDeadline(undefined);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
     if (!user) {
       toast({
-        title: 'Authentication required',
-        description: 'Please log in to post a new project.',
-        variant: 'destructive',
+        title: "Authentication Required",
+        description: "You must be logged in to post a project.",
+        variant: "destructive",
       });
       return;
     }
-
-    if (roles.length === 0) {
+    
+    if (!title || !description || !location || !type || roles.length === 0 || !deadline) {
       toast({
-        title: 'Roles needed',
-        description: 'Please add at least one role needed for the project.',
-        variant: 'destructive',
+        title: "Missing Information",
+        description: "Please fill out all required fields.",
+        variant: "destructive",
       });
       return;
     }
-
+    
     setIsSubmitting(true);
+    
     try {
-      const { data: projectData, error } = await supabase
-        .from('projects')
-        .insert({
-          title: data.title,
-          description: data.description,
-          location: data.location,
-          owner_id: user.id,
-          required_roles: roles,
-          deadline: endDate?.toISOString().split('T')[0]
-        })
-        .select()
-        .single();
+      const projectData = {
+        title,
+        description,
+        location,
+        type,
+        roles,
+        deadline: deadline.toISOString().split('T')[0], // Format as YYYY-MM-DD
+      };
       
-      if (error) throw error;
+      await addProject(projectData);
       
       toast({
-        title: 'Project created!',
-        description: 'Your project has been successfully posted.',
+        title: "Project Posted",
+        description: "Your project has been successfully posted.",
       });
       
-      reset();
-      setRoles([]);
-      setStartDate(new Date());
-      setEndDate(new Date(new Date().setMonth(new Date().getMonth() + 1)));
+      resetForm();
       onClose();
       
-      // Navigate to the projects page
+      // Redirect to projects page and refresh to see the new project
       navigate('/projects');
+      window.location.reload();
     } catch (error: any) {
-      console.error('Error creating project:', error);
+      console.error('Error posting project:', error);
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to create project. Please try again.',
-        variant: 'destructive',
+        title: "Error",
+        description: error.message || "Failed to post project. Please try again.",
+        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
@@ -124,184 +123,142 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ isOpen, onClose }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl">Post a New Project</DialogTitle>
+          <DialogTitle>Create New Project</DialogTitle>
           <DialogDescription>
-            Fill out the details below to post your project and find collaborators.
+            Share the details of your creative project and find collaborators.
           </DialogDescription>
         </DialogHeader>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="title">Project Title</Label>
-            <Input 
-              id="title" 
-              {...register("title", { required: true })}
-              placeholder="Enter a clear, descriptive title"
-              className={errors.title ? "border-red-500" : ""}
+        
+        <form onSubmit={handleSubmit} className="space-y-4 py-4">
+          <div className="grid w-full items-center gap-2">
+            <Label htmlFor="title">Project Title*</Label>
+            <Input
+              id="title"
+              placeholder="Enter project title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
             />
-            {errors.title && <p className="text-red-500 text-sm">Project title is required</p>}
           </div>
-
-          <div className="space-y-2">
-            <Label>Project Type</Label>
-            <div className="flex flex-wrap gap-2">
-              {projectTypes.map(type => (
-                <Badge 
-                  key={type}
-                  variant={selectedType === type ? "default" : "outline"}
-                  className="cursor-pointer"
-                  onClick={() => setSelectedType(type)}
+          
+          <div className="grid w-full items-center gap-2">
+            <Label htmlFor="type">Project Type*</Label>
+            <Input
+              id="type"
+              placeholder="e.g., Short Film, Music Video, Commercial"
+              value={type}
+              onChange={(e) => setType(e.target.value)}
+              required
+            />
+          </div>
+          
+          <div className="grid w-full items-center gap-2">
+            <Label htmlFor="description">Description*</Label>
+            <Textarea
+              id="description"
+              placeholder="Describe your project, goals, and vision..."
+              className="min-h-[100px]"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              required
+            />
+          </div>
+          
+          <div className="grid w-full items-center gap-2">
+            <Label htmlFor="location">Location*</Label>
+            <Input
+              id="location"
+              placeholder="e.g., Los Angeles, CA or Remote"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              required
+            />
+          </div>
+          
+          <div className="grid w-full items-center gap-2">
+            <Label htmlFor="deadline">Project Deadline*</Label>
+            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !deadline && "text-muted-foreground"
+                  )}
                 >
-                  {type}
-                </Badge>
-              ))}
-            </div>
+                  <Calendar className="mr-2 h-4 w-4" />
+                  {deadline ? format(deadline, "PPP") : "Select a date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <CalendarComponent
+                  mode="single"
+                  selected={deadline}
+                  onSelect={(date) => {
+                    setDeadline(date);
+                    setIsCalendarOpen(false);
+                  }}
+                  initialFocus
+                  disabled={(date) => date < new Date()}
+                />
+              </PopoverContent>
+            </Popover>
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Project Description</Label>
-            <Textarea 
-              id="description" 
-              {...register("description", { required: true })}
-              placeholder="Describe your project, goals, and vision"
-              className={cn(
-                errors.description ? "border-red-500" : "",
-                "min-h-32"
-              )}
-            />
-            {errors.description && <p className="text-red-500 text-sm">Project description is required</p>}
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="location">City</Label>
-              <Input 
-                id="location" 
-                {...register("location", { required: true })}
-                placeholder="City, Country or Remote"
-                className={errors.location ? "border-red-500" : ""}
-              />
-              {errors.location && <p className="text-red-500 text-sm">Location is required</p>}
-            </div>
-
-            <div className="space-y-2">
-              <Label>Project Dates</Label>
-              <div className="flex items-center gap-2">
-                <Popover open={datePickerOpen === 'start'} onOpenChange={(open) => {
-                  if (open) setDatePickerOpen('start');
-                  else setDatePickerOpen(null);
-                }}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !startDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {startDate ? format(startDate, "MMM d, yyyy") : "Start date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={startDate}
-                      onSelect={(date) => {
-                        setStartDate(date);
-                        setDatePickerOpen(null);
-                      }}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-                
-                <span>-</span>
-                
-                <Popover open={datePickerOpen === 'end'} onOpenChange={(open) => {
-                  if (open) setDatePickerOpen('end');
-                  else setDatePickerOpen(null);
-                }}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !endDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {endDate ? format(endDate, "MMM d, yyyy") : "End date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={endDate}
-                      onSelect={(date) => {
-                        setEndDate(date);
-                        setDatePickerOpen(null);
-                      }}
-                      initialFocus
-                      disabled={(date) => date < (startDate || new Date())}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Roles Needed</Label>
+          
+          <div className="grid w-full items-center gap-2">
+            <Label htmlFor="roles">Roles Needed*</Label>
             <div className="flex gap-2">
-              <Input 
-                value={newRole}
-                onChange={(e) => setNewRole(e.target.value)}
-                placeholder="e.g., Cinematographer"
+              <Input
+                id="roles"
+                placeholder="e.g., Cinematographer, Editor"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                onKeyDown={handleKeyPress}
                 className="flex-1"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    addRole();
-                  }
-                }}
               />
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={addRole}
-              >
-                Add
+              <Button type="button" onClick={handleAddRole} variant="outline">
+                <Plus size={18} />
               </Button>
             </div>
-            
-            <div className="flex flex-wrap gap-2 mt-2">
-              {roles.map((role, index) => (
-                <Badge key={index} variant="secondary" className="pl-2 pr-1 py-1 flex items-center gap-1">
-                  {role}
-                  <button 
-                    type="button" 
-                    onClick={() => removeRole(role)}
-                    className="ml-1 rounded-full hover:bg-muted p-1"
-                  >
-                    <X size={14} />
-                  </button>
-                </Badge>
-              ))}
-            </div>
-            {roles.length === 0 && (
-              <p className="text-muted-foreground text-sm">Add at least one role needed for your project</p>
+            {roles.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {roles.map((r, index) => (
+                  <Badge key={index} variant="secondary" className="pl-2 pr-1 py-1 flex items-center gap-1">
+                    {r}
+                    <button 
+                      type="button" 
+                      onClick={() => handleRemoveRole(r)}
+                      className="ml-1 rounded-full hover:bg-muted p-1"
+                    >
+                      <X size={14} />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
             )}
           </div>
-
+          
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => {
+                resetForm();
+                onClose();
+              }}
+              disabled={isSubmitting}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Posting...' : 'Post Project'}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Posting...
+                </>
+              ) : "Post Project"}
             </Button>
           </DialogFooter>
         </form>

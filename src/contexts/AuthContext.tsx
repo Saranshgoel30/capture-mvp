@@ -10,6 +10,7 @@ type Profile = {
   full_name?: string;
   avatar_url?: string;
   bio?: string;
+  city?: string;
   roles?: string[];
   skills?: string[];
   updated_at?: string;
@@ -28,6 +29,7 @@ type AuthContextType = {
   signUpWithEmail: (email: string, password: string) => Promise<boolean>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<Profile | null>;
+  refreshUserProfile: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -49,25 +51,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { toast } = useToast();
 
   // Load user profile
+  const refreshUserProfile = async () => {
+    if (!user) {
+      setProfile(null);
+      return;
+    }
+
+    setProfileLoading(true);
+    try {
+      const userProfile = await fetchUserProfile(user.id);
+      setProfile(userProfile);
+    } catch (error) {
+      console.error('Error loading profile:', error);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  // Load user profile on user change
   useEffect(() => {
-    const loadProfile = async () => {
-      if (!user) {
-        setProfile(null);
-        return;
-      }
-
-      setProfileLoading(true);
-      try {
-        const userProfile = await fetchUserProfile(user.id);
-        setProfile(userProfile);
-      } catch (error) {
-        console.error('Error loading profile:', error);
-      } finally {
-        setProfileLoading(false);
-      }
-    };
-
-    loadProfile();
+    refreshUserProfile();
   }, [user]);
 
   // Set up auth state listener and check current session
@@ -248,6 +251,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signUpWithEmail,
     signOut,
     updateProfile,
+    refreshUserProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -12,7 +12,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { X, User, Save, Camera, Loader2 } from 'lucide-react';
+import { Switch } from "@/components/ui/switch";
+import { 
+  X, User, Save, Camera, Loader2, BellRing, Link2, AtSign, 
+  Github, Mail, Instagram, Globe, Twitter, Linkedin, Youtube
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { updateUserProfile } from '@/lib/supabase';
 
@@ -29,6 +33,21 @@ const Settings: React.FC = () => {
   const [roles, setRoles] = useState<string[]>([]);
   const [newSkill, setNewSkill] = useState('');
   const [newRole, setNewRole] = useState('');
+  const [socialLinks, setSocialLinks] = useState({
+    website: '',
+    instagram: '',
+    twitter: '',
+    linkedin: '',
+    github: '',
+    youtube: ''
+  });
+  const [notifications, setNotifications] = useState({
+    email: true,
+    projectMatches: true,
+    messages: true,
+    applications: true,
+    marketing: false
+  });
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -47,12 +66,29 @@ const Settings: React.FC = () => {
       });
       setSkills(profile.skills || []);
       setRoles(profile.roles || []);
+      
+      // Set social links if they exist in the profile
+      if (profile.social_links) {
+        setSocialLinks({
+          ...socialLinks,
+          ...profile.social_links
+        });
+      }
     }
   }, [user, profile, navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSocialLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setSocialLinks(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleNotificationChange = (key: string, checked: boolean) => {
+    setNotifications(prev => ({ ...prev, [key]: checked }));
   };
 
   const addSkill = () => {
@@ -87,6 +123,8 @@ const Settings: React.FC = () => {
         ...formData,
         skills,
         roles,
+        social_links: socialLinks,
+        notification_preferences: notifications
       };
       
       await updateUserProfile(user.id, updates);
@@ -130,8 +168,9 @@ const Settings: React.FC = () => {
           <Tabs defaultValue="profile" className="w-full">
             <TabsList className="mb-8">
               <TabsTrigger value="profile">Profile</TabsTrigger>
-              <TabsTrigger value="account">Account</TabsTrigger>
+              <TabsTrigger value="social">Social Links</TabsTrigger>
               <TabsTrigger value="notifications">Notifications</TabsTrigger>
+              <TabsTrigger value="account">Account</TabsTrigger>
             </TabsList>
             
             <TabsContent value="profile">
@@ -149,8 +188,8 @@ const Settings: React.FC = () => {
                       <div className="relative">
                         <Avatar className="h-24 w-24">
                           <AvatarImage src={formData.avatar_url} alt={formData.full_name} />
-                          <AvatarFallback className="text-4xl">
-                            <User size={36} />
+                          <AvatarFallback className="text-4xl bg-primary text-primary-foreground">
+                            {formData.full_name ? formData.full_name.charAt(0).toUpperCase() : <User size={36} />}
                           </AvatarFallback>
                         </Avatar>
                         <Button
@@ -294,20 +333,116 @@ const Settings: React.FC = () => {
               </Card>
             </TabsContent>
             
-            <TabsContent value="account">
+            <TabsContent value="social">
               <Card>
                 <CardHeader>
-                  <CardTitle>Account Settings</CardTitle>
+                  <CardTitle>Social Links</CardTitle>
                   <CardDescription>
-                    Manage your account settings and preferences.
+                    Connect your social media accounts to your profile.
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <p>Email: {user?.email}</p>
-                  <p className="text-muted-foreground mt-4">
-                    More account settings coming soon, including password reset and account deletion options.
-                  </p>
+                <CardContent className="space-y-4">
+                  <div className="grid gap-4">
+                    <div className="grid grid-cols-[20px_1fr] items-center gap-4">
+                      <Globe className="h-5 w-5" />
+                      <div className="flex-1">
+                        <Label htmlFor="website">Website</Label>
+                        <Input 
+                          id="website" 
+                          name="website" 
+                          placeholder="https://yourdomain.com" 
+                          value={socialLinks.website}
+                          onChange={handleSocialLinkChange}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-[20px_1fr] items-center gap-4">
+                      <Instagram className="h-5 w-5" />
+                      <div className="flex-1">
+                        <Label htmlFor="instagram">Instagram</Label>
+                        <Input 
+                          id="instagram" 
+                          name="instagram" 
+                          placeholder="username" 
+                          value={socialLinks.instagram}
+                          onChange={handleSocialLinkChange}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-[20px_1fr] items-center gap-4">
+                      <Twitter className="h-5 w-5" />
+                      <div className="flex-1">
+                        <Label htmlFor="twitter">Twitter</Label>
+                        <Input 
+                          id="twitter" 
+                          name="twitter" 
+                          placeholder="username" 
+                          value={socialLinks.twitter}
+                          onChange={handleSocialLinkChange}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-[20px_1fr] items-center gap-4">
+                      <Linkedin className="h-5 w-5" />
+                      <div className="flex-1">
+                        <Label htmlFor="linkedin">LinkedIn</Label>
+                        <Input 
+                          id="linkedin" 
+                          name="linkedin" 
+                          placeholder="username or URL" 
+                          value={socialLinks.linkedin}
+                          onChange={handleSocialLinkChange}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-[20px_1fr] items-center gap-4">
+                      <Github className="h-5 w-5" />
+                      <div className="flex-1">
+                        <Label htmlFor="github">GitHub</Label>
+                        <Input 
+                          id="github" 
+                          name="github" 
+                          placeholder="username" 
+                          value={socialLinks.github}
+                          onChange={handleSocialLinkChange}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-[20px_1fr] items-center gap-4">
+                      <Youtube className="h-5 w-5" />
+                      <div className="flex-1">
+                        <Label htmlFor="youtube">YouTube</Label>
+                        <Input 
+                          id="youtube" 
+                          name="youtube" 
+                          placeholder="channel name or URL" 
+                          value={socialLinks.youtube}
+                          onChange={handleSocialLinkChange}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </CardContent>
+                <CardFooter className="flex justify-end">
+                  <Button onClick={handleSubmit} disabled={isLoading}>
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="mr-2 h-4 w-4" />
+                        Save Links
+                      </>
+                    )}
+                  </Button>
+                </CardFooter>
               </Card>
             </TabsContent>
             
@@ -316,13 +451,137 @@ const Settings: React.FC = () => {
                 <CardHeader>
                   <CardTitle>Notification Preferences</CardTitle>
                   <CardDescription>
-                    Control which notifications you receive.
+                    Control which notifications you receive and how you receive them.
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    Notification settings will be available soon.
-                  </p>
+                <CardContent className="space-y-4">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-col gap-1">
+                        <Label htmlFor="email-notifications" className="text-base">Email Notifications</Label>
+                        <span className="text-sm text-muted-foreground">
+                          Receive notifications via email
+                        </span>
+                      </div>
+                      <Switch 
+                        id="email-notifications" 
+                        checked={notifications.email}
+                        onCheckedChange={(checked) => handleNotificationChange('email', checked)}
+                      />
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-col gap-1">
+                        <Label htmlFor="project-matches" className="text-base">Project Matches</Label>
+                        <span className="text-sm text-muted-foreground">
+                          Get notified about projects that match your skills
+                        </span>
+                      </div>
+                      <Switch 
+                        id="project-matches" 
+                        checked={notifications.projectMatches}
+                        onCheckedChange={(checked) => handleNotificationChange('projectMatches', checked)}
+                      />
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-col gap-1">
+                        <Label htmlFor="messages" className="text-base">Messages</Label>
+                        <span className="text-sm text-muted-foreground">
+                          Receive notifications for new messages
+                        </span>
+                      </div>
+                      <Switch 
+                        id="messages" 
+                        checked={notifications.messages}
+                        onCheckedChange={(checked) => handleNotificationChange('messages', checked)}
+                      />
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-col gap-1">
+                        <Label htmlFor="applications" className="text-base">Application Updates</Label>
+                        <span className="text-sm text-muted-foreground">
+                          Get notified about status changes to your applications
+                        </span>
+                      </div>
+                      <Switch 
+                        id="applications" 
+                        checked={notifications.applications}
+                        onCheckedChange={(checked) => handleNotificationChange('applications', checked)}
+                      />
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-col gap-1">
+                        <Label htmlFor="marketing" className="text-base">Marketing Emails</Label>
+                        <span className="text-sm text-muted-foreground">
+                          Receive updates about new features and events
+                        </span>
+                      </div>
+                      <Switch 
+                        id="marketing" 
+                        checked={notifications.marketing}
+                        onCheckedChange={(checked) => handleNotificationChange('marketing', checked)}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter className="flex justify-end">
+                  <Button onClick={handleSubmit} disabled={isLoading}>
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="mr-2 h-4 w-4" />
+                        Save Preferences
+                      </>
+                    )}
+                  </Button>
+                </CardFooter>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="account">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Account Settings</CardTitle>
+                  <CardDescription>
+                    Manage your account settings and preferences.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-medium">Email Address</h3>
+                    <p className="text-muted-foreground">{user?.email}</p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-medium">Authentication</h3>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline">
+                        {user?.app_metadata?.provider || 'Email'}
+                      </Badge>
+                      {user?.app_metadata?.provider === 'google' && (
+                        <span className="text-sm text-muted-foreground">Connected via Google</span>
+                      )}
+                      {user?.app_metadata?.provider === 'github' && (
+                        <span className="text-sm text-muted-foreground">Connected via GitHub</span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="pt-4 space-y-4">
+                    <Button variant="outline" className="w-full">
+                      Change Password
+                    </Button>
+                    <Button variant="destructive" className="w-full">
+                      Delete Account
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { fetchUserProfile } from '@/lib/supabase';
@@ -6,11 +5,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { useProfileData } from '@/hooks/useProfileData';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, MapPin, Link as LinkIcon, Loader2, Settings, PenSquare } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import ProfileHeader from '@/components/profile/ProfileHeader';
+import PortfolioSection from '@/components/profile/PortfolioSection';
+import CurrentProjectsSection from '@/components/profile/CurrentProjectsSection';
 
 const Profile: React.FC = () => {
   const { userId } = useParams();
@@ -87,156 +86,70 @@ const Profile: React.FC = () => {
           <div className="flex flex-col md:flex-row gap-8">
             {/* Profile Info */}
             <div className="md:w-1/3">
-              <div className="rounded-2xl bg-secondary/40 backdrop-blur-md p-6 relative">
-                {isCurrentUser && (
-                  <div className="absolute top-4 right-4 flex gap-2">
-                    <Link to="/settings">
-                      <Button variant="outline" size="icon" className="h-8 w-8">
-                        <Settings size={16} />
-                      </Button>
-                    </Link>
-                  </div>
-                )}
-                
-                <div className="flex flex-col items-center text-center mb-6">
-                  <Avatar className="h-32 w-32 mb-4">
-                    {profile.avatar_url ? (
-                      <AvatarImage 
-                        src={profile.avatar_url} 
-                        alt={profile.full_name} 
-                        className="object-cover"
-                        onError={(e) => {
-                          // Fallback if image fails to load
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
-                    ) : null}
-                    <AvatarFallback className="text-4xl bg-primary text-primary-foreground">
-                      {profile.full_name ? profile.full_name.charAt(0).toUpperCase() : <User size={48} />}
-                    </AvatarFallback>
-                  </Avatar>
-                  <h1 className="text-3xl font-bold">{profile.full_name || 'Anonymous'}</h1>
-                  {profile.city && (
-                    <div className="flex items-center mt-2 text-muted-foreground">
-                      <MapPin size={16} className="mr-1" />
-                      <span>{profile.city}</span>
-                    </div>
-                  )}
-                </div>
-
-                {profile.bio ? (
-                  <div className="mb-6">
-                    <h2 className="text-xl font-semibold mb-2">About</h2>
-                    <p className="text-muted-foreground">{profile.bio}</p>
-                  </div>
-                ) : isCurrentUser ? (
-                  <div className="mb-6">
-                    <Link to="/settings">
-                      <Button variant="outline" className="w-full">
-                        <PenSquare className="mr-2 h-4 w-4" />
-                        Complete Your Profile
-                      </Button>
-                    </Link>
-                  </div>
-                ) : null}
-
-                {profile.roles && profile.roles.length > 0 && (
-                  <div className="mb-6">
-                    <h2 className="text-xl font-semibold mb-2">Roles</h2>
-                    <div className="flex flex-wrap gap-2">
-                      {profile.roles.map((role: string, index: number) => (
-                        <Badge key={index} variant="secondary">
-                          {role}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {profile.skills && profile.skills.length > 0 && (
-                  <div className="mb-6">
-                    <h2 className="text-xl font-semibold mb-2">Skills</h2>
-                    <div className="flex flex-wrap gap-2">
-                      {profile.skills.map((skill: string, index: number) => (
-                        <Badge key={index} variant="outline">
-                          {skill}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
+              <ProfileHeader 
+                profile={profile} 
+                isCurrentUser={isCurrentUser} 
+              />
             </div>
 
             {/* Projects */}
             <div className="md:w-2/3">
-              {/* Current Projects */}
-              <div className="mb-8">
-                <h2 className="text-2xl font-bold mb-4">Current Projects</h2>
-                {currentProjectsLoading ? (
-                  <div className="flex justify-center py-8">
-                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <Tabs defaultValue="portfolio" className="w-full">
+                <TabsList className="w-full mb-4">
+                  <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
+                  <TabsTrigger value="current">Current Projects</TabsTrigger>
+                  {isCurrentUser && (
+                    <TabsTrigger value="applications">Applications</TabsTrigger>
+                  )}
+                </TabsList>
+                
+                <TabsContent value="portfolio" className="space-y-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-2xl font-bold">Portfolio</h2>
+                    {isCurrentUser && (
+                      <Link to="/settings">
+                        <Button variant="outline">Add Project</Button>
+                      </Link>
+                    )}
                   </div>
-                ) : currentProjects.length > 0 ? (
-                  <div className="grid grid-cols-1 gap-4">
-                    {currentProjects.map((project) => (
-                      <Card key={project.id}>
-                        <CardHeader>
-                          <CardTitle>{project.title}</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <p className="text-sm text-muted-foreground mb-2">
-                            <span className="font-medium">Role:</span> {project.role}
-                          </p>
-                          <p className="text-sm text-muted-foreground mb-4">
-                            <span className="font-medium">Timeline:</span> {project.timeline}
-                          </p>
-                          <p className="text-sm">{project.description}</p>
-                        </CardContent>
-                      </Card>
-                    ))}
+                  <PortfolioSection 
+                    portfolioProjects={portfolioProjects} 
+                    isLoading={portfolioLoading}
+                    isCurrentUser={isCurrentUser} 
+                  />
+                </TabsContent>
+                
+                <TabsContent value="current" className="space-y-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-2xl font-bold">Current Projects</h2>
+                    {isCurrentUser && (
+                      <Link to="/projects">
+                        <Button variant="outline">Find Projects</Button>
+                      </Link>
+                    )}
                   </div>
-                ) : (
-                  <p className="text-muted-foreground">No current projects</p>
+                  <CurrentProjectsSection 
+                    currentProjects={currentProjects}
+                    isLoading={currentProjectsLoading}
+                    isCurrentUser={isCurrentUser}
+                  />
+                </TabsContent>
+                
+                {isCurrentUser && (
+                  <TabsContent value="applications" className="space-y-6">
+                    <h2 className="text-2xl font-bold mb-4">My Applications</h2>
+                    <div className="bg-secondary/40 backdrop-blur-md rounded-xl p-6 text-center">
+                      <h3 className="text-xl font-semibold mb-2">No applications yet</h3>
+                      <p className="text-muted-foreground">
+                        You haven't applied to any projects yet.
+                      </p>
+                      <Link to="/projects" className="block mt-4">
+                        <Button>Browse Projects</Button>
+                      </Link>
+                    </div>
+                  </TabsContent>
                 )}
-              </div>
-
-              {/* Portfolio */}
-              <div>
-                <h2 className="text-2xl font-bold mb-4">Portfolio</h2>
-                {portfolioLoading ? (
-                  <div className="flex justify-center py-8">
-                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                  </div>
-                ) : portfolioProjects.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {portfolioProjects.map((project) => (
-                      <Card key={project.id}>
-                        {project.thumbnail && (
-                          <div className="aspect-video w-full overflow-hidden">
-                            <img 
-                              src={project.thumbnail} 
-                              alt={project.title}
-                              className="w-full h-full object-cover" 
-                            />
-                          </div>
-                        )}
-                        <CardHeader>
-                          <CardTitle>{project.title}</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <p className="text-sm text-muted-foreground mb-2">
-                            <span className="font-medium">Type:</span> {project.type}
-                          </p>
-                          <p className="text-sm">{project.description}</p>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground">No portfolio items yet</p>
-                )}
-              </div>
+              </Tabs>
             </div>
           </div>
         </div>
