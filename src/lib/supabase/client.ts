@@ -21,6 +21,6 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     autoRefreshToken: true,
     flowType: 'pkce',
     detectSessionInUrl: true,
-    redirectTo: getRedirectTo()
+    // Redirect URL is set in auth options elsewhere
   }
 });

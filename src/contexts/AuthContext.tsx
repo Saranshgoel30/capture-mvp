@@ -61,9 +61,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setProfileLoading(true);
     try {
       const userProfile = await fetchUserProfile(user.id);
-      setProfile(userProfile);
+      if (userProfile) {
+        setProfile(userProfile as Profile);
+      } else {
+        setProfile(null);
+      }
     } catch (error) {
       console.error('Error loading profile:', error);
+      setProfile(null);
     } finally {
       setProfileLoading(false);
     }
@@ -221,14 +226,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     try {
       const updatedProfile = await updateUserProfile(user.id, updates);
-      setProfile(updatedProfile);
-      
-      toast({
-        title: 'Profile updated',
-        description: 'Your profile has been successfully updated.',
-      });
-      
-      return updatedProfile;
+      if (updatedProfile) {
+        setProfile(updatedProfile as Profile);
+        
+        toast({
+          title: 'Profile updated',
+          description: 'Your profile has been successfully updated.',
+        });
+        
+        return updatedProfile as Profile;
+      }
+      return null;
     } catch (error: any) {
       console.error('Profile update error:', error);
       toast({

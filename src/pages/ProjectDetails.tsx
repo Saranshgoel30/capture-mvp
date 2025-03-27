@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -68,7 +69,8 @@ const ProjectDetails: React.FC = () => {
 
     setIsApplying(true);
     try {
-      await applyForProject(projectId, user.id);
+      // Add an empty string as the coverLetter parameter
+      await applyForProject(projectId, user.id, '');
       toast({
         title: "Application Submitted",
         description: "Your application has been submitted successfully!",
