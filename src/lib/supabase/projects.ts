@@ -51,7 +51,7 @@ export const addProject = async (projectData: any) => {
 };
 
 // Improved function to fetch projects with better error handling and consistent data format
-export const fetchProjects = async () => {
+export const fetchProjects = async (): Promise<Project[]> => {
   // First, let's fetch all projects
   const { data: projectsData, error: projectsError } = await supabase
     .from('projects')
@@ -82,7 +82,9 @@ export const fetchProjects = async () => {
   const profilesMap = new Map();
   if (profilesData) {
     profilesData.forEach(profile => {
-      profilesMap.set(profile.id, profile);
+      if (profile && profile.id) {
+        profilesMap.set(profile.id, profile);
+      }
     });
   }
 
@@ -116,50 +118,60 @@ export const fetchProjects = async () => {
 };
 
 // Function to fetch a single project by ID
-export const fetchProjectById = async (projectId: string) => {
-  // Fetch the project data
-  const { data: project, error: projectError } = await supabase
-    .from('projects')
-    .select('*')
-    .eq('id', projectId)
-    .single();
+export const fetchProjectById = async (projectId: string): Promise<Project | null> => {
+  try {
+    // Fetch the project data
+    const { data: project, error: projectError } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('id', projectId)
+      .single();
 
-  if (projectError) {
-    console.error('Error fetching project:', projectError);
-    throw projectError;
+    if (projectError) {
+      console.error('Error fetching project:', projectError);
+      return null; // Return null instead of throwing to handle gracefully
+    }
+
+    if (!project) {
+      console.error('Project not found');
+      return null;
+    }
+
+    // Fetch the owner's profile data
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('full_name, avatar_url')
+      .eq('id', project.owner_id)
+      .single();
+
+    if (profileError) {
+      console.error('Error fetching project owner profile:', profileError);
+      // Continue without profile data
+    }
+
+    // Determine project type from title or default to "Other"
+    const projectType = determineProjectType(project.title);
+
+    // Transform data to match the expected Project format
+    return {
+      id: project.id,
+      title: project.title,
+      type: projectType,
+      description: project.description,
+      location: project.location,
+      timeline: `Until ${new Date(project.deadline).toLocaleDateString()}`,
+      rolesNeeded: project.required_roles || [],
+      postedBy: profile?.full_name || 'Anonymous',
+      postedById: project.owner_id,
+      postedByAvatar: profile?.avatar_url,
+      deadline: new Date(project.deadline).toLocaleDateString(),
+      applicants: 0, // Default value since we don't have this field yet
+      createdAt: new Date(project.created_at).getTime()
+    };
+  } catch (error) {
+    console.error('Exception fetching project:', error);
+    return null; // Return null to handle gracefully in the UI
   }
-
-  // Fetch the owner's profile data
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('full_name, avatar_url')
-    .eq('id', project.owner_id)
-    .single();
-
-  if (profileError) {
-    console.error('Error fetching project owner profile:', profileError);
-    // Continue without profile data
-  }
-
-  // Determine project type from title or default to "Other"
-  const projectType = determineProjectType(project.title);
-
-  // Transform data to match the expected Project format
-  return {
-    id: project.id,
-    title: project.title,
-    type: projectType,
-    description: project.description,
-    location: project.location,
-    timeline: `Until ${new Date(project.deadline).toLocaleDateString()}`,
-    rolesNeeded: project.required_roles || [],
-    postedBy: profile?.full_name || 'Anonymous',
-    postedById: project.owner_id,
-    postedByAvatar: profile?.avatar_url,
-    deadline: new Date(project.deadline).toLocaleDateString(),
-    applicants: 0, // Default value since we don't have this field yet
-    createdAt: new Date(project.created_at).getTime()
-  };
 };
 
 // Function to apply for a project

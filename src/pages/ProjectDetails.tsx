@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Calendar, Clock, MapPin, Users, ArrowLeft, BookmarkPlus, Send } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { fetchProjectById, applyToProject } from '@/lib/firestore';
+import { fetchProjectById, applyForProject } from '@/lib/supabase/projects';
 import { Project } from '@/lib/types';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -27,8 +26,17 @@ const ProjectDetails: React.FC = () => {
       
       setIsLoading(true);
       try {
+        console.log("Fetching project with ID:", projectId);
         const fetchedProject = await fetchProjectById(projectId);
+        console.log("Fetched project:", fetchedProject);
         setProject(fetchedProject);
+        if (!fetchedProject) {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Project not found. It may have been removed.",
+          });
+        }
       } catch (error) {
         console.error('Error loading project details:', error);
         toast({
@@ -60,7 +68,7 @@ const ProjectDetails: React.FC = () => {
 
     setIsApplying(true);
     try {
-      await applyToProject(projectId, user.id);
+      await applyForProject(projectId, user.id);
       toast({
         title: "Application Submitted",
         description: "Your application has been submitted successfully!",
