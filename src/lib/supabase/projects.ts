@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 import { Project } from '@/lib/types';
 
@@ -182,6 +181,25 @@ export const fetchProjectById = async (projectId: string): Promise<Project | nul
 // Function to apply for a project
 export const applyForProject = async (projectId: string, userId: string, coverLetter: string = '') => {
   try {
+    // Check if the user has already applied
+    const { data: existingApplication, error: checkError } = await supabase
+      .from('applications')
+      .select('id')
+      .eq('project_id', projectId)
+      .eq('applicant_id', userId)
+      .maybeSingle();
+
+    if (checkError) {
+      console.error('Error checking existing application:', checkError);
+      throw checkError;
+    }
+
+    // If the user has already applied, return the existing application
+    if (existingApplication) {
+      return existingApplication;
+    }
+
+    // Otherwise, create a new application
     const { data, error } = await supabase
       .from('applications')
       .insert({

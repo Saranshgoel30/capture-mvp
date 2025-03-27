@@ -4,8 +4,11 @@ import { ArrowRight } from 'lucide-react';
 import Button from './ui-custom/Button';
 import FadeIn from './ui-custom/FadeIn';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Hero: React.FC = () => {
+  const { user } = useAuth();
+  
   return (
     <section id="home" className="min-h-screen pt-28 pb-16 px-6 md:px-12 flex items-center relative overflow-hidden">
       {/* Overlay background */}
@@ -39,11 +42,13 @@ const Hero: React.FC = () => {
                   </Button>
                 </Link>
                 
-                <Link to="/projects">
-                  <Button size="lg" variant="outline" className="rounded-full">
-                    Explore Without Signing Up
-                  </Button>
-                </Link>
+                {!user && (
+                  <Link to="/projects">
+                    <Button size="lg" variant="outline" className="rounded-full">
+                      Explore Without Signing Up
+                    </Button>
+                  </Link>
+                )}
               </div>
             </FadeIn>
           </div>
