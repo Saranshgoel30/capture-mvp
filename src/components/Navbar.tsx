@@ -13,7 +13,7 @@ import {
   DropdownMenuContent, 
   DropdownMenuItem, 
   DropdownMenuLabel, 
-  DropdownMenuSeparator, The
+  DropdownMenuSeparator, // The comma was missing here
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 
