@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { PortfolioProject, CurrentProject } from '@/lib/types';
+import { fetchPortfolioItems } from '@/lib/supabase/portfolio';
 
 export const useProfileData = (userId?: string) => {
   const [portfolioProjects, setPortfolioProjects] = useState<PortfolioProject[]>([]);
@@ -13,40 +14,26 @@ export const useProfileData = (userId?: string) => {
 
   const targetUserId = userId || (user ? user.id : null);
 
+  const refreshPortfolio = async () => {
+    if (!targetUserId) return;
+    
+    setPortfolioLoading(true);
+    try {
+      const items = await fetchPortfolioItems(targetUserId);
+      setPortfolioProjects(items);
+    } catch (error) {
+      console.error('Error loading portfolio projects:', error);
+    } finally {
+      setPortfolioLoading(false);
+    }
+  };
+
   useEffect(() => {
     const loadProfileData = async () => {
       if (!targetUserId) return;
 
       // Load portfolio projects
-      setPortfolioLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('portfolio_items')
-          .select('*')
-          .eq('profile_id', targetUserId);
-          
-        if (error) throw error;
-        
-        // Convert Supabase data to our app's format
-        const formattedPortfolio = data.map(item => ({
-          id: item.id,
-          userId: targetUserId,
-          title: item.title,
-          type: item.type,
-          thumbnail: item.media_url,
-          role: 'Creator', // Default role if not available in DB
-          date: new Date(item.created_at).toLocaleDateString(),
-          collaborators: [],
-          description: item.description || '',
-          createdAt: new Date(item.created_at).getTime()
-        }));
-        
-        setPortfolioProjects(formattedPortfolio);
-      } catch (error) {
-        console.error('Error loading portfolio projects:', error);
-      } finally {
-        setPortfolioLoading(false);
-      }
+      await refreshPortfolio();
 
       // Load current projects
       setCurrentProjectsLoading(true);
@@ -85,6 +72,7 @@ export const useProfileData = (userId?: string) => {
     portfolioProjects,
     currentProjects,
     portfolioLoading,
-    currentProjectsLoading
+    currentProjectsLoading,
+    refreshPortfolio
   };
 };

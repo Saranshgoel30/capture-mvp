@@ -55,6 +55,7 @@ export interface PortfolioProject {
   title: string;
   type: string;
   thumbnail?: string;
+  mediaType?: 'link' | 'image' | 'video';
   role: string;
   date: string;
   collaborators: string[];
