@@ -47,14 +47,17 @@ export const fetchPortfolioItems = async (userId: string): Promise<PortfolioProj
       return [];
     }
     
-    // Convert Supabase data to our app's format
+    // Convert Supabase data to our app's format with proper type casting
     return data.map(item => ({
       id: item.id,
       userId: userId,
       title: item.title,
       type: item.type,
       thumbnail: item.media_url,
-      mediaType: item.media_type || 'link',
+      // Ensure mediaType is one of the allowed values, defaulting to 'link' if not
+      mediaType: (item.media_type === 'image' || item.media_type === 'video') 
+        ? item.media_type as 'image' | 'video' 
+        : 'link',
       role: item.role || 'Creator',
       date: item.date || new Date(item.created_at).toLocaleDateString(),
       collaborators: item.collaborators || [],
