@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,17 +7,17 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { 
-  X, User, Save, Camera, Loader2, BellRing, Link2, AtSign, 
+  X, User, Save, Loader2, BellRing, Link2, AtSign, 
   Github, Mail, Instagram, Globe, Twitter, Linkedin, Youtube
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { updateUserProfile } from '@/lib/supabase';
+import ProfileImage from '@/components/profile/ProfileImage';
 
 const Settings: React.FC = () => {
   const { user, profile, refreshUserProfile } = useAuth();
@@ -67,7 +66,6 @@ const Settings: React.FC = () => {
       setSkills(profile.skills || []);
       setRoles(profile.roles || []);
       
-      // Set social links if they exist in the profile
       if (profile.social_links) {
         setSocialLinks({
           ...socialLinks,
@@ -111,6 +109,10 @@ const Settings: React.FC = () => {
 
   const removeRole = (roleToRemove: string) => {
     setRoles(roles.filter(role => role !== roleToRemove));
+  };
+
+  const handleAvatarUpdate = (url: string) => {
+    setFormData(prev => ({ ...prev, avatar_url: url }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -185,22 +187,13 @@ const Settings: React.FC = () => {
                   
                   <CardContent className="space-y-6">
                     <div className="flex flex-col items-center sm:flex-row sm:items-start gap-8">
-                      <div className="relative">
-                        <Avatar className="h-24 w-24">
-                          <AvatarImage src={formData.avatar_url} alt={formData.full_name} />
-                          <AvatarFallback className="text-4xl bg-primary text-primary-foreground">
-                            {formData.full_name ? formData.full_name.charAt(0).toUpperCase() : <User size={36} />}
-                          </AvatarFallback>
-                        </Avatar>
-                        <Button
-                          type="button"
-                          size="icon"
-                          variant="secondary"
-                          className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full"
-                        >
-                          <Camera size={14} />
-                        </Button>
-                      </div>
+                      <ProfileImage 
+                        avatar={formData.avatar_url}
+                        name={formData.full_name}
+                        userId={user.id}
+                        size="lg"
+                        onAvatarUpdate={handleAvatarUpdate}
+                      />
                       
                       <div className="space-y-4 flex-1">
                         <div>

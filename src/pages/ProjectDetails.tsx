@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -69,14 +68,12 @@ const ProjectDetails: React.FC = () => {
 
     setIsApplying(true);
     try {
-      // Add an empty string as the coverLetter parameter
       await applyForProject(projectId, user.id, '');
       toast({
         title: "Application Submitted",
         description: "Your application has been submitted successfully!",
       });
       
-      // Update the local state to reflect the new applicant count
       setProject(prev => {
         if (!prev) return null;
         return {
@@ -84,12 +81,12 @@ const ProjectDetails: React.FC = () => {
           applicants: prev.applicants + 1
         };
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error applying to project:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to submit your application. Please try again.",
+        description: error.message || "Failed to submit your application. Please try again.",
       });
     } finally {
       setIsApplying(false);

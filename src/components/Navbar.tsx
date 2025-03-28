@@ -1,315 +1,169 @@
-
 import React, { useState, useEffect } from 'react';
-import { Menu, X, User, Search, Settings, Home, Film, LogIn, LogOut, Bell } from 'lucide-react';
-import Button from './ui-custom/Button';
-import { cn } from '@/lib/utils';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import ThemeToggle from './ThemeToggle';
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator,
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
+import { Menu, X, User, Settings, Home, Film, LogOut, MessageSquare, UserPlus } from 'lucide-react';
+import ThemeToggle from './ThemeToggle';
+import { useMobile } from '@/hooks/use-mobile';
 
-const Navbar: React.FC = () => {
+const Navbar = () => {
+  const { user, logout, profile } = useAuth();
+  const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [lastScrollY, setLastScrollY] = useState(0);
-  const [visible, setVisible] = useState(true);
-  const { user, profile, signOut } = useAuth();
-  const [unreadNotifications, setUnreadNotifications] = useState(0);
-  const navigate = useNavigate();
+  const isAuthenticated = !!user;
+  const isMobile = useMobile();
 
-  // Handle scroll direction
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      
-      if (currentScrollY > 10) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
 
-      // Show navbar when scrolling up
-      if (currentScrollY > lastScrollY) {
-        setVisible(false);
-      } else {
-        setVisible(true);
-      }
-      
-      setLastScrollY(currentScrollY);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY]);
-
-  // Simulate notification count - in a real app, this would come from a backend
-  useEffect(() => {
-    if (user) {
-      // Randomly set between 0 and 5 unread notifications for demo
-      setUnreadNotifications(Math.floor(Math.random() * 5));
-    }
-  }, [user]);
-
-  const handleLogout = async () => {
-    await signOut();
-    navigate('/');
+  const closeMenu = () => {
     setIsMenuOpen(false);
   };
 
-  const getInitials = () => {
-    if (profile?.full_name) {
-      return profile.full_name.split(' ').map(part => part[0]).join('').toUpperCase();
-    }
-    return user?.email ? user.email[0].toUpperCase() : 'U';
+  const handleLogout = async () => {
+    await logout();
+    closeMenu();
   };
 
+  const navItems = [
+    { name: 'Home', path: '/' },
+    { name: 'Projects', path: '/projects' },
+    { name: 'Creators', path: '/creators' },
+  ];
+
+  if (isAuthenticated) {
+    navItems.push({ name: 'Messages', path: '/messages' });
+  }
+
   return (
-    <nav 
-      className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-6 md:px-12 py-4",
-        isScrolled 
-          ? "bg-background/80 backdrop-blur-lg shadow-sm" 
-          : "bg-transparent",
-        visible ? "translate-y-0" : "-translate-y-full"
-      )}
-    >
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
-        {/* Logo */}
-        <Link to="/" className="flex items-center">
-          <span className="font-bebas text-2xl tracking-wider text-foreground">
-            CAPTURE
-          </span>
+    <div className="bg-background border-b sticky top-0 z-50">
+      <div className="container flex items-center justify-between py-4">
+        <Link to="/" className="font-bold text-2xl tracking-tight">
+          CineHub
         </Link>
 
         {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center space-x-8">
-          <div className="flex items-center space-x-6">
-            <Link to="/" className="text-sm font-medium text-foreground transition-all duration-200 hover:text-primary flex items-center gap-2">
-              <Home size={18} />
-              <span>Home</span>
+        <div className="hidden md:flex items-center space-x-6">
+          {navItems.map((item) => (
+            <Link
+              key={item.name}
+              to={item.path}
+              className={`text-sm font-medium transition-colors hover:text-primary ${location.pathname === item.path ? 'text-primary' : 'text-muted-foreground'}`}
+            >
+              {item.name}
             </Link>
-            <Link to="/projects" className="text-sm font-medium text-foreground transition-all duration-200 hover:text-primary flex items-center gap-2">
-              <Film size={18} />
-              <span>Projects</span>
-            </Link>
-            {user ? (
-              <>
-                <Link to="/profile" className="text-sm font-medium text-foreground transition-all duration-200 hover:text-primary flex items-center gap-2">
-                  <User size={18} />
-                  <span>Profile</span>
-                </Link>
-                <Link to="/settings" className="text-sm font-medium text-foreground transition-all duration-200 hover:text-primary flex items-center gap-2">
-                  <Settings size={18} />
-                  <span>Settings</span>
-                </Link>
-              </>
-            ) : (
-              <Link to="/login" className="text-sm font-medium text-foreground transition-all duration-200 hover:text-primary flex items-center gap-2">
-                <LogIn size={18} />
-                <span>Login</span>
-              </Link>
-            )}
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <ThemeToggle />
-            
-            {user ? (
-              <div className="flex items-center gap-4">
-                {/* Notification Bell */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="relative"
-                    >
-                      <Bell size={20} />
-                      {unreadNotifications > 0 && (
-                        <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
-                          {unreadNotifications}
-                        </span>
-                      )}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-[300px]">
-                    <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <div className="max-h-[400px] overflow-auto">
-                      {[...Array(unreadNotifications)].map((_, i) => (
-                        <DropdownMenuItem key={i} className="cursor-pointer py-3">
-                          <div className="flex flex-col">
-                            <span className="font-medium">New project match</span>
-                            <span className="text-xs text-muted-foreground">
-                              A new project matches your skills
-                            </span>
-                          </div>
-                        </DropdownMenuItem>
-                      ))}
-                      {unreadNotifications === 0 && (
-                        <div className="py-3 px-2 text-center text-muted-foreground">
-                          No new notifications
-                        </div>
-                      )}
-                    </div>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem className="justify-center">
-                      <Link to="/settings" className="text-sm text-primary">
-                        View all notifications
-                      </Link>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+          ))}
 
-                {/* User Avatar */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Avatar className="cursor-pointer">
-                      {profile?.avatar_url ? (
-                        <AvatarImage 
-                          src={profile.avatar_url} 
-                          alt={profile.full_name || "User"}
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                          }}
-                        />
-                      ) : null}
-                      <AvatarFallback className="bg-primary text-primary-foreground">
-                        {getInitials()}
-                      </AvatarFallback>
-                    </Avatar>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>
-                      {profile?.full_name || user?.email}
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => navigate('/profile')}>
-                      Profile
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate('/settings')}>
-                      Settings
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout}>
-                      Logout
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            ) : (
-              <Button size="sm" className="rounded-full" onClick={() => navigate('/signup')}>
-                Sign Up
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {/* Mobile menu button */}
-        <div className="md:hidden flex items-center gap-2">
           <ThemeToggle />
-          
-          {user && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="relative"
-              onClick={() => navigate('/settings')}
-            >
-              <Bell size={20} />
-              {unreadNotifications > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
-                  {unreadNotifications}
-                </span>
-              )}
-            </Button>
-          )}
-          
-          <button 
-            className="text-foreground p-2 rounded-md focus:outline-none"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-        </div>
-      </div>
 
-      {/* Mobile Navigation */}
-      {isMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 p-6 mt-2 mx-4 rounded-lg bg-background/90 backdrop-blur-lg shadow-lg">
-          <div className="flex flex-col space-y-4">
-            <Link 
-              to="/" 
-              className="text-sm font-medium text-foreground hover:text-primary px-2 py-1 flex items-center gap-2"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <Home size={18} />
-              <span>Home</span>
-            </Link>
-            <Link 
-              to="/projects" 
-              className="text-sm font-medium text-foreground hover:text-primary px-2 py-1 flex items-center gap-2"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <Film size={18} />
-              <span>Projects</span>
-            </Link>
-            {user ? (
-              <>
-                <Link 
-                  to="/profile" 
-                  className="text-sm font-medium text-foreground hover:text-primary px-2 py-1 flex items-center gap-2"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <User size={18} />
-                  <span>Profile</span>
-                </Link>
-                <Link 
-                  to="/settings" 
-                  className="text-sm font-medium text-foreground hover:text-primary px-2 py-1 flex items-center gap-2"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <Settings size={18} />
-                  <span>Settings</span>
-                </Link>
-                <button 
-                  className="text-sm font-medium text-foreground hover:text-primary px-2 py-1 flex items-center gap-2 w-full text-left"
-                  onClick={handleLogout}
-                >
-                  <LogOut size={18} />
-                  <span>Logout</span>
-                </button>
-              </>
-            ) : (
-              <Link 
-                to="/login" 
-                className="text-sm font-medium text-foreground hover:text-primary px-2 py-1 flex items-center gap-2"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <LogIn size={18} />
-                <span>Login</span>
+          {isAuthenticated ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={profile?.avatar_url || `https://avatar.vercel.sh/${user?.email}.png`} alt={user?.email || 'User Avatar'} />
+                    <AvatarFallback>{profile?.full_name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || <User />}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/profile" className="flex items-center gap-2">
+                    <User className="h-4 w-4 mr-2" />
+                    <span>Profile</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/settings" className="flex items-center gap-2">
+                    <Settings className="h-4 w-4 mr-2" />
+                    <span>Settings</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <div className="flex items-center space-x-4">
+              <Link to="/login">
+                <Button variant="outline" size="sm">
+                  Login
+                </Button>
               </Link>
-            )}
-            
-            <Button size="sm" className="mt-2 rounded-full" onClick={() => {
-              navigate(user ? '/projects' : '/signup');
-              setIsMenuOpen(false);
-            }}>
-              {user ? 'Browse Projects' : 'Sign Up'}
-            </Button>
-          </div>
+              <Link to="/signup">
+                <Button size="sm">Sign Up</Button>
+              </Link>
+            </div>
+          )}
         </div>
-      )}
-    </nav>
+
+        {/* Mobile Navigation */}
+        <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon" onClick={toggleMenu} className="md:hidden">
+              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              <span className="sr-only">Toggle Menu</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="sm:max-w-sm">
+            <SheetHeader className="text-left">
+              <SheetTitle>Menu</SheetTitle>
+            </SheetHeader>
+            <div className="grid gap-4 py-4">
+              {navItems.map((item) => (
+                <Link
+                  key={item.name}
+                  to={item.path}
+                  className={`flex items-center text-sm font-medium transition-colors hover:text-primary ${location.pathname === item.path ? 'text-primary' : 'text-muted-foreground'}`}
+                  onClick={closeMenu}
+                >
+                  {item.name}
+                </Link>
+              ))}
+
+              <ThemeToggle />
+
+              {isAuthenticated ? (
+                <>
+                  <Link to="/profile" className="flex items-center gap-2" onClick={closeMenu}>
+                    <User className="h-4 w-4 mr-2" />
+                    <span>Profile</span>
+                  </Link>
+                  <Link to="/settings" className="flex items-center gap-2" onClick={closeMenu}>
+                    <Settings className="h-4 w-4 mr-2" />
+                    <span>Settings</span>
+                  </Link>
+                  <Button variant="outline" onClick={handleLogout} className="justify-start">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Link to="/login" onClick={closeMenu}>
+                    <Button variant="outline" className="justify-start">
+                      Login
+                    </Button>
+                  </Link>
+                  <Link to="/signup" onClick={closeMenu}>
+                    <Button className="justify-start">Sign Up</Button>
+                  </Link>
+                </>
+              )}
+            </div>
+          </SheetContent>
+        </Sheet>
+      </div>
+    </div>
   );
 };
 

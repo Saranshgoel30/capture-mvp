@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, MapPin, UserCheck, Loader2 } from 'lucide-react';
-import { fetchAllUserProfiles } from '@/lib/firestore';
+import { fetchAllUserProfiles } from '@/lib/supabase/creators';
 import { UserProfile } from '@/lib/types';
 
 const FindCreators: React.FC = () => {
