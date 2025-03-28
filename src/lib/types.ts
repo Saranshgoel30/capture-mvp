@@ -72,3 +72,15 @@ export interface CurrentProject {
   description: string;
   createdAt: number;
 }
+
+export interface Message {
+  id: string;
+  sender_id: string;
+  receiver_id: string;
+  content: string;
+  created_at: string;
+  sender?: {
+    full_name: string;
+    avatar_url: string;
+  };
+}

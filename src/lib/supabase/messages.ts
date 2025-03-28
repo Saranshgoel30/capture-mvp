@@ -1,17 +1,14 @@
-
 import { supabase } from './client';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { fetchUserProfile } from './users';
+import { Message } from '@/lib/types';
 
 // Fetch messages between two users
-export const getMessages = async (userId1: string, userId2: string) => {
+export const getMessages = async (userId1: string, userId2: string): Promise<Message[]> => {
   try {
     const { data, error } = await supabase
       .from('messages')
-      .select(`
-        *,
-        sender:sender_id(full_name, avatar_url)
-      `)
+      .select('*')
       .or(`and(sender_id.eq.${userId1},receiver_id.eq.${userId2}),and(sender_id.eq.${userId2},receiver_id.eq.${userId1})`)
       .order('created_at');
     
@@ -20,7 +17,21 @@ export const getMessages = async (userId1: string, userId2: string) => {
       return [];
     }
     
-    return data || [];
+    // Enhance messages with sender info
+    const enhancedMessages = await Promise.all(
+      (data || []).map(async (message) => {
+        const sender = await fetchUserProfile(message.sender_id);
+        return {
+          ...message,
+          sender: {
+            full_name: sender?.full_name || 'Unknown',
+            avatar_url: sender?.avatar_url
+          }
+        };
+      })
+    );
+    
+    return enhancedMessages;
   } catch (error) {
     console.error('Exception fetching messages:', error);
     return [];
@@ -28,7 +39,7 @@ export const getMessages = async (userId1: string, userId2: string) => {
 };
 
 // Send a message to another user
-export const sendMessage = async (senderId: string, receiverId: string, content: string) => {
+export const sendMessage = async (senderId: string, receiverId: string, content: string): Promise<Message | null> => {
   try {
     const { data, error } = await supabase
       .from('messages')
@@ -53,7 +64,7 @@ export const sendMessage = async (senderId: string, receiverId: string, content:
 };
 
 // Subscribe to new messages
-export const listenToMessages = (userId1: string, userId2: string, callback: (message: any) => void) => {
+export const listenToMessages = (userId1: string, userId2: string, callback: (message: Message) => void): RealtimeChannel => {
   const channel = supabase
     .channel('messages')
     .on(
@@ -64,20 +75,16 @@ export const listenToMessages = (userId1: string, userId2: string, callback: (me
         table: 'messages',
         filter: `or(and(sender_id=eq.${userId1},receiver_id=eq.${userId2}),and(sender_id=eq.${userId2},receiver_id=eq.${userId1}))`
       },
-      (payload) => {
+      async (payload) => {
         // Get sender info and add it to the message
-        const enhanceMessage = async () => {
-          const sender = await fetchUserProfile(payload.new.sender_id);
-          callback({
-            ...payload.new,
-            sender: {
-              full_name: sender?.full_name,
-              avatar_url: sender?.avatar_url
-            }
-          });
-        };
-        
-        enhanceMessage();
+        const sender = await fetchUserProfile(payload.new.sender_id);
+        callback({
+          ...payload.new as Message,
+          sender: {
+            full_name: sender?.full_name || 'Unknown',
+            avatar_url: sender?.avatar_url
+          }
+        });
       }
     )
     .subscribe();
@@ -88,26 +95,41 @@ export const listenToMessages = (userId1: string, userId2: string, callback: (me
 // Get recent conversations for a user
 export const getConversations = async (userId: string) => {
   try {
-    // This is a complex query to get the most recent message from each conversation
+    // Get all messages where the user is either sender or receiver
     const { data, error } = await supabase
-      .rpc('get_user_conversations', { user_id: userId });
+      .from('messages')
+      .select('*')
+      .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
+      .order('created_at', { ascending: false });
     
     if (error) {
       console.error('Error fetching conversations:', error);
       return [];
     }
     
+    if (!data || data.length === 0) {
+      return [];
+    }
+    
+    // Create a map to track the most recent message with each user
+    const conversationsMap = new Map();
+    
+    for (const message of data) {
+      const otherUserId = message.sender_id === userId ? message.receiver_id : message.sender_id;
+      
+      // Only keep the most recent message for each conversation
+      if (!conversationsMap.has(otherUserId)) {
+        conversationsMap.set(otherUserId, message);
+      }
+    }
+    
     // Fetch profile details for each conversation partner
-    const conversationsWithProfiles = await Promise.all(
-      data.map(async (conversation: any) => {
-        const otherUserId = conversation.sender_id === userId 
-          ? conversation.receiver_id 
-          : conversation.sender_id;
-        
+    const conversations = await Promise.all(
+      Array.from(conversationsMap.entries()).map(async ([otherUserId, message]) => {
         const profile = await fetchUserProfile(otherUserId);
         
         return {
-          ...conversation,
+          ...message,
           otherUser: {
             id: otherUserId,
             name: profile?.full_name || 'Unknown',
@@ -117,7 +139,7 @@ export const getConversations = async (userId: string) => {
       })
     );
     
-    return conversationsWithProfiles;
+    return conversations;
   } catch (error) {
     console.error('Exception fetching conversations:', error);
     return [];

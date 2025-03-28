@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
@@ -14,18 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getMessages, sendMessage, listenToMessages } from '@/lib/supabase/messages';
 import { fetchUserProfile } from '@/lib/supabase/users';
 import ProfileImage from '@/components/profile/ProfileImage';
-
-interface Message {
-  id: string;
-  sender_id: string;
-  receiver_id: string;
-  content: string;
-  created_at: string;
-  sender?: {
-    full_name: string;
-    avatar_url: string;
-  };
-}
+import { Message } from '@/lib/types';
 
 const Messages: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -154,11 +142,11 @@ const Messages: React.FC = () => {
                   {messages.map((message) => (
                     <div 
                       key={message.id} 
-                      className={`flex ${message.sender_id === user.id ? 'justify-end' : 'justify-start'}`}
+                      className={`flex ${message.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
                     >
                       <div 
                         className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                          message.sender_id === user.id 
+                          message.sender_id === user?.id 
                             ? 'bg-primary text-primary-foreground' 
                             : 'bg-secondary text-secondary-foreground'
                         }`}
