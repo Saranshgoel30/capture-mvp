@@ -8,14 +8,14 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Badge } from "@/components/ui/badge";
 import { Menu, X, User, Settings, Home, Film, LogOut, MessageSquare, UserPlus } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
-import { useMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Navbar = () => {
-  const { user, logout, profile } = useAuth();
+  const { user, signOut, profile } = useAuth();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const isAuthenticated = !!user;
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -26,7 +26,7 @@ const Navbar = () => {
   };
 
   const handleLogout = async () => {
-    await logout();
+    await signOut();
     closeMenu();
   };
 
@@ -47,7 +47,6 @@ const Navbar = () => {
           CineHub
         </Link>
 
-        {/* Desktop Navigation */}
         <div className="hidden md:flex items-center space-x-6">
           {navItems.map((item) => (
             <Link
@@ -106,7 +105,6 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* Mobile Navigation */}
         <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" onClick={toggleMenu} className="md:hidden">
