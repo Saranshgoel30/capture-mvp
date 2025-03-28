@@ -70,6 +70,13 @@ const Projects: React.FC = () => {
     setSelectedCategory(category);
   };
 
+  // Function to check if a project deadline has passed
+  const isProjectActive = (deadline: string) => {
+    const deadlineDate = new Date(deadline);
+    const today = new Date();
+    return deadlineDate >= today;
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />

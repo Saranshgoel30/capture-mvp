@@ -1,121 +1,133 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { 
+  Calendar, Clock, MapPin, User, Users, ArrowLeft, CheckCircle,
+  AlertTriangle
+} from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
-import { Calendar, Clock, MapPin, Users, ArrowLeft, BookmarkPlus, Send } from 'lucide-react';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
-import { fetchProjectById, applyForProject } from '@/lib/supabase/projects';
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/use-toast";
+import { fetchProjectById, applyForProject } from '@/lib/supabase';
+import { useAuth } from "@/contexts/AuthContext";
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 import { Project } from '@/lib/types';
-import { useAuth } from '@/contexts/AuthContext';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const ProjectDetails: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
-  const [project, setProject] = useState<Project | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isApplying, setIsApplying] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-
+  
+  const [project, setProject] = useState<Project | null>(null);
+  const [coverLetter, setCoverLetter] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isApplying, setIsApplying] = useState(false);
+  const [isExpired, setIsExpired] = useState(false);
+  
   useEffect(() => {
+    if (!projectId) return;
+    
     const loadProject = async () => {
-      if (!projectId) return;
-      
       setIsLoading(true);
       try {
-        console.log("Fetching project with ID:", projectId);
-        const fetchedProject = await fetchProjectById(projectId);
-        console.log("Fetched project:", fetchedProject);
-        setProject(fetchedProject);
-        if (!fetchedProject) {
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Project not found. It may have been removed.",
-          });
+        const projectData = await fetchProjectById(projectId);
+        setProject(projectData);
+        
+        // Check if the project deadline has passed
+        if (projectData) {
+          const deadlineDate = new Date(projectData.deadline);
+          const today = new Date();
+          setIsExpired(deadlineDate < today);
         }
       } catch (error) {
-        console.error('Error loading project details:', error);
+        console.error('Error loading project:', error);
         toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to load project details. Please try again.",
+          title: 'Error',
+          description: 'Failed to load project details.',
+          variant: 'destructive',
         });
       } finally {
         setIsLoading(false);
       }
     };
-
+    
     loadProject();
   }, [projectId, toast]);
-
+  
   const handleApply = async () => {
-    if (!user || !project || !projectId) {
-      if (!user) {
-        toast({
-          title: "Login Required",
-          description: "Please login to apply for this project",
-          variant: "destructive",
-        });
-        navigate('/login');
-        return;
-      }
+    if (!user || !projectId) {
+      toast({
+        title: 'Authentication Required',
+        description: 'Please sign in to apply for this project.',
+        variant: 'destructive',
+      });
       return;
     }
-
+    
+    if (isExpired) {
+      toast({
+        title: 'Project Expired',
+        description: 'This project has passed its deadline and is no longer accepting applications.',
+        variant: 'destructive', 
+      });
+      return;
+    }
+    
     setIsApplying(true);
     try {
-      await applyForProject(projectId, user.id, '');
+      await applyForProject(projectId, user.id, coverLetter);
       toast({
-        title: "Application Submitted",
-        description: "Your application has been submitted successfully!",
+        title: 'Application Submitted',
+        description: 'Your application has been successfully submitted!',
       });
-      
-      setProject(prev => {
-        if (!prev) return null;
-        return {
-          ...prev,
-          applicants: prev.applicants + 1
-        };
-      });
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error applying to project:', error);
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to submit your application. Please try again.",
+        title: 'Application Failed',
+        description: 'There was an error submitting your application. Please try again.',
+        variant: 'destructive',
       });
     } finally {
       setIsApplying(false);
     }
   };
-
+  
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="pt-32 pb-24 px-6 md:px-12 flex items-center justify-center">
-          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
+        <div className="pt-32 pb-24 px-6 md:px-12">
+          <div className="max-w-4xl mx-auto">
+            <div className="animate-pulse">
+              <div className="h-8 bg-gray-200 rounded w-3/4 mb-4"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
+              <div className="h-24 bg-gray-200 rounded mb-4"></div>
+              <div className="h-12 bg-gray-200 rounded w-full mb-4"></div>
+              <div className="h-12 bg-gray-200 rounded w-full"></div>
+            </div>
+          </div>
         </div>
         <Footer />
       </div>
     );
   }
-
+  
   if (!project) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
         <div className="pt-32 pb-24 px-6 md:px-12">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-2xl font-bold mb-4">Project Not Found</h1>
-            <p className="mb-6">The project you're looking for doesn't exist or has been removed.</p>
+          <div className="max-w-4xl mx-auto">
+            <h1 className="text-2xl mb-4">Project Not Found</h1>
+            <p className="text-muted-foreground mb-4">The project you're looking for doesn't exist or may have been removed.</p>
             <Button onClick={() => navigate('/projects')}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Projects
+              <ArrowLeft className="mr-2 h-4 w-4" /> Back to Projects
             </Button>
           </div>
         </div>
@@ -123,113 +135,137 @@ const ProjectDetails: React.FC = () => {
       </div>
     );
   }
-
+  
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="pt-32 pb-24 px-6 md:px-12">
         <div className="max-w-4xl mx-auto">
-          <Button 
-            variant="ghost" 
-            className="mb-6"
-            onClick={() => navigate('/projects')}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Projects
-          </Button>
-
-          <Card className="mb-8">
-            <CardHeader>
-              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-2">
-                <div>
-                  <Badge variant="outline" className="mb-2">{project.type}</Badge>
-                  <CardTitle className="text-3xl">{project.title}</CardTitle>
-                </div>
-                <div className="flex gap-3">
-                  <Button 
-                    variant="outline" 
-                    className="gap-2"
-                  >
-                    <BookmarkPlus size={18} />
-                    <span className="hidden md:inline">Save</span>
-                  </Button>
-                  <Button 
-                    onClick={handleApply} 
-                    disabled={isApplying}
-                    className="gap-2"
-                  >
-                    {isApplying ? (
-                      <div className="animate-spin w-4 h-4 border-2 border-background border-t-transparent rounded-full mr-2"></div>
-                    ) : (
-                      <Send size={18} />
-                    )}
-                    Apply Now
-                  </Button>
-                </div>
+          <div className="mb-6">
+            <Button 
+              variant="outline" 
+              className="mb-4"
+              onClick={() => navigate('/projects')}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" /> Back to Projects
+            </Button>
+            
+            {isExpired && (
+              <Alert variant="destructive" className="mb-6">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Project Expired</AlertTitle>
+                <AlertDescription>
+                  This project has passed its deadline and is no longer accepting applications.
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            <h1 className="text-3xl md:text-4xl font-bold mb-2">{project.title}</h1>
+            <div className="flex flex-wrap gap-3 mb-6">
+              <Badge variant="outline">{project.type}</Badge>
+              <div className="flex items-center text-sm text-muted-foreground">
+                <MapPin size={16} className="mr-1" />
+                {project.location}
               </div>
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3 text-muted-foreground">
-                <div className="flex items-center">
-                  <MapPin size={16} className="mr-1" />
-                  {project.location}
-                </div>
-                <span className="hidden sm:block">•</span>
-                <div className="flex items-center">
-                  <Clock size={16} className="mr-1" />
-                  {project.timeline}
-                </div>
-                <span className="hidden sm:block">•</span>
-                <div className="flex items-center">
-                  <Calendar size={16} className="mr-1" />
-                  Due {project.deadline}
-                </div>
-                <span className="hidden sm:block">•</span>
-                <div className="flex items-center">
-                  <Users size={16} className="mr-1" />
-                  {project.applicants} applicant{project.applicants !== 1 ? 's' : ''}
-                </div>
+              <div className="flex items-center text-sm text-muted-foreground">
+                <Calendar size={16} className="mr-1" />
+                <span>Due {project.deadline}</span>
               </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Project Description</h3>
-                <p className="whitespace-pre-line">{project.description}</p>
+              <div className="flex items-center text-sm text-muted-foreground">
+                <Clock size={16} className="mr-1" />
+                <span>{project.timeline}</span>
               </div>
-              
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Roles Needed</h3>
-                <div className="flex flex-wrap gap-2">
-                  {project.rolesNeeded.map((role, index) => (
-                    <Badge key={index} variant="secondary">
-                      {role}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter className="flex flex-col sm:flex-row items-start sm:items-center border-t pt-6">
-              <div className="flex items-center mb-4 sm:mb-0">
-                <div className="w-10 h-10 rounded-full overflow-hidden mr-3">
-                  <img 
-                    src={project.postedByAvatar || 'https://i.pravatar.cc/150?img=5'} 
-                    alt={project.postedBy} 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div>
-                  <p className="font-medium">{project.postedBy}</p>
-                  <p className="text-sm text-muted-foreground">Project Creator</p>
-                </div>
-              </div>
-              <div className="sm:ml-auto">
-                <Button 
-                  onClick={handleApply} 
-                  disabled={isApplying}
-                >
-                  {isApplying ? 'Applying...' : 'Apply Now'}
-                </Button>
-              </div>
-            </CardFooter>
-          </Card>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="md:col-span-2">
+              <Card>
+                <CardContent className="pt-6">
+                  <h2 className="text-xl font-semibold mb-4">About This Project</h2>
+                  <p className="text-gray-700 whitespace-pre-line mb-6">
+                    {project.description}
+                  </p>
+                  
+                  <h3 className="text-lg font-semibold mb-2">Roles Needed</h3>
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    {project.rolesNeeded.map((role, index) => (
+                      <Badge key={index} variant="secondary">
+                        {role}
+                      </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <div>
+              <Card>
+                <CardContent className="pt-6">
+                  <h2 className="text-lg font-semibold mb-4">Posted by</h2>
+                  <div className="flex items-center mb-6">
+                    <Avatar className="h-10 w-10 mr-3">
+                      <AvatarImage src={project.postedByAvatar || 'https://i.pravatar.cc/150?img=8'} />
+                      <AvatarFallback>{project.postedBy.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-medium">{project.postedBy}</p>
+                    </div>
+                  </div>
+                  
+                  <h2 className="text-lg font-semibold mb-4">Apply for this project</h2>
+                  
+                  {user ? (
+                    <>
+                      <Textarea
+                        placeholder="Write a brief message explaining why you're a good fit for this project..."
+                        className="mb-4"
+                        rows={5}
+                        value={coverLetter}
+                        onChange={(e) => setCoverLetter(e.target.value)}
+                        disabled={isApplying || isExpired}
+                      />
+                      <Button 
+                        className="w-full" 
+                        onClick={handleApply}
+                        disabled={isApplying || isExpired}
+                      >
+                        {isApplying ? (
+                          <>
+                            <span className="mr-2">Submitting...</span>
+                            <div className="animate-spin">
+                              <Clock className="h-4 w-4" />
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle className="mr-2 h-4 w-4" />
+                            Apply Now
+                          </>
+                        )}
+                      </Button>
+                      {isExpired && (
+                        <p className="text-destructive text-sm mt-2">
+                          This project has passed its deadline and is no longer accepting applications.
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-center p-4 bg-gray-50 rounded-md">
+                      <User className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                      <p className="text-gray-600 mb-2">Sign in to apply for this project</p>
+                      <Button
+                        variant="outline"
+                        onClick={() => navigate('/login')}
+                      >
+                        Sign In
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </div>
       </div>
       <Footer />

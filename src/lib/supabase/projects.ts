@@ -1,3 +1,4 @@
+
 import { supabase } from './client';
 import { Project } from '@/lib/types';
 
@@ -57,10 +58,14 @@ export const addProject = async (projectData: any) => {
 // Improved function to fetch projects with better error handling and consistent data format
 export const fetchProjects = async (): Promise<Project[]> => {
   try {
-    // First, let's fetch all projects
+    // Get current date for filtering expired projects
+    const currentDate = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+    
+    // Fetch all projects that have not expired (deadline >= current date)
     const { data: projectsData, error: projectsError } = await supabase
       .from('projects')
-      .select('*');
+      .select('*')
+      .gte('deadline', currentDate); // Only fetch projects with deadlines >= today
 
     if (projectsError) {
       console.error('Error fetching projects:', projectsError);
