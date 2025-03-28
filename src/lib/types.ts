@@ -1,4 +1,3 @@
-
 // Project and User profile types for the application
 
 export interface Project {

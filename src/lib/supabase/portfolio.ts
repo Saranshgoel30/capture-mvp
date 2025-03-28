@@ -14,8 +14,8 @@ export const addPortfolioItem = async (userId: string, itemData: any) => {
         description: itemData.description,
         media_url: itemData.mediaUrl || null,
         media_type: itemData.mediaType || 'link',
-        role: itemData.role,
-        date: itemData.date,
+        role: itemData.role || '',
+        date: itemData.date || '',
         collaborators: itemData.collaborators || []
       })
       .select()

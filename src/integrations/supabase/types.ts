@@ -70,29 +70,41 @@ export type Database = {
       }
       portfolio_items: {
         Row: {
+          collaborators: string[] | null
           created_at: string | null
+          date: string | null
           description: string | null
           id: string
+          media_type: string | null
           media_url: string
           profile_id: string | null
+          role: string | null
           title: string
           type: string
         }
         Insert: {
+          collaborators?: string[] | null
           created_at?: string | null
+          date?: string | null
           description?: string | null
           id?: string
+          media_type?: string | null
           media_url: string
           profile_id?: string | null
+          role?: string | null
           title: string
           type: string
         }
         Update: {
+          collaborators?: string[] | null
           created_at?: string | null
+          date?: string | null
           description?: string | null
           id?: string
+          media_type?: string | null
           media_url?: string
           profile_id?: string | null
+          role?: string | null
           title?: string
           type?: string
         }
