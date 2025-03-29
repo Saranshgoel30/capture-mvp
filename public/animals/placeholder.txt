@@ -1,0 +1,2 @@
+
+This folder contains animated animal images used as profile pictures throughout the application.

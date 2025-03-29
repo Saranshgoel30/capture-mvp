@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Camera, Loader2, User } from 'lucide-react';
 import { uploadProfileImage } from '@/lib/supabase/storage';
 import { useToast } from '@/hooks/use-toast';
+import { getAnimalAvatarForUser } from '@/lib/animalAvatars';
 
 interface ProfileImageProps {
   avatar?: string | null;
@@ -44,6 +45,9 @@ const ProfileImage: React.FC<ProfileImageProps> = ({
     md: 18,
     lg: 24
   };
+
+  // Get animal avatar for this user
+  const animalAvatar = getAnimalAvatarForUser(userId);
   
   const handleAvatarClick = () => {
     if (readOnly) return;
@@ -81,7 +85,8 @@ const ProfileImage: React.FC<ProfileImageProps> = ({
   return (
     <div className="relative">
       <Avatar className={sizeClasses[size]}>
-        <AvatarImage src={avatar || ''} alt={name} />
+        {/* Use the user's uploaded avatar first, then fall back to the animal avatar */}
+        <AvatarImage src={avatar || animalAvatar} alt={name} />
         <AvatarFallback className="bg-primary text-primary-foreground">
           {name ? name.charAt(0).toUpperCase() : <User />}
         </AvatarFallback>

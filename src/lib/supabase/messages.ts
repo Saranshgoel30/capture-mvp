@@ -3,6 +3,20 @@ import { RealtimeChannel } from '@supabase/supabase-js';
 import { fetchUserProfile } from './users';
 import { Message } from '@/lib/types';
 
+// Map database fields to our type
+const mapMessage = (message: any): Message => ({
+  id: message.id,
+  content: message.content,
+  senderId: message.sender_id,
+  receiverId: message.receiver_id,
+  createdAt: new Date(message.created_at).getTime(),
+  // Keep original fields for compatibility
+  sender_id: message.sender_id,
+  receiver_id: message.receiver_id,
+  created_at: message.created_at,
+  sender: message.sender
+});
+
 // Fetch messages between two users
 export const getMessages = async (userId1: string, userId2: string): Promise<Message[]> => {
   try {
@@ -22,20 +36,12 @@ export const getMessages = async (userId1: string, userId2: string): Promise<Mes
       (data || []).map(async (message) => {
         const sender = await fetchUserProfile(message.sender_id);
         return {
-          id: message.id,
-          content: message.content,
-          senderId: message.sender_id,
-          receiverId: message.receiver_id,
-          createdAt: new Date(message.created_at).getTime(),
+          ...mapMessage(message),
           sender: {
             full_name: sender?.full_name || 'Unknown',
             avatar_url: sender?.avatar_url
-          },
-          // Keep original fields for compatibility
-          sender_id: message.sender_id,
-          receiver_id: message.receiver_id,
-          created_at: message.created_at
-        } as Message;
+          }
+        };
       })
     );
     
@@ -65,17 +71,7 @@ export const sendMessage = async (senderId: string, receiverId: string, content:
     }
     
     // Map the database response to our Message type
-    return {
-      id: data.id,
-      content: data.content,
-      senderId: data.sender_id,
-      receiverId: data.receiver_id,
-      createdAt: new Date(data.created_at).getTime(),
-      // Keep original fields for compatibility
-      sender_id: data.sender_id,
-      receiver_id: data.receiver_id,
-      created_at: data.created_at
-    } as Message;
+    return mapMessage(data);
   } catch (error) {
     console.error('Exception sending message:', error);
     throw error;
@@ -98,20 +94,12 @@ export const listenToMessages = (userId1: string, userId2: string, callback: (me
         // Get sender info and add it to the message
         const sender = await fetchUserProfile(payload.new.sender_id);
         callback({
-          id: payload.new.id,
-          content: payload.new.content,
-          senderId: payload.new.sender_id,
-          receiverId: payload.new.receiver_id,
-          createdAt: new Date(payload.new.created_at).getTime(),
+          ...mapMessage(payload.new),
           sender: {
             full_name: sender?.full_name || 'Unknown',
             avatar_url: sender?.avatar_url
-          },
-          // Keep original fields for compatibility
-          sender_id: payload.new.sender_id,
-          receiver_id: payload.new.receiver_id,
-          created_at: payload.new.created_at
-        } as Message);
+          }
+        });
       }
     )
     .subscribe();
