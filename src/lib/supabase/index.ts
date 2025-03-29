@@ -4,3 +4,5 @@ export * from './client';
 export * from './users';
 export * from './projects';
 export * from './portfolio';
+export * from './messages';
+export * from './storage';

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase/client';
@@ -49,7 +48,10 @@ export const useProfileData = (userId?: string) => {
         timeline: item.timeline,
         status: item.status as "In Production" | "Pre-Production" | "Post-Production",
         description: item.description,
-        createdAt: new Date(item.created_at).getTime()
+        createdAt: new Date(item.created_at).getTime(),
+        // Keep original fields for compatibility
+        user_id: item.user_id,
+        created_at: item.created_at
       }));
       
       setCurrentProjects(formattedExperience);

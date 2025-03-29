@@ -1,5 +1,5 @@
 import { supabase } from './client';
-import { Project } from '@/lib/types';
+import { Project, ProjectApplication } from '@/lib/types';
 
 // Helper function to determine project type based on title or other data
 // Since 'type' doesn't exist in our database schema, we're deriving it
@@ -98,7 +98,7 @@ export const fetchProjects = async (): Promise<Project[]> => {
     }
 
     // Transform data to match the expected Project format
-    return projectsData.map((project) => {
+    const transformedProjects: Project[] = projectsData.map((project) => {
       const profile = profilesMap.get(project.owner_id);
       
       // Determine project type from title or default to "Other"
@@ -119,9 +119,15 @@ export const fetchProjects = async (): Promise<Project[]> => {
         postedBy: profile?.full_name || 'Anonymous',
         postedById: project.owner_id,
         postedByAvatar: profile?.avatar_url,
-        applicants: 0
+        applicants: 0,
+        // Keep original fields for compatibility
+        owner_id: project.owner_id,
+        required_roles: project.required_roles,
+        created_at: project.created_at
       };
     });
+    
+    return transformedProjects;
   } catch (error) {
     console.error('Exception fetching projects:', error);
     return [];
@@ -159,7 +165,7 @@ export const fetchProjectById = async (projectId: string): Promise<Project | nul
     const projectType = determineProjectType(project.title);
 
     // Transform data to match the expected Project format
-    return {
+    const transformedProject: Project = {
       id: project.id,
       title: project.title,
       description: project.description,
@@ -174,8 +180,14 @@ export const fetchProjectById = async (projectId: string): Promise<Project | nul
       postedBy: profile?.full_name || 'Anonymous',
       postedById: project.owner_id,
       postedByAvatar: profile?.avatar_url,
-      applicants: 0
+      applicants: 0,
+      // Keep original fields for compatibility
+      owner_id: project.owner_id,
+      required_roles: project.required_roles,
+      created_at: project.created_at
     };
+    
+    return transformedProject;
   } catch (error) {
     console.error('Exception fetching project:', error);
     return null; // Return null to handle gracefully in the UI
@@ -183,7 +195,7 @@ export const fetchProjectById = async (projectId: string): Promise<Project | nul
 };
 
 // Function to apply for a project
-export const applyForProject = async (projectId: string, userId: string, coverLetter: string = '') => {
+export const applyForProject = async (projectId: string, userId: string, coverLetter: string = ''): Promise<ProjectApplication> => {
   try {
     // Check if the user has already applied
     const { data: existingApplication, error: checkError } = await supabase
@@ -200,7 +212,18 @@ export const applyForProject = async (projectId: string, userId: string, coverLe
 
     // If the user has already applied, return the existing application
     if (existingApplication) {
-      return existingApplication;
+      return {
+        id: existingApplication.id,
+        projectId,
+        userId,
+        status: 'pending',
+        coverLetter,
+        createdAt: Date.now(),
+        // Add database field names for compatibility
+        project_id: projectId,
+        applicant_id: userId,
+        cover_letter: coverLetter
+      };
     }
 
     // Otherwise, create a new application
@@ -220,7 +243,19 @@ export const applyForProject = async (projectId: string, userId: string, coverLe
       throw error;
     }
 
-    return data;
+    return {
+      id: data.id,
+      projectId: data.project_id,
+      userId: data.applicant_id,
+      status: data.status as 'pending' | 'approved' | 'rejected',
+      coverLetter: data.cover_letter,
+      createdAt: new Date(data.created_at).getTime(),
+      // Keep original fields for compatibility
+      project_id: data.project_id,
+      applicant_id: data.applicant_id,
+      cover_letter: data.cover_letter,
+      created_at: data.created_at
+    };
   } catch (error) {
     console.error('Exception applying for project:', error);
     throw error;
@@ -228,7 +263,7 @@ export const applyForProject = async (projectId: string, userId: string, coverLe
 };
 
 // Function to fetch user applications
-export const fetchUserApplications = async (userId: string) => {
+export const fetchUserApplications = async (userId: string): Promise<ProjectApplication[]> => {
   try {
     const { data, error } = await supabase
       .from('applications')
@@ -243,7 +278,33 @@ export const fetchUserApplications = async (userId: string) => {
       return [];
     }
 
-    return data || [];
+    if (!data || data.length === 0) {
+      return [];
+    }
+
+    return data.map(app => ({
+      id: app.id,
+      projectId: app.project_id,
+      userId: app.applicant_id,
+      status: app.status as 'pending' | 'approved' | 'rejected',
+      coverLetter: app.cover_letter,
+      createdAt: new Date(app.created_at).getTime(),
+      project: app.projects ? {
+        id: app.projects.id,
+        title: app.projects.title,
+        description: app.projects.description,
+        location: app.projects.location,
+        deadline: new Date(app.projects.deadline).toLocaleDateString(),
+        requiredRoles: app.projects.required_roles || [],
+        ownerId: app.projects.owner_id,
+        createdAt: new Date(app.projects.created_at).getTime(),
+      } : undefined,
+      // Keep original fields for compatibility
+      project_id: app.project_id,
+      applicant_id: app.applicant_id,
+      cover_letter: app.cover_letter,
+      created_at: app.created_at
+    }));
   } catch (error) {
     console.error('Exception fetching applications:', error);
     return [];

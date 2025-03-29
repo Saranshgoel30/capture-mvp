@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 import { PortfolioProject } from '../types';
 
@@ -62,7 +61,12 @@ export const fetchPortfolioItems = async (userId: string): Promise<PortfolioProj
       date: item.date || new Date(item.created_at).toLocaleDateString(),
       collaborators: item.collaborators || [],
       description: item.description || '',
-      createdAt: new Date(item.created_at).getTime()
+      createdAt: new Date(item.created_at).getTime(),
+      // Keep original fields for compatibility
+      profile_id: item.profile_id,
+      media_url: item.media_url,
+      media_type: item.media_type,
+      created_at: item.created_at
     }));
   } catch (error) {
     console.error('Error in fetchPortfolioItems:', error);

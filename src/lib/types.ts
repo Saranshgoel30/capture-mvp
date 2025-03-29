@@ -8,6 +8,9 @@ export type CurrentProject = {
   status: "In Production" | "Pre-Production" | "Post-Production";
   description: string;
   createdAt: number;
+  // Database field names
+  user_id?: string;
+  created_at?: string;
 };
 
 export type PortfolioProject = {
@@ -22,6 +25,11 @@ export type PortfolioProject = {
   collaborators: string[];
   description: string;
   createdAt: number;
+  // Database field names
+  profile_id?: string;
+  media_url?: string;
+  media_type?: string;
+  created_at?: string;
 };
 
 export type Project = {
@@ -42,6 +50,11 @@ export type Project = {
   postedBy?: string;
   postedById?: string;
   postedByAvatar?: string;
+  
+  // Database field names
+  owner_id?: string;
+  required_roles?: string[];
+  created_at?: string;
 };
 
 export type UserProfile = {
@@ -63,6 +76,13 @@ export type UserProfile = {
     projects: number;
   };
   createdAt: number;
+  
+  // Database field names
+  full_name?: string;
+  avatar_url?: string;
+  city?: string;
+  updated_at?: string;
+  created_at?: string;
 };
 
 export type Message = {
@@ -89,4 +109,13 @@ export type ProjectApplication = {
   status: 'pending' | 'approved' | 'rejected';
   coverLetter?: string;
   createdAt: number;
+  
+  // Database field names
+  project_id?: string;
+  applicant_id?: string;
+  cover_letter?: string;
+  created_at?: string;
+  
+  // Related data
+  project?: Project;
 };
