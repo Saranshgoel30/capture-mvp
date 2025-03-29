@@ -34,6 +34,14 @@ export type Project = {
   ownerId: string;
   createdAt: number;
   applicants?: number;
+  
+  // Additional properties used in the UI
+  type?: string;
+  timeline?: string;
+  rolesNeeded?: string[];
+  postedBy?: string;
+  postedById?: string;
+  postedByAvatar?: string;
 };
 
 export type UserProfile = {
@@ -67,6 +75,11 @@ export type Message = {
     full_name: string;
     avatar_url: string | null;
   };
+  
+  // Add database field names for compatibility
+  sender_id?: string;
+  receiver_id?: string;
+  created_at?: string;
 };
 
 export type ProjectApplication = {

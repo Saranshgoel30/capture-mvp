@@ -17,17 +17,25 @@ export const getMessages = async (userId1: string, userId2: string): Promise<Mes
       return [];
     }
     
-    // Enhance messages with sender info
+    // Enhance messages with sender info and map to our Message type
     const enhancedMessages = await Promise.all(
       (data || []).map(async (message) => {
         const sender = await fetchUserProfile(message.sender_id);
         return {
-          ...message,
+          id: message.id,
+          content: message.content,
+          senderId: message.sender_id,
+          receiverId: message.receiver_id,
+          createdAt: new Date(message.created_at).getTime(),
           sender: {
             full_name: sender?.full_name || 'Unknown',
             avatar_url: sender?.avatar_url
-          }
-        };
+          },
+          // Keep original fields for compatibility
+          sender_id: message.sender_id,
+          receiver_id: message.receiver_id,
+          created_at: message.created_at
+        } as Message;
       })
     );
     
@@ -56,7 +64,18 @@ export const sendMessage = async (senderId: string, receiverId: string, content:
       throw error;
     }
     
-    return data;
+    // Map the database response to our Message type
+    return {
+      id: data.id,
+      content: data.content,
+      senderId: data.sender_id,
+      receiverId: data.receiver_id,
+      createdAt: new Date(data.created_at).getTime(),
+      // Keep original fields for compatibility
+      sender_id: data.sender_id,
+      receiver_id: data.receiver_id,
+      created_at: data.created_at
+    } as Message;
   } catch (error) {
     console.error('Exception sending message:', error);
     throw error;
@@ -79,12 +98,20 @@ export const listenToMessages = (userId1: string, userId2: string, callback: (me
         // Get sender info and add it to the message
         const sender = await fetchUserProfile(payload.new.sender_id);
         callback({
-          ...payload.new as Message,
+          id: payload.new.id,
+          content: payload.new.content,
+          senderId: payload.new.sender_id,
+          receiverId: payload.new.receiver_id,
+          createdAt: new Date(payload.new.created_at).getTime(),
           sender: {
             full_name: sender?.full_name || 'Unknown',
             avatar_url: sender?.avatar_url
-          }
-        });
+          },
+          // Keep original fields for compatibility
+          sender_id: payload.new.sender_id,
+          receiver_id: payload.new.receiver_id,
+          created_at: payload.new.created_at
+        } as Message);
       }
     )
     .subscribe();

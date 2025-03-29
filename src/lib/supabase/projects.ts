@@ -107,20 +107,19 @@ export const fetchProjects = async (): Promise<Project[]> => {
       return {
         id: project.id,
         title: project.title,
-        // Use a derived or default type since it's not in the database
-        type: projectType,
         description: project.description,
         location: project.location,
-        // Create a timeline string from the deadline
+        deadline: new Date(project.deadline).toLocaleDateString(),
+        requiredRoles: project.required_roles || [],
+        ownerId: project.owner_id,
+        createdAt: new Date(project.created_at).getTime(),
+        type: projectType,
         timeline: `Until ${new Date(project.deadline).toLocaleDateString()}`,
         rolesNeeded: project.required_roles || [],
         postedBy: profile?.full_name || 'Anonymous',
         postedById: project.owner_id,
         postedByAvatar: profile?.avatar_url,
-        deadline: new Date(project.deadline).toLocaleDateString(),
-        // Default to 0 if applicants count is not available
-        applicants: 0,
-        createdAt: new Date(project.created_at).getTime()
+        applicants: 0
       };
     });
   } catch (error) {
@@ -163,17 +162,19 @@ export const fetchProjectById = async (projectId: string): Promise<Project | nul
     return {
       id: project.id,
       title: project.title,
-      type: projectType,
       description: project.description,
       location: project.location,
+      deadline: new Date(project.deadline).toLocaleDateString(),
+      requiredRoles: project.required_roles || [],
+      ownerId: project.owner_id,
+      createdAt: new Date(project.created_at).getTime(),
+      type: projectType,
       timeline: `Until ${new Date(project.deadline).toLocaleDateString()}`,
       rolesNeeded: project.required_roles || [],
       postedBy: profile?.full_name || 'Anonymous',
       postedById: project.owner_id,
       postedByAvatar: profile?.avatar_url,
-      deadline: new Date(project.deadline).toLocaleDateString(),
-      applicants: 0, // Default value since we don't have this field yet
-      createdAt: new Date(project.created_at).getTime()
+      applicants: 0
     };
   } catch (error) {
     console.error('Exception fetching project:', error);

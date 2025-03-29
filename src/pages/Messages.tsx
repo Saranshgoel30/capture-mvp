@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
@@ -142,18 +143,18 @@ const Messages: React.FC = () => {
                   {messages.map((message) => (
                     <div 
                       key={message.id} 
-                      className={`flex ${message.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
+                      className={`flex ${message.senderId === user?.id ? 'justify-end' : 'justify-start'}`}
                     >
                       <div 
                         className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                          message.sender_id === user?.id 
+                          message.senderId === user?.id 
                             ? 'bg-primary text-primary-foreground' 
                             : 'bg-secondary text-secondary-foreground'
                         }`}
                       >
                         <p>{message.content}</p>
                         <p className="text-xs opacity-80 mt-1">
-                          {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>
                     </div>
