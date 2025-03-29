@@ -44,6 +44,39 @@ export type Database = {
           },
         ]
       }
+      current_projects: {
+        Row: {
+          created_at: string | null
+          description: string
+          id: string
+          role: string
+          status: string
+          timeline: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          id?: string
+          role: string
+          status?: string
+          timeline: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          id?: string
+          role?: string
+          status?: string
+          timeline?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string

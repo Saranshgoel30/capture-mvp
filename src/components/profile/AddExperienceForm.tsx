@@ -1,147 +1,93 @@
 
-import React, { useState } from 'react';
+import React from 'react';
+import { useForm } from 'react-hook-form';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
+import { toast } from "@/components/ui/sonner";
+
+type ExperienceFormData = {
+  title: string;
+  role: string;
+  timeline: string;
+  status: "In Production" | "Pre-Production" | "Post-Production";
+  description: string;
+};
 
 interface AddExperienceFormProps {
   userId: string;
-  onSuccess: () => void;
+  onSuccess?: () => void;
 }
 
 const AddExperienceForm: React.FC<AddExperienceFormProps> = ({ userId, onSuccess }) => {
-  const [formData, setFormData] = useState({
-    title: '',
-    role: '',
-    timeline: '',
-    description: '',
-    status: 'In Production' as 'In Production' | 'Pre-Production' | 'Post-Production' | 'Completed'
-  });
-  const [isLoading, setIsLoading] = useState(false);
+  const { register, handleSubmit, control, formState: { errors } } = useForm<ExperienceFormData>();
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!userId) return;
-    
-    setIsLoading(true);
+  const onSubmit = async (data: ExperienceFormData) => {
     try {
-      // Insert into the current_projects table
       const { error } = await supabase
         .from('current_projects')
         .insert({
           user_id: userId,
-          title: formData.title,
-          role: formData.role,
-          timeline: formData.timeline,
-          description: formData.description,
-          status: formData.status,
-          created_at: new Date().toISOString()
+          title: data.title,
+          role: data.role,
+          timeline: data.timeline,
+          status: data.status,
+          description: data.description
         });
-      
+
       if (error) throw error;
-      onSuccess();
+
+      toast.success('Experience added successfully');
+      onSuccess?.();
     } catch (error) {
       console.error('Error adding experience:', error);
-    } finally {
-      setIsLoading(false);
+      toast.error('Failed to add experience');
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <Label htmlFor="title">Project Title</Label>
-        <Input
-          id="title"
-          name="title"
-          value={formData.title}
-          onChange={handleInputChange}
-          required
-        />
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="role">Your Role</Label>
-          <Input
-            id="role"
-            name="role"
-            value={formData.role}
-            onChange={handleInputChange}
-            placeholder="e.g. Director, Cinematographer"
-            required
-          />
-        </div>
-        
-        <div>
-          <Label htmlFor="timeline">Timeline</Label>
-          <Input
-            id="timeline"
-            name="timeline"
-            value={formData.timeline}
-            onChange={handleInputChange}
-            placeholder="e.g. Jan-Mar 2023"
-            required
-          />
-        </div>
-      </div>
-      
-      <div>
-        <Label htmlFor="status">Status</Label>
-        <Select 
-          value={formData.status} 
-          onValueChange={(value) => handleSelectChange('status', value)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="In Production">In Production</SelectItem>
-            <SelectItem value="Pre-Production">Pre-Production</SelectItem>
-            <SelectItem value="Post-Production">Post-Production</SelectItem>
-            <SelectItem value="Completed">Completed</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      
-      <div>
-        <Label htmlFor="description">Description</Label>
-        <Textarea
-          id="description"
-          name="description"
-          value={formData.description}
-          onChange={handleInputChange}
-          placeholder="Describe your role and responsibilities"
-          className="min-h-[100px]"
-          required
-        />
-      </div>
-      
-      <div className="flex justify-end gap-2 pt-2">
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Saving...
-            </>
-          ) : (
-            'Add Experience'
-          )}
-        </Button>
-      </div>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <Input 
+        {...register('title', { required: 'Title is required' })}
+        placeholder="Project Title" 
+      />
+      {errors.title && <p className="text-red-500">{errors.title.message}</p>}
+
+      <Input 
+        {...register('role', { required: 'Role is required' })}
+        placeholder="Your Role" 
+      />
+      {errors.role && <p className="text-red-500">{errors.role.message}</p>}
+
+      <Input 
+        {...register('timeline', { required: 'Timeline is required' })}
+        placeholder="Project Timeline (e.g., Summer 2023)" 
+      />
+      {errors.timeline && <p className="text-red-500">{errors.timeline.message}</p>}
+
+      <Select 
+        {...register('status', { required: 'Status is required' })}
+      >
+        <SelectTrigger>
+          <SelectValue placeholder="Project Status" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="In Production">In Production</SelectItem>
+          <SelectItem value="Pre-Production">Pre-Production</SelectItem>
+          <SelectItem value="Post-Production">Post-Production</SelectItem>
+        </SelectContent>
+      </Select>
+      {errors.status && <p className="text-red-500">{errors.status.message}</p>}
+
+      <Textarea 
+        {...register('description', { required: 'Description is required' })}
+        placeholder="Project Description" 
+      />
+      {errors.description && <p className="text-red-500">{errors.description.message}</p>}
+
+      <Button type="submit" className="w-full">Add Experience</Button>
     </form>
   );
 };
