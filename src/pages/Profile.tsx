@@ -1,25 +1,30 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge"; // Added missing import
-import { Pencil, MessageSquare, MapPin, Calendar, Briefcase } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Pencil, MessageSquare, MapPin, Calendar, Briefcase, Plus, Loader2 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfileData } from '@/hooks/useProfileData';
 import { fetchUserProfile } from '@/lib/supabase/users';
+import { supabase } from '@/lib/supabase/client';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import PortfolioSection from '@/components/profile/PortfolioSection';
+import ProfileHeader from '@/components/profile/ProfileHeader';
 import { useToast } from "@/components/ui/use-toast";
+import AddExperienceForm from '@/components/profile/AddExperienceForm';
 
 const Profile: React.FC = () => {
   const { user } = useAuth();
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [showAddExperience, setShowAddExperience] = useState(false);
   
   const isCurrentUser = !userId || userId === user?.id;
   const targetUserId = userId || user?.id;
@@ -31,7 +36,9 @@ const Profile: React.FC = () => {
     portfolioProjects, 
     currentProjects, 
     portfolioLoading,
-    refreshPortfolio
+    currentProjectsLoading,
+    refreshPortfolio,
+    refreshExperience
   } = useProfileData(targetUserId);
 
   useEffect(() => {
@@ -123,79 +130,13 @@ const Profile: React.FC = () => {
       <Navbar />
       <div className="pt-32 pb-24 px-6 md:px-12">
         <div className="max-w-4xl mx-auto">
-          <Card className="mb-8">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <Avatar className="w-16 h-16 mr-4">
-                    <AvatarImage src={profile.avatar_url} alt={profile.full_name} />
-                    <AvatarFallback className="text-2xl bg-gradient-to-br from-primary/20 to-secondary/20">
-                      {animalEmoji}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <CardTitle className="text-2xl">{profile.full_name}</CardTitle>
-                    <CardDescription className="text-gray-500 flex items-center mt-1">
-                      {profile.city && (
-                        <>
-                          <MapPin className="h-3.5 w-3.5 mr-1" />
-                          <span>{profile.city}</span>
-                        </>
-                      )}
-                    </CardDescription>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  {!isCurrentUser && (
-                    <Button variant="default" onClick={handleMessageClick}>
-                      <MessageSquare className="w-4 h-4 mr-2" />
-                      Message
-                    </Button>
-                  )}
-                  {isCurrentUser && (
-                    <Button variant="outline" size="sm" onClick={() => navigate('/settings')}>
-                      <Pencil className="w-4 h-4 mr-2" />
-                      Edit Profile
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="mb-6">
-                <h3 className="text-lg font-medium mb-2">About</h3>
-                <p className="text-gray-700">{profile.bio || "No bio available."}</p>
-              </div>
-              
-              {(profile.roles?.length > 0 || profile.skills?.length > 0) && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {profile.roles?.length > 0 && (
-                    <div>
-                      <h3 className="text-sm font-medium mb-2 text-muted-foreground">Roles</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {profile.roles.map((role: string, index: number) => (
-                          <Badge key={index} variant="secondary">{role}</Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {profile.skills?.length > 0 && (
-                    <div>
-                      <h3 className="text-sm font-medium mb-2 text-muted-foreground">Skills</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {profile.skills.map((skill: string, index: number) => (
-                          <Badge key={index} variant="outline">{skill}</Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <ProfileHeader 
+            profile={profile} 
+            isCurrentUser={isCurrentUser} 
+            onMessageClick={handleMessageClick}
+          />
 
-          <Tabs defaultValue="portfolio" className="mb-8">
+          <Tabs defaultValue="portfolio" className="mt-8">
             <TabsList className="mb-4">
               <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
               <TabsTrigger value="experience">Experience</TabsTrigger>
@@ -216,9 +157,39 @@ const Profile: React.FC = () => {
               <div className="space-y-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-2xl font-semibold">Experience</h2>
+                  {isCurrentUser && (
+                    <Dialog open={showAddExperience} onOpenChange={setShowAddExperience}>
+                      <DialogTrigger asChild>
+                        <Button>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Experience
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-lg">
+                        <DialogHeader>
+                          <DialogTitle>Add Experience</DialogTitle>
+                        </DialogHeader>
+                        <AddExperienceForm 
+                          userId={targetUserId || ''} 
+                          onSuccess={() => {
+                            setShowAddExperience(false);
+                            refreshExperience();
+                            toast({
+                              title: "Experience Added",
+                              description: "Your experience has been successfully added to your profile"
+                            });
+                          }}
+                        />
+                      </DialogContent>
+                    </Dialog>
+                  )}
                 </div>
                 
-                {currentProjects && currentProjects.length > 0 ? (
+                {currentProjectsLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : currentProjects && currentProjects.length > 0 ? (
                   <div className="space-y-6">
                     {currentProjects.map((project) => (
                       <Card key={project.id}>
