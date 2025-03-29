@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 import { Project } from '@/lib/types';
 
@@ -103,7 +102,6 @@ export const fetchProjects = async (): Promise<Project[]> => {
       const profile = profilesMap.get(project.owner_id);
       
       // Determine project type from title or default to "Other"
-      // This is a workaround since 'type' doesn't exist in the database schema
       const projectType = determineProjectType(project.title);
       
       return {

@@ -121,14 +121,48 @@ const AddPortfolioItemForm = ({ onSuccess }: { onSuccess: () => void }) => {
     }
   };
 
+  const projectTypes = [
+    "Short Film",
+    "Music Video",
+    "Photography",
+    "Documentary",
+    "Commercial",
+    "Marketing",
+    "Podcast",
+    "Art Installation",
+    "Animation",
+    "Other"
+  ];
+
+  const commonRoles = [
+    "Director",
+    "Producer",
+    "Cinematographer",
+    "Editor",
+    "Writer",
+    "Sound Designer",
+    "Actor/Actress",
+    "Photographer",
+    "Art Director",
+    "Composer",
+    "VFX Artist",
+    "Set Designer",
+    "Costume Designer",
+    "Makeup Artist",
+    "Gaffer",
+    "Production Assistant",
+    "Other"
+  ];
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="w-full h-36 border-dashed flex flex-col gap-2">
-          <Plus size={24} />
-          <span>Add Portfolio Project</span>
-        </Button>
+        <button id="portfolio-dialog-trigger" className="hidden">Add Portfolio</button>
       </DialogTrigger>
+      <Button variant="outline" className="w-full h-36 border-dashed flex flex-col gap-2" id="add-portfolio-button" onClick={() => setIsOpen(true)}>
+        <Plus size={24} />
+        <span>Add Portfolio Project</span>
+      </Button>
       <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add Portfolio Project</DialogTitle>
@@ -160,7 +194,16 @@ const AddPortfolioItemForm = ({ onSuccess }: { onSuccess: () => void }) => {
                 <FormItem>
                   <FormLabel>Project Type*</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Short Film, Music Video" {...field} />
+                    <select
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      {...field}
+                      defaultValue=""
+                    >
+                      <option value="" disabled>Select a project type</option>
+                      {projectTypes.map(type => (
+                        <option key={type} value={type}>{type}</option>
+                      ))}
+                    </select>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -174,7 +217,16 @@ const AddPortfolioItemForm = ({ onSuccess }: { onSuccess: () => void }) => {
                 <FormItem>
                   <FormLabel>Your Role*</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Director, Cinematographer" {...field} />
+                    <select
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      {...field}
+                      defaultValue=""
+                    >
+                      <option value="" disabled>Select your role</option>
+                      {commonRoles.map(role => (
+                        <option key={role} value={role}>{role}</option>
+                      ))}
+                    </select>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -232,19 +284,22 @@ const AddPortfolioItemForm = ({ onSuccess }: { onSuccess: () => void }) => {
               <Tabs 
                 defaultValue="link" 
                 value={mediaTab}
-                onValueChange={(value) => setMediaTab(value as 'link' | 'image' | 'video')}
+                onValueChange={(value) => {
+                  setMediaTab(value as 'link' | 'image' | 'video');
+                  form.setValue('mediaType', value as 'link' | 'image' | 'video');
+                }}
                 className="w-full"
               >
                 <TabsList className="grid grid-cols-3 mb-4">
-                  <TabsTrigger value="link" onClick={() => form.setValue('mediaType', 'link')}>
+                  <TabsTrigger value="link">
                     <LinkIcon className="h-4 w-4 mr-2" />
                     Link
                   </TabsTrigger>
-                  <TabsTrigger value="image" onClick={() => form.setValue('mediaType', 'image')}>
+                  <TabsTrigger value="image">
                     <ImageIcon className="h-4 w-4 mr-2" />
                     Image
                   </TabsTrigger>
-                  <TabsTrigger value="video" onClick={() => form.setValue('mediaType', 'video')}>
+                  <TabsTrigger value="video">
                     <FileVideo className="h-4 w-4 mr-2" />
                     Video
                   </TabsTrigger>
@@ -276,9 +331,20 @@ const AddPortfolioItemForm = ({ onSuccess }: { onSuccess: () => void }) => {
                       onChange={handleFileChange}
                     />
                     {mediaFile && (
-                      <p className="text-sm text-muted-foreground">
-                        Selected: {mediaFile.name}
-                      </p>
+                      <div className="mt-2">
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Selected: {mediaFile.name}
+                        </p>
+                        {mediaFile.type.startsWith('image/') && (
+                          <div className="relative w-full h-32 bg-secondary/20 rounded-md overflow-hidden">
+                            <img 
+                              src={URL.createObjectURL(mediaFile)} 
+                              alt="Preview" 
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                 </TabsContent>
@@ -291,9 +357,20 @@ const AddPortfolioItemForm = ({ onSuccess }: { onSuccess: () => void }) => {
                       onChange={handleFileChange}
                     />
                     {mediaFile && (
-                      <p className="text-sm text-muted-foreground">
-                        Selected: {mediaFile.name}
-                      </p>
+                      <div className="mt-2">
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Selected: {mediaFile.name}
+                        </p>
+                        {mediaFile.type.startsWith('video/') && (
+                          <div className="relative w-full h-32 bg-secondary/20 rounded-md overflow-hidden">
+                            <video 
+                              src={URL.createObjectURL(mediaFile)} 
+                              controls
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                 </TabsContent>

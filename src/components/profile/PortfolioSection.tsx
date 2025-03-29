@@ -3,7 +3,7 @@ import React from 'react';
 import { PortfolioProject } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ExternalLink } from 'lucide-react';
+import { Loader2, ExternalLink, PlayCircle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import AddPortfolioItemForm from './AddPortfolioItemForm';
 
@@ -83,38 +83,53 @@ const PortfolioSection: React.FC<PortfolioSectionProps> = ({
       );
     }
     
-    // For external links that aren't videos
-    if (project.mediaType === 'link') {
+    // For images
+    if (project.mediaType === 'image') {
       return (
-        <div className="aspect-video w-full overflow-hidden bg-secondary/40 flex items-center justify-center">
-          <Button 
-            variant="outline" 
-            className="gap-2"
-            onClick={() => window.open(project.thumbnail, '_blank')}
-          >
-            <ExternalLink size={16} />
-            View Project
-          </Button>
+        <div className="aspect-video w-full overflow-hidden bg-muted">
+          <img 
+            src={project.thumbnail} 
+            alt={project.title}
+            loading="lazy"
+            className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" 
+          />
         </div>
       );
     }
     
-    // Default case: treat as image
+    // For external links that aren't videos or images
     return (
-      <div className="aspect-video w-full overflow-hidden">
-        <img 
-          src={project.thumbnail} 
-          alt={project.title}
-          className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" 
-        />
+      <div className="aspect-video w-full overflow-hidden bg-secondary/40 flex flex-col items-center justify-center gap-2 p-4">
+        <PlayCircle size={48} className="text-muted-foreground/60" />
+        <Button 
+          variant="outline" 
+          className="gap-2"
+          onClick={() => window.open(project.thumbnail, '_blank')}
+        >
+          <ExternalLink size={16} />
+          View Project
+        </Button>
       </div>
     );
   };
 
   return (
     <div className="space-y-4">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-2xl font-semibold">Portfolio</h2>
+        {isCurrentUser && (
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => document.getElementById('add-portfolio-button')?.click()}
+          >
+            Add Project
+          </Button>
+        )}
+      </div>
+
       {isCurrentUser && (
-        <div className="mb-6">
+        <div className="mb-6 hidden">
           <AddPortfolioItemForm onSuccess={onRefresh} />
         </div>
       )}
@@ -127,9 +142,19 @@ const PortfolioSection: React.FC<PortfolioSectionProps> = ({
               ? "Add your projects to showcase your work and skills to potential collaborators."
               : "This user hasn't added any portfolio items yet."}
           </p>
+          {isCurrentUser && (
+            <Button 
+              id="add-portfolio-button"
+              variant="default" 
+              className="mt-4"
+              onClick={() => document.getElementById('add-portfolio-dialog-trigger')?.click()}
+            >
+              Add Your First Project
+            </Button>
+          )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {portfolioProjects.map((project) => (
             <Card key={project.id} className="overflow-hidden hover:shadow-md transition-all duration-200">
               {renderMedia(project)}
@@ -158,6 +183,18 @@ const PortfolioSection: React.FC<PortfolioSectionProps> = ({
           ))}
         </div>
       )}
+      
+      {isCurrentUser && (
+        <div className="hidden">
+          <button id="add-portfolio-dialog-trigger" onClick={() => document.getElementById('portfolio-dialog-trigger')?.click()}>
+            Add Portfolio
+          </button>
+        </div>
+      )}
+      
+      <div className="hidden">
+        <AddPortfolioItemForm onSuccess={onRefresh} />
+      </div>
     </div>
   );
 };
