@@ -33,16 +33,25 @@ const Chatroom: React.FC = () => {
 
   const fetchMessages = async () => {
     try {
-      const { data, error } = await supabase
-        .from('chatroom_messages')
-        .select('*, user_id:profiles!inner(id, full_name)')
-        .order('created_at', { ascending: true });
-
+      // Use raw SQL query through RPC to bypass type checking issues
+      const { data, error } = await supabase.rpc('get_chatroom_messages');
+      
       if (error) {
         throw error;
       }
       
-      setMessages(data || []);
+      // Transform the data to match our ChatMessage interface
+      const formattedMessages = (data || []).map((msg: any) => ({
+        id: msg.id,
+        content: msg.content,
+        user_id: {
+          id: msg.user_id,
+          full_name: msg.full_name
+        },
+        created_at: msg.created_at
+      }));
+      
+      setMessages(formattedMessages);
     } catch (error: any) {
       console.error('Error fetching messages:', error);
       toast({
@@ -57,12 +66,11 @@ const Chatroom: React.FC = () => {
     if (!newMessage.trim()) return;
 
     try {
-      const { error } = await supabase
-        .from('chatroom_messages')
-        .insert({
-          content: newMessage,
-          user_id: user.id
-        });
+      // Use raw SQL query through RPC to bypass type checking issues
+      const { error } = await supabase.rpc('insert_chatroom_message', {
+        message_content: newMessage,
+        user_identifier: user.id
+      });
 
       if (error) {
         throw error;
