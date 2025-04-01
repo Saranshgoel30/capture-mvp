@@ -12,7 +12,7 @@ const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   
   useEffect(() => {
     const handleScroll = () => {
@@ -57,9 +57,11 @@ const Navbar: React.FC = () => {
             <Link to="/find-creators" className="text-foreground hover:text-primary transition">
               Find Creators
             </Link>
-            <Link to="/chatroom" className="text-foreground hover:text-primary transition">
-              Community Chat
-            </Link>
+            {user && (
+              <Link to="/chatroom" className="text-foreground hover:text-primary transition">
+                Community Chat
+              </Link>
+            )}
             {user && (
               <Link to="/messages" className="text-foreground hover:text-primary transition">
                 Messages
@@ -75,8 +77,8 @@ const Navbar: React.FC = () => {
               <div className="flex items-center space-x-4">
                 <Link to={`/profile/${user.id}`}>
                   <Avatar className="h-8 w-8 cursor-pointer">
-                    <AvatarImage src={user.avatar_url || userAvatar} />
-                    <AvatarFallback>{user.full_name?.charAt(0) || <User size={14} />}</AvatarFallback>
+                    <AvatarImage src={profile?.avatar_url || userAvatar} />
+                    <AvatarFallback>{profile?.full_name?.charAt(0) || <User size={14} />}</AvatarFallback>
                   </Avatar>
                 </Link>
                 <Link to="/settings">
@@ -124,10 +126,12 @@ const Navbar: React.FC = () => {
               <Users className="mr-2 h-4 w-4" />
               Find Creators
             </Link>
-            <Link to="/chatroom" className="block py-2 hover:text-primary transition flex items-center">
-              <MessageCircle className="mr-2 h-4 w-4" />
-              Community Chat
-            </Link>
+            {user && (
+              <Link to="/chatroom" className="block py-2 hover:text-primary transition flex items-center">
+                <MessageCircle className="mr-2 h-4 w-4" />
+                Community Chat
+              </Link>
+            )}
             {user && (
               <Link to="/messages" className="block py-2 hover:text-primary transition flex items-center">
                 <MessageSquare className="mr-2 h-4 w-4" />

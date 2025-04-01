@@ -8,45 +8,75 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { getAnimalAvatarForUser } from '@/lib/animalAvatars';
+import { useToast } from '@/hooks/use-toast';
+
+interface ChatMessage {
+  id: string;
+  content: string;
+  user_id: {
+    id: string;
+    full_name: string | null;
+  };
+  created_at: string;
+}
 
 const Chatroom: React.FC = () => {
   const { user } = useAuth();
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
-
+  const { toast } = useToast();
+  
   // Redirect to login if not authenticated
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
   const fetchMessages = async () => {
-    const { data, error } = await supabase
-      .from('chatroom_messages')
-      .select('*, user_id(full_name)')
-      .order('created_at', { ascending: true });
+    try {
+      const { data, error } = await supabase
+        .from('chatroom_messages')
+        .select('*, user_id:profiles!inner(id, full_name)')
+        .order('created_at', { ascending: true });
 
-    if (error) {
-      console.error('Error fetching messages:', error);
-    } else {
+      if (error) {
+        throw error;
+      }
+      
       setMessages(data || []);
+    } catch (error: any) {
+      console.error('Error fetching messages:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load chat messages',
+        variant: 'destructive',
+      });
     }
   };
 
   const sendMessage = async () => {
     if (!newMessage.trim()) return;
 
-    const { error } = await supabase
-      .from('chatroom_messages')
-      .insert({
-        content: newMessage,
-        user_id: user.id
-      });
+    try {
+      const { error } = await supabase
+        .from('chatroom_messages')
+        .insert({
+          content: newMessage,
+          user_id: user.id
+        });
 
-    if (error) {
-      console.error('Error sending message:', error);
-    } else {
+      if (error) {
+        throw error;
+      }
+      
       setNewMessage('');
       fetchMessages();
+    } catch (error: any) {
+      console.error('Error sending message:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to send message',
+        variant: 'destructive',
+      });
     }
   };
 

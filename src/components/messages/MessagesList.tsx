@@ -14,7 +14,7 @@ interface MessagesListProps {
 const MessagesList: React.FC<MessagesListProps> = ({ otherId }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
@@ -99,9 +99,9 @@ const MessagesList: React.FC<MessagesListProps> = ({ otherId }) => {
             </div>
             {isCurrentUser && (
               <Avatar className="h-8 w-8 ml-2">
-                <AvatarImage src={user.avatar_url || senderAvatar} />
+                <AvatarImage src={profile?.avatar_url || senderAvatar} />
                 <AvatarFallback>
-                  {user.full_name?.charAt(0) || '?'}
+                  {profile?.full_name?.charAt(0) || '?'}
                 </AvatarFallback>
               </Avatar>
             )}

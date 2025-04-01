@@ -44,6 +44,27 @@ export type Database = {
           },
         ]
       }
+      chatroom_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       current_projects: {
         Row: {
           created_at: string | null
