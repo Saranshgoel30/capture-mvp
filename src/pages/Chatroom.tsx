@@ -13,10 +13,8 @@ import { useToast } from '@/hooks/use-toast';
 interface ChatMessage {
   id: string;
   content: string;
-  user_id: {
-    id: string;
-    full_name: string | null;
-  };
+  user_id: string;
+  full_name: string | null;
   created_at: string;
 }
 
@@ -33,25 +31,14 @@ const Chatroom: React.FC = () => {
 
   const fetchMessages = async () => {
     try {
-      // Use raw SQL query through RPC to bypass type checking issues
-      const { data, error } = await supabase.rpc('get_chatroom_messages');
+      // Call the edge function
+      const { data, error } = await supabase.functions.invoke('get_chatroom_messages');
       
       if (error) {
         throw error;
       }
       
-      // Transform the data to match our ChatMessage interface
-      const formattedMessages = (data || []).map((msg: any) => ({
-        id: msg.id,
-        content: msg.content,
-        user_id: {
-          id: msg.user_id,
-          full_name: msg.full_name
-        },
-        created_at: msg.created_at
-      }));
-      
-      setMessages(formattedMessages);
+      setMessages(data || []);
     } catch (error: any) {
       console.error('Error fetching messages:', error);
       toast({
@@ -66,10 +53,12 @@ const Chatroom: React.FC = () => {
     if (!newMessage.trim()) return;
 
     try {
-      // Use raw SQL query through RPC to bypass type checking issues
-      const { error } = await supabase.rpc('insert_chatroom_message', {
-        message_content: newMessage,
-        user_identifier: user.id
+      // Call the edge function
+      const { error } = await supabase.functions.invoke('insert_chatroom_message', {
+        body: {
+          message_content: newMessage,
+          user_identifier: user.id
+        }
       });
 
       if (error) {
@@ -117,12 +106,12 @@ const Chatroom: React.FC = () => {
               {messages.map((msg) => (
                 <div key={msg.id} className="mb-2 flex items-start">
                   <img 
-                    src={getAnimalAvatarForUser(msg.user_id.id)} 
+                    src={getAnimalAvatarForUser(msg.user_id)} 
                     alt="User avatar" 
                     className="w-8 h-8 rounded-full mr-2"
                   />
                   <div>
-                    <p className="font-semibold">{msg.user_id.full_name || 'Anonymous'}</p>
+                    <p className="font-semibold">{msg.full_name || 'Anonymous'}</p>
                     <p>{msg.content}</p>
                   </div>
                 </div>
