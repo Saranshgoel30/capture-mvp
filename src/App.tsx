@@ -16,6 +16,7 @@ import ProjectDetails from './pages/ProjectDetails';
 import FindCreators from './pages/FindCreators';
 import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
+import MyProjects from './pages/MyProjects';
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
             <Route path="/profile/:userId" element={<Profile />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/projects/:projectId" element={<ProjectDetails />} />
+            <Route path="/my-projects" element={<MyProjects />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/messages/:userId" element={<Messages />} />
             <Route path="/chatroom" element={<Chatroom />} />

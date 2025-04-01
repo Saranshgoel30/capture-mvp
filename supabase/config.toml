@@ -69,3 +69,6 @@ verify_jwt = true
 
 [functions.insert_chatroom_message]
 verify_jwt = true
+
+[functions.delete_all_users]
+verify_jwt = true
