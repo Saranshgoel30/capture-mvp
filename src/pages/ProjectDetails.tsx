@@ -3,20 +3,21 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   Calendar, Clock, MapPin, User, Users, ArrowLeft, CheckCircle,
-  AlertTriangle
+  AlertTriangle, MessageSquare
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { fetchProjectById, applyForProject } from '@/lib/supabase';
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Project } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { getAnimalAvatarForUser } from '@/lib/animalAvatars';
 
 const ProjectDetails: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -29,6 +30,7 @@ const ProjectDetails: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isApplying, setIsApplying] = useState(false);
   const [isExpired, setIsExpired] = useState(false);
+  const [hasApplied, setHasApplied] = useState(false);
   
   useEffect(() => {
     if (!projectId) return;
@@ -86,6 +88,7 @@ const ProjectDetails: React.FC = () => {
         title: 'Application Submitted',
         description: 'Your application has been successfully submitted!',
       });
+      setHasApplied(true);
     } catch (error) {
       console.error('Error applying to project:', error);
       toast({
@@ -95,6 +98,12 @@ const ProjectDetails: React.FC = () => {
       });
     } finally {
       setIsApplying(false);
+    }
+  };
+  
+  const handleMessageCreator = () => {
+    if (project && project.postedById) {
+      navigate(`/messages/${project.postedById}`);
     }
   };
   
@@ -135,6 +144,9 @@ const ProjectDetails: React.FC = () => {
       </div>
     );
   }
+  
+  // Get avatar for the project owner
+  const ownerAvatar = getAnimalAvatarForUser(project.postedById);
   
   return (
     <div className="min-h-screen bg-background">
@@ -205,62 +217,89 @@ const ProjectDetails: React.FC = () => {
                   <h2 className="text-lg font-semibold mb-4">Posted by</h2>
                   <div className="flex items-center mb-6">
                     <Avatar className="h-10 w-10 mr-3">
-                      <AvatarImage src={project.postedByAvatar || 'https://i.pravatar.cc/150?img=8'} />
+                      <AvatarImage src={project.postedByAvatar || ownerAvatar} />
                       <AvatarFallback>{project.postedBy.charAt(0)}</AvatarFallback>
                     </Avatar>
-                    <div>
+                    <div className="flex flex-col">
                       <p className="font-medium">{project.postedBy}</p>
+                      {project.postedById !== user?.id && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="flex items-center -ml-2 mt-1 text-muted-foreground hover:text-foreground"
+                          onClick={handleMessageCreator}
+                        >
+                          <MessageSquare className="h-3 w-3 mr-1" />
+                          Message
+                        </Button>
+                      )}
                     </div>
                   </div>
                   
-                  <h2 className="text-lg font-semibold mb-4">Apply for this project</h2>
-                  
-                  {user ? (
+                  {project.postedById !== user?.id && (
                     <>
-                      <Textarea
-                        placeholder="Write a brief message explaining why you're a good fit for this project..."
-                        className="mb-4"
-                        rows={5}
-                        value={coverLetter}
-                        onChange={(e) => setCoverLetter(e.target.value)}
-                        disabled={isApplying || isExpired}
-                      />
-                      <Button 
-                        className="w-full" 
-                        onClick={handleApply}
-                        disabled={isApplying || isExpired}
-                      >
-                        {isApplying ? (
-                          <>
-                            <span className="mr-2">Submitting...</span>
-                            <div className="animate-spin">
-                              <Clock className="h-4 w-4" />
+                      <h2 className="text-lg font-semibold mb-4">Apply for this project</h2>
+                      
+                      {user ? (
+                        <>
+                          {hasApplied ? (
+                            <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-md text-center">
+                              <CheckCircle className="h-8 w-8 mx-auto text-green-600 dark:text-green-400 mb-2" />
+                              <p className="text-green-800 dark:text-green-300 font-medium">Application Submitted</p>
+                              <p className="text-green-600 dark:text-green-400 text-sm mt-1">
+                                You'll be notified if the creator responds.
+                              </p>
                             </div>
-                          </>
-                        ) : (
-                          <>
-                            <CheckCircle className="mr-2 h-4 w-4" />
-                            Apply Now
-                          </>
-                        )}
-                      </Button>
-                      {isExpired && (
-                        <p className="text-destructive text-sm mt-2">
-                          This project has passed its deadline and is no longer accepting applications.
-                        </p>
+                          ) : (
+                            <>
+                              <Textarea
+                                placeholder="Write a brief message explaining why you're a good fit for this project..."
+                                className="mb-4"
+                                rows={5}
+                                value={coverLetter}
+                                onChange={(e) => setCoverLetter(e.target.value)}
+                                disabled={isApplying || isExpired}
+                              />
+                              <Button 
+                                className="w-full" 
+                                onClick={handleApply}
+                                disabled={isApplying || isExpired}
+                              >
+                                {isApplying ? (
+                                  <>
+                                    <span className="mr-2">Submitting...</span>
+                                    <div className="animate-spin">
+                                      <Clock className="h-4 w-4" />
+                                    </div>
+                                  </>
+                                ) : (
+                                  <>
+                                    <CheckCircle className="mr-2 h-4 w-4" />
+                                    Apply Now
+                                  </>
+                                )}
+                              </Button>
+                              {isExpired && (
+                                <p className="text-destructive text-sm mt-2">
+                                  This project has passed its deadline and is no longer accepting applications.
+                                </p>
+                              )}
+                            </>
+                          )}
+                        </>
+                      ) : (
+                        <div className="text-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-md">
+                          <User className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                          <p className="text-gray-600 dark:text-gray-300 mb-2">Sign in to apply for this project</p>
+                          <Button
+                            variant="outline"
+                            onClick={() => navigate('/login')}
+                          >
+                            Sign In
+                          </Button>
+                        </div>
                       )}
                     </>
-                  ) : (
-                    <div className="text-center p-4 bg-gray-50 rounded-md">
-                      <User className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-                      <p className="text-gray-600 mb-2">Sign in to apply for this project</p>
-                      <Button
-                        variant="outline"
-                        onClick={() => navigate('/login')}
-                      >
-                        Sign In
-                      </Button>
-                    </div>
                   )}
                 </CardContent>
               </Card>

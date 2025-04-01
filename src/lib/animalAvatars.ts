@@ -11,6 +11,11 @@ const animalAvatars = [
   "/animals/tiger.gif",
   "/animals/bear.gif",
   "/animals/rabbit.gif",
+  "/animals/elephant.gif",
+  "/animals/monkey.gif",
+  "/animals/owl.gif",
+  "/animals/wolf.gif",
+  "/animals/raccoon.gif",
 ];
 
 // Get a random animal avatar
