@@ -13,43 +13,55 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Create a Supabase client with the Auth context of the logged in user
-  const supabaseClient = createClient(
-    Deno.env.get('SUPABASE_URL') ?? '',
-    Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-    {
-      global: {
-        headers: { Authorization: req.headers.get('Authorization')! },
-      },
-    }
-  );
-
   try {
-    // Get messages with profile details
-    const { data, error } = await supabaseClient
+    // Create a Supabase client with the Auth context of the logged in user
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: req.headers.get('Authorization')! },
+        },
+      }
+    );
+
+    // Get the session to verify the user is authenticated
+    const { data: authData, error: authError } = await supabaseClient.auth.getUser();
+    
+    if (authError || !authData.user) {
+      throw new Error('Authentication required');
+    }
+
+    // Fetch messages with user information
+    const { data: messages, error: messagesError } = await supabaseClient
       .from('chatroom_messages')
       .select(`
-        id,
-        content,
-        created_at,
-        user_id,
-        profiles:user_id (id, full_name)
+        *,
+        profiles:user_id (
+          full_name,
+          avatar_url
+        )
       `)
-      .order('created_at', { ascending: true });
-
-    if (error) throw error;
-
-    // Format the response for the client
-    const formattedData = data.map(msg => ({
-      id: msg.id,
-      content: msg.content,
-      created_at: msg.created_at,
-      user_id: msg.user_id,
-      full_name: msg.profiles?.full_name
+      .order('created_at');
+    
+    if (messagesError) {
+      throw messagesError;
+    }
+    
+    // Transform the data to match the expected format
+    const formattedMessages = messages.map(message => ({
+      id: message.id,
+      content: message.content,
+      user_id: message.user_id,
+      created_at: message.created_at,
+      user: message.profiles ? {
+        full_name: message.profiles.full_name,
+        avatar_url: message.profiles.avatar_url
+      } : undefined
     }));
 
     return new Response(
-      JSON.stringify(formattedData),
+      JSON.stringify(formattedMessages),
       {
         headers: { 
           'Content-Type': 'application/json',
@@ -58,6 +70,7 @@ serve(async (req) => {
         status: 200,
       }
     );
+
   } catch (error) {
     return new Response(
       JSON.stringify({ error: error.message }),

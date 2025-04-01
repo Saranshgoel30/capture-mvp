@@ -1,44 +1,82 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Navigate } from 'react-router-dom';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { getAnimalAvatarForUser } from '@/lib/animalAvatars';
-import { useToast } from '@/hooks/use-toast';
+import { Loader2, Send } from 'lucide-react';
 
 interface ChatMessage {
   id: string;
   content: string;
   user_id: string;
-  full_name: string | null;
   created_at: string;
+  user?: {
+    full_name?: string;
+    avatar_url?: string | null;
+  };
 }
 
 const Chatroom: React.FC = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSending, setIsSending] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  
-  // Redirect to login if not authenticated
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
+
+  // Fetch messages on component mount
+  useEffect(() => {
+    fetchMessages();
+    
+    // Subscribe to new messages
+    const subscription = supabase
+      .channel('chatroom_messages')
+      .on('postgres_changes', { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: 'chatroom_messages' 
+      }, (payload) => {
+        fetchUserForMessage(payload.new as ChatMessage);
+      })
+      .subscribe();
+    
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  // Scroll to bottom whenever messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   const fetchMessages = async () => {
     try {
-      // Call the edge function
+      setIsLoading(true);
+      
+      // Use the edge function to get messages
       const { data, error } = await supabase.functions.invoke('get_chatroom_messages');
       
       if (error) {
         throw error;
       }
       
-      setMessages(data || []);
+      if (data) {
+        setMessages(data as ChatMessage[]);
+      }
     } catch (error: any) {
       console.error('Error fetching messages:', error);
       toast({
@@ -46,27 +84,55 @@ const Chatroom: React.FC = () => {
         description: 'Failed to load chat messages',
         variant: 'destructive',
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const sendMessage = async () => {
-    if (!newMessage.trim()) return;
-
+  const fetchUserForMessage = async (message: ChatMessage) => {
     try {
-      // Call the edge function
-      const { error } = await supabase.functions.invoke('insert_chatroom_message', {
-        body: {
-          message_content: newMessage,
-          user_identifier: user.id
+      const { data: userData, error: userError } = await supabase
+        .from('profiles')
+        .select('full_name, avatar_url')
+        .eq('id', message.user_id)
+        .single();
+      
+      if (userError) throw userError;
+      
+      const enhancedMessage = {
+        ...message,
+        user: {
+          full_name: userData.full_name,
+          avatar_url: userData.avatar_url
         }
-      });
+      };
+      
+      setMessages(prev => [...prev, enhancedMessage]);
+    } catch (error) {
+      console.error('Error fetching user for message:', error);
+      // Still add message even if we can't get user details
+      setMessages(prev => [...prev, message]);
+    }
+  };
 
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!newMessage.trim() || !user) return;
+    
+    try {
+      setIsSending(true);
+      
+      // Use the edge function to insert a message
+      const { error } = await supabase.functions.invoke('insert_chatroom_message', {
+        body: { content: newMessage }
+      });
+      
       if (error) {
         throw error;
       }
       
       setNewMessage('');
-      fetchMessages();
     } catch (error: any) {
       console.error('Error sending message:', error);
       toast({
@@ -74,59 +140,118 @@ const Chatroom: React.FC = () => {
         description: 'Failed to send message',
         variant: 'destructive',
       });
+    } finally {
+      setIsSending(false);
     }
   };
 
-  useEffect(() => {
-    fetchMessages();
+  const formatTime = (timestamp: string) => {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
 
-    const channel = supabase
-      .channel('public:chatroom_messages')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'chatroom_messages' },
-        (payload) => {
-          fetchMessages();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+  // Redirect to login if not authenticated
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="pt-32 pb-24 px-6 md:px-12">
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-secondary/40 backdrop-blur-md rounded-xl p-6 h-[600px] flex flex-col">
-            <div className="flex-grow overflow-y-auto mb-4">
-              {messages.map((msg) => (
-                <div key={msg.id} className="mb-2 flex items-start">
-                  <img 
-                    src={getAnimalAvatarForUser(msg.user_id)} 
-                    alt="User avatar" 
-                    className="w-8 h-8 rounded-full mr-2"
-                  />
-                  <div>
-                    <p className="font-semibold">{msg.full_name || 'Anonymous'}</p>
-                    <p>{msg.content}</p>
+        <div className="max-w-4xl mx-auto">
+          <Card className="shadow-lg">
+            <CardHeader className="bg-primary text-primary-foreground">
+              <CardTitle>CrewConnect Community Chat</CardTitle>
+            </CardHeader>
+            
+            <ScrollArea className="h-[60vh]">
+              <CardContent className="p-6">
+                {isLoading ? (
+                  <div className="flex justify-center items-center h-40">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
-                </div>
-              ))}
-            </div>
-            <div className="flex space-x-2">
-              <Input 
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Type a message..."
-                onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-              />
-              <Button onClick={sendMessage}>Send</Button>
-            </div>
-          </div>
+                ) : messages.length === 0 ? (
+                  <div className="text-center text-muted-foreground py-12">
+                    <p>No messages yet. Be the first to say hello!</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {messages.map((message) => (
+                      <div
+                        key={message.id}
+                        className={`flex gap-3 ${
+                          message.user_id === user.id ? 'justify-end' : 'justify-start'
+                        }`}
+                      >
+                        {message.user_id !== user.id && (
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={message.user?.avatar_url || ''} />
+                            <AvatarFallback>
+                              {message.user?.full_name?.charAt(0) || '?'}
+                            </AvatarFallback>
+                          </Avatar>
+                        )}
+                        
+                        <div className="max-w-[80%]">
+                          <div className="flex items-baseline gap-2">
+                            {message.user_id !== user.id && (
+                              <span className="text-sm font-medium">
+                                {message.user?.full_name || 'Anonymous'}
+                              </span>
+                            )}
+                            <span className="text-xs text-muted-foreground">
+                              {formatTime(message.created_at)}
+                            </span>
+                          </div>
+                          
+                          <div
+                            className={`rounded-lg px-4 py-2 mt-1 text-sm ${
+                              message.user_id === user.id
+                                ? 'bg-primary text-primary-foreground'
+                                : 'bg-secondary'
+                            }`}
+                          >
+                            {message.content}
+                          </div>
+                        </div>
+                        
+                        {message.user_id === user.id && (
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={profile?.avatar_url || ''} />
+                            <AvatarFallback>
+                              {profile?.full_name?.charAt(0) || user.email?.charAt(0) || '?'}
+                            </AvatarFallback>
+                          </Avatar>
+                        )}
+                      </div>
+                    ))}
+                    <div ref={messagesEndRef} />
+                  </div>
+                )}
+              </CardContent>
+            </ScrollArea>
+            
+            <CardFooter className="p-4 border-t">
+              <form onSubmit={handleSendMessage} className="flex w-full gap-2">
+                <Input
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  placeholder="Type your message..."
+                  disabled={isSending}
+                  className="flex-1"
+                />
+                <Button type="submit" disabled={isSending || !newMessage.trim()}>
+                  {isSending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                  <span className="ml-2 hidden sm:inline">Send</span>
+                </Button>
+              </form>
+            </CardFooter>
+          </Card>
         </div>
       </div>
       <Footer />

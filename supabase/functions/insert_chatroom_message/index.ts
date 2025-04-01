@@ -13,35 +13,50 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Create a Supabase client with the Auth context of the logged in user
-  const supabaseClient = createClient(
-    Deno.env.get('SUPABASE_URL') ?? '',
-    Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-    {
-      global: {
-        headers: { Authorization: req.headers.get('Authorization')! },
-      },
-    }
-  );
-
   try {
-    const { message_content, user_identifier } = await req.json();
-
-    if (!message_content) {
+    // Parse request body
+    const { content } = await req.json();
+    
+    if (!content || typeof content !== 'string' || content.trim() === '') {
       throw new Error('Message content is required');
     }
 
+    // Create a Supabase client with the Auth context of the logged in user
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: req.headers.get('Authorization')! },
+        },
+      }
+    );
+
+    // Get the session to verify the user is authenticated
+    const { data: authData, error: authError } = await supabaseClient.auth.getUser();
+    
+    if (authError || !authData.user) {
+      throw new Error('Authentication required');
+    }
+    
+    const userId = authData.user.id;
+
+    // Insert the new message
     const { data, error } = await supabaseClient
       .from('chatroom_messages')
       .insert({
-        content: message_content,
-        user_id: user_identifier
-      });
-
-    if (error) throw error;
+        content: content.trim(),
+        user_id: userId
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      throw error;
+    }
 
     return new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify(data),
       {
         headers: { 
           'Content-Type': 'application/json',
@@ -50,6 +65,7 @@ serve(async (req) => {
         status: 200,
       }
     );
+
   } catch (error) {
     return new Response(
       JSON.stringify({ error: error.message }),

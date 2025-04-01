@@ -24,7 +24,7 @@ const Settings: React.FC = () => {
   const handleDeleteAllUsers = async () => {
     try {
       setIsDeleting(true);
-      const { error } = await supabase.functions.invoke('delete_all_users');
+      const { data, error } = await supabase.functions.invoke('delete_all_users');
       
       if (error) {
         throw error;
@@ -74,7 +74,9 @@ const Settings: React.FC = () => {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button variant="outline">Edit Profile</Button>
+                <Button variant="outline" asChild>
+                  <a href={`/profile/${user.id}`}>Edit Profile</a>
+                </Button>
               </CardFooter>
             </Card>
             
