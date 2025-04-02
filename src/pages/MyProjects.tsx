@@ -9,6 +9,8 @@ import { Loader2, Plus, Briefcase, Send } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Project, ProjectApplication } from '@/lib/types';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 
 const MyProjects = () => {
   const { user } = useAuth();
@@ -131,169 +133,177 @@ const MyProjects = () => {
 
   if (!user) {
     return (
-      <div className="container max-w-7xl mx-auto py-24 px-4 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <h1 className="text-3xl font-extrabold">Please log in to view your projects</h1>
-          <p className="mt-4 text-lg text-muted-foreground">
-            You need to be logged in to view your projects and applications.
-          </p>
-          <Button asChild className="mt-4">
-            <Link to="/login">Log in</Link>
-          </Button>
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="container max-w-7xl mx-auto py-24 px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h1 className="text-3xl font-extrabold">Please log in to view your projects</h1>
+            <p className="mt-4 text-lg text-muted-foreground">
+              You need to be logged in to view your projects and applications.
+            </p>
+            <Button asChild className="mt-4">
+              <Link to="/login">Log in</Link>
+            </Button>
+          </div>
         </div>
+        <Footer />
       </div>
     );
   }
 
   return (
-    <div className="container max-w-7xl mx-auto py-24 px-4 sm:px-6 lg:px-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-extrabold">My Projects</h1>
-        <Button asChild>
-          <Link to="/new-project">
-            <Plus className="mr-2 h-4 w-4" />
-            Create Project
-          </Link>
-        </Button>
-      </div>
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <div className="container max-w-7xl mx-auto py-24 px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-extrabold">My Projects</h1>
+          <Button asChild>
+            <Link to="/new-project">
+              <Plus className="mr-2 h-4 w-4" />
+              Create Project
+            </Link>
+          </Button>
+        </div>
 
-      <Tabs defaultValue="my-projects">
-        <TabsList className="mb-8">
-          <TabsTrigger value="my-projects" className="flex items-center">
-            <Briefcase className="mr-2 h-4 w-4" />
-            Projects I've Posted
-          </TabsTrigger>
-          <TabsTrigger value="applied-projects" className="flex items-center">
-            <Send className="mr-2 h-4 w-4" />
-            Projects I've Applied To
-          </TabsTrigger>
-        </TabsList>
+        <Tabs defaultValue="my-projects">
+          <TabsList className="mb-8">
+            <TabsTrigger value="my-projects" className="flex items-center">
+              <Briefcase className="mr-2 h-4 w-4" />
+              Projects I've Posted
+            </TabsTrigger>
+            <TabsTrigger value="applied-projects" className="flex items-center">
+              <Send className="mr-2 h-4 w-4" />
+              Projects I've Applied To
+            </TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="my-projects">
-          {loading ? (
-            <div className="flex justify-center items-center min-h-[300px]">
-              <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
-          ) : myProjects.length === 0 ? (
-            <div className="text-center py-12 border rounded-md bg-muted/30">
-              <h3 className="text-xl font-medium mb-2">No projects yet</h3>
-              <p className="text-muted-foreground mb-6">
-                You haven't created any projects yet. Start by creating your first project.
-              </p>
-              <Button asChild>
-                <Link to="/new-project">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create Project
-                </Link>
-              </Button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {myProjects.map((project) => (
-                <Card key={project.id} className="flex flex-col h-full">
-                  <CardHeader>
-                    <CardTitle className="line-clamp-2">
-                      <Link to={`/projects/${project.id}`} className="hover:underline">
-                        {project.title}
-                      </Link>
-                    </CardTitle>
-                    <CardDescription>
-                      Posted on {new Date(project.created_at || project.createdAt).toLocaleDateString()}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="flex-grow">
-                    <p className="line-clamp-3 text-sm text-muted-foreground">
-                      {project.description}
-                    </p>
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {project.requiredRoles?.slice(0, 3).map((role, idx) => (
-                        <Badge key={idx} variant="outline">
-                          {role}
-                        </Badge>
-                      ))}
-                      {project.requiredRoles && project.requiredRoles.length > 3 && (
-                        <Badge variant="outline">+{project.requiredRoles.length - 3} more</Badge>
-                      )}
-                    </div>
-                  </CardContent>
-                  <CardFooter className="flex justify-between pt-2 border-t">
-                    <Badge variant="secondary">
-                      {project.type || 'Project'}
-                    </Badge>
-                    <Button asChild variant="outline" size="sm">
-                      <Link to={`/projects/${project.id}`}>View Details</Link>
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="applied-projects">
-          {loading ? (
-            <div className="flex justify-center items-center min-h-[300px]">
-              <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
-          ) : appliedProjects.length === 0 ? (
-            <div className="text-center py-12 border rounded-md bg-muted/30">
-              <h3 className="text-xl font-medium mb-2">No applications yet</h3>
-              <p className="text-muted-foreground mb-6">
-                You haven't applied to any projects yet. Browse available projects and start applying!
-              </p>
-              <Button asChild>
-                <Link to="/projects">Browse Projects</Link>
-              </Button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {appliedProjects.map((project) => (
-                <Card key={project.id} className="flex flex-col h-full">
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
+          <TabsContent value="my-projects">
+            {loading ? (
+              <div className="flex justify-center items-center min-h-[300px]">
+                <Loader2 className="h-8 w-8 animate-spin" />
+              </div>
+            ) : myProjects.length === 0 ? (
+              <div className="text-center py-12 border rounded-md bg-muted/30">
+                <h3 className="text-xl font-medium mb-2">No projects yet</h3>
+                <p className="text-muted-foreground mb-6">
+                  You haven't created any projects yet. Start by creating your first project.
+                </p>
+                <Button asChild>
+                  <Link to="/new-project">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Create Project
+                  </Link>
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {myProjects.map((project) => (
+                  <Card key={project.id} className="flex flex-col h-full">
+                    <CardHeader>
                       <CardTitle className="line-clamp-2">
                         <Link to={`/projects/${project.id}`} className="hover:underline">
                           {project.title}
                         </Link>
                       </CardTitle>
-                      <Badge variant={getStatusBadgeVariant(project.applicationStatus || '')}>
-                        {project.applicationStatus === 'accepted' ? 'Accepted' :
-                         project.applicationStatus === 'rejected' ? 'Rejected' : 'Pending'}
+                      <CardDescription>
+                        Posted on {new Date(project.created_at || project.createdAt).toLocaleDateString()}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex-grow">
+                      <p className="line-clamp-3 text-sm text-muted-foreground">
+                        {project.description}
+                      </p>
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {project.requiredRoles?.slice(0, 3).map((role, idx) => (
+                          <Badge key={idx} variant="outline">
+                            {role}
+                          </Badge>
+                        ))}
+                        {project.requiredRoles && project.requiredRoles.length > 3 && (
+                          <Badge variant="outline">+{project.requiredRoles.length - 3} more</Badge>
+                        )}
+                      </div>
+                    </CardContent>
+                    <CardFooter className="flex justify-between pt-2 border-t">
+                      <Badge variant="secondary">
+                        {project.type || 'Project'}
                       </Badge>
-                    </div>
-                    <CardDescription>
-                      Applied on {new Date(project.created_at || project.createdAt).toLocaleDateString()}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="flex-grow">
-                    <p className="line-clamp-3 text-sm text-muted-foreground">
-                      {project.description}
-                    </p>
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {project.requiredRoles?.slice(0, 3).map((role, idx) => (
-                        <Badge key={idx} variant="outline">
-                          {role}
+                      <Button asChild variant="outline" size="sm">
+                        <Link to={`/projects/${project.id}`}>View Details</Link>
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="applied-projects">
+            {loading ? (
+              <div className="flex justify-center items-center min-h-[300px]">
+                <Loader2 className="h-8 w-8 animate-spin" />
+              </div>
+            ) : appliedProjects.length === 0 ? (
+              <div className="text-center py-12 border rounded-md bg-muted/30">
+                <h3 className="text-xl font-medium mb-2">No applications yet</h3>
+                <p className="text-muted-foreground mb-6">
+                  You haven't applied to any projects yet. Browse available projects and start applying!
+                </p>
+                <Button asChild>
+                  <Link to="/projects">Browse Projects</Link>
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {appliedProjects.map((project) => (
+                  <Card key={project.id} className="flex flex-col h-full">
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <CardTitle className="line-clamp-2">
+                          <Link to={`/projects/${project.id}`} className="hover:underline">
+                            {project.title}
+                          </Link>
+                        </CardTitle>
+                        <Badge variant={getStatusBadgeVariant(project.applicationStatus || '')}>
+                          {project.applicationStatus === 'accepted' ? 'Accepted' :
+                           project.applicationStatus === 'rejected' ? 'Rejected' : 'Pending'}
                         </Badge>
-                      ))}
-                      {project.requiredRoles && project.requiredRoles.length > 3 && (
-                        <Badge variant="outline">+{project.requiredRoles.length - 3} more</Badge>
-                      )}
-                    </div>
-                  </CardContent>
-                  <CardFooter className="flex justify-between pt-2 border-t">
-                    <Badge variant="secondary">
-                      {project.type || 'Project'}
-                    </Badge>
-                    <Button asChild variant="outline" size="sm">
-                      <Link to={`/projects/${project.id}`}>View Details</Link>
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+                      </div>
+                      <CardDescription>
+                        Applied on {new Date(project.created_at || project.createdAt).toLocaleDateString()}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex-grow">
+                      <p className="line-clamp-3 text-sm text-muted-foreground">
+                        {project.description}
+                      </p>
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {project.requiredRoles?.slice(0, 3).map((role, idx) => (
+                          <Badge key={idx} variant="outline">
+                            {role}
+                          </Badge>
+                        ))}
+                        {project.requiredRoles && project.requiredRoles.length > 3 && (
+                          <Badge variant="outline">+{project.requiredRoles.length - 3} more</Badge>
+                        )}
+                      </div>
+                    </CardContent>
+                    <CardFooter className="flex justify-between pt-2 border-t">
+                      <Badge variant="secondary">
+                        {project.type || 'Project'}
+                      </Badge>
+                      <Button asChild variant="outline" size="sm">
+                        <Link to={`/projects/${project.id}`}>View Details</Link>
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
+      <Footer />
     </div>
   );
 };
