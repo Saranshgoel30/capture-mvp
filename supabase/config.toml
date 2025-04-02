@@ -62,7 +62,6 @@ backend = "postgres"
 
 [functions]
 enabled = true
-port = 54323
 
 [functions.get_chatroom_messages]
 verify_jwt = true
