@@ -7,7 +7,10 @@ export const fetchProjectApplications = async (projectId: string): Promise<Proje
   try {
     const { data, error } = await supabase
       .from('applications')
-      .select('*')
+      .select(`
+        *,
+        profiles:applicant_id (*)
+      `)
       .eq('project_id', projectId);
 
     if (error) {
@@ -19,34 +22,26 @@ export const fetchProjectApplications = async (projectId: string): Promise<Proje
       return [];
     }
 
-    // Fetch applicant profiles separately since the join is causing type errors
-    const enhancedApplications = await Promise.all(
-      data.map(async (app) => {
-        const profile = await fetchUserProfile(app.applicant_id);
-        
-        return {
-          id: app.id,
-          projectId: app.project_id,
-          userId: app.applicant_id,
-          status: app.status as 'pending' | 'approved' | 'rejected',
-          coverLetter: app.cover_letter,
-          createdAt: new Date(app.created_at).getTime(),
-          applicant: profile ? {
-            id: profile.id,
-            name: profile.full_name || 'Unnamed User',
-            avatar: profile.avatar_url,
-            roles: profile.roles || []
-          } : undefined,
-          // Keep original fields for compatibility
-          project_id: app.project_id,
-          applicant_id: app.applicant_id,
-          cover_letter: app.cover_letter,
-          created_at: app.created_at
-        };
-      })
-    );
-    
-    return enhancedApplications;
+    // Map database response to our application type
+    return data.map(app => ({
+      id: app.id,
+      projectId: app.project_id,
+      userId: app.applicant_id,
+      status: app.status as 'pending' | 'approved' | 'rejected',
+      coverLetter: app.cover_letter,
+      createdAt: new Date(app.created_at).getTime(),
+      applicant: app.profiles ? {
+        id: app.profiles.id,
+        name: app.profiles.full_name || 'Unnamed User',
+        avatar: app.profiles.avatar_url,
+        roles: app.profiles.roles || []
+      } : undefined,
+      // Keep original fields for compatibility
+      project_id: app.project_id,
+      applicant_id: app.applicant_id,
+      cover_letter: app.cover_letter,
+      created_at: app.created_at
+    }));
   } catch (error) {
     console.error('Exception fetching project applications:', error);
     return [];

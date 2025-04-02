@@ -6,5 +6,3 @@ export * from './projects';
 export * from './portfolio';
 export * from './messages';
 export * from './storage';
-export * from './projectApplications';
-export * from './notifications';

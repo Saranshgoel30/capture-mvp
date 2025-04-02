@@ -17,7 +17,6 @@ import Footer from '@/components/Footer';
 import { Project } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { getAnimalAvatarForUser } from '@/lib/animalAvatars';
-import ProjectApplications from '@/components/projects/ProjectApplications';
 
 const ProjectDetails: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -31,8 +30,6 @@ const ProjectDetails: React.FC = () => {
   const [isApplying, setIsApplying] = useState(false);
   const [isExpired, setIsExpired] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
-  const [showApplications, setShowApplications] = useState(false);
-  const isOwner = project?.ownerId === user?.id;
   
   useEffect(() => {
     if (!projectId) return;
@@ -215,27 +212,6 @@ const ProjectDetails: React.FC = () => {
                   </div>
                 </CardContent>
               </Card>
-              
-              {isOwner && (
-                <Card className="mt-6">
-                  <CardContent className="pt-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-xl font-semibold">Project Applications</h2>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => setShowApplications(!showApplications)}
-                      >
-                        {showApplications ? 'Hide' : 'View'} Applications
-                      </Button>
-                    </div>
-                    
-                    {showApplications && (
-                      <ProjectApplications projectId={project.id} projectTitle={project.title} />
-                    )}
-                  </CardContent>
-                </Card>
-              )}
             </div>
             
             <div>
