@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { ThemeToggle } from '@/components/ThemeToggle';
+import ThemeToggle from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -15,7 +16,7 @@ import { UserCircle, Menu, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 const Navbar: React.FC = () => {
-  const { user, signOut, profile, isSignedIn } = useAuth();
+  const { user, signOut, profile } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
@@ -46,7 +47,7 @@ const Navbar: React.FC = () => {
             <Link to="/projects" className="px-3 py-2 text-sm font-medium rounded-md hover:bg-accent">
               Projects
             </Link>
-            {isSignedIn && (
+            {user && (
               <>
                 <Link to="/my-projects" className="px-3 py-2 text-sm font-medium rounded-md hover:bg-accent">
                   My Projects
@@ -81,7 +82,7 @@ const Navbar: React.FC = () => {
 
           {/* Authentication Buttons (Desktop) */}
           <div className="hidden md:flex items-center space-x-2">
-            {isSignedIn ? (
+            {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="gap-2">
@@ -138,7 +139,7 @@ const Navbar: React.FC = () => {
                   Projects
                 </Link>
                 
-                {isSignedIn && (
+                {user && (
                   <>
                     <Link
                       to="/my-projects"
@@ -194,7 +195,7 @@ const Navbar: React.FC = () => {
                   </>
                 )}
 
-                {!isSignedIn && (
+                {!user && (
                   <>
                     <Link
                       to="/login"
