@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
@@ -105,6 +104,10 @@ const ProjectDetails: React.FC = () => {
     if (project && project.postedById) {
       navigate(`/messages/${project.postedById}`);
     }
+  };
+  
+  const handleMessageApplicant = (applicantId: string) => {
+    navigate(`/messages/${applicantId}`);
   };
   
   if (isLoading) {
