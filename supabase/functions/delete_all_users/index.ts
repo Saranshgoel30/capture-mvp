@@ -1,3 +1,4 @@
+
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.21.0';
 
@@ -15,7 +16,7 @@ serve(async (req) => {
   // Create a Supabase client with the Auth context of the logged in user
   const supabaseClient = createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
-    Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '', // Using service role for admin operations
     {
       global: {
         headers: { Authorization: req.headers.get('Authorization')! },
@@ -33,6 +34,8 @@ serve(async (req) => {
     
     const currentUserId = authData.user.id;
     
+    console.log("Starting deletion process, preserving user:", currentUserId);
+    
     // Delete all profiles except the current user
     const { error: profileError } = await supabaseClient
       .from('profiles')
@@ -40,17 +43,22 @@ serve(async (req) => {
       .neq('id', currentUserId);
     
     if (profileError) {
+      console.error("Error deleting profiles:", profileError);
       throw new Error(`Error deleting profiles: ${profileError.message}`);
     }
     
-    // Delete all users except the current user through RPC (needs admin rights)
-    // Note: This requires creating a database function with admin rights
+    console.log("Successfully deleted profiles");
+    
+    // Call the RPC function to delete users
     const { error: rpcError } = await supabaseClient
       .rpc('delete_users_except_current', { current_user_id: currentUserId });
     
     if (rpcError) {
+      console.error("Error in RPC call:", rpcError);
       throw new Error(`Error deleting users: ${rpcError.message}`);
     }
+
+    console.log("Successfully deleted users via RPC");
 
     return new Response(
       JSON.stringify({ success: true, message: 'All users except your account have been deleted' }),
@@ -63,6 +71,7 @@ serve(async (req) => {
       }
     );
   } catch (error) {
+    console.error("Function error:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
