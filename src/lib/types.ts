@@ -120,4 +120,28 @@ export type ProjectApplication = {
   
   // Related data
   project?: Project;
+  applicant?: {
+    id: string;
+    name: string;
+    avatar?: string;
+    roles?: string[];
+  };
+};
+
+export type Notification = {
+  id: string;
+  userId: string;
+  type: string;
+  title: string;
+  message: string;
+  read: boolean;
+  relatedId?: string;
+  relatedType?: string;
+  createdAt: number;
+  
+  // Database field names
+  user_id?: string;
+  related_id?: string;
+  related_type?: string;
+  created_at?: string;
 };
