@@ -50,6 +50,8 @@ export type Project = {
   postedBy?: string;
   postedById?: string;
   postedByAvatar?: string;
+  skills?: string[];      // Add skills property
+  budget_range?: string;  // Add budget_range property
   
   // Database field names
   owner_id?: string;

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Plus, Briefcase, Send } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Project, ProjectApplication } from '@/lib/types';
 
@@ -15,9 +14,7 @@ const MyProjects = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [myProjects, setMyProjects] = useState<Project[]>([]);
-  const [appliedProjects, setAppliedProjects] = useState<
-    (Project & { applicationStatus?: string })[]
-  >([]);
+  const [appliedProjects, setAppliedProjects] = useState<(Project & { applicationStatus?: string })[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,11 +30,27 @@ const MyProjects = () => {
       const { data, error } = await supabase
         .from('projects')
         .select('*')
-        .eq('user_id', user?.id)
+        .eq('owner_id', user?.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setMyProjects(data || []);
+      
+      const formattedProjects: Project[] = (data || []).map(project => ({
+        id: project.id,
+        title: project.title,
+        description: project.description,
+        location: project.location,
+        deadline: new Date(project.deadline).toLocaleDateString(),
+        requiredRoles: project.required_roles || [],
+        ownerId: project.owner_id,
+        createdAt: new Date(project.created_at).getTime(),
+        owner_id: project.owner_id,
+        required_roles: project.required_roles,
+        created_at: project.created_at,
+        skills: [],
+      }));
+      
+      setMyProjects(formattedProjects);
     } catch (error: any) {
       console.error('Error fetching my projects:', error.message);
       toast({
@@ -52,19 +65,16 @@ const MyProjects = () => {
 
   const fetchAppliedProjects = async () => {
     try {
-      // First get all the project applications for the user
       const { data: applications, error: applicationsError } = await supabase
-        .from('project_applications')
-        .select('*, project_id')
-        .eq('user_id', user?.id);
+        .from('applications')
+        .select('*')
+        .eq('applicant_id', user?.id);
 
       if (applicationsError) throw applicationsError;
 
       if (applications && applications.length > 0) {
-        // Get the project IDs from the applications
         const projectIds = applications.map((app) => app.project_id);
 
-        // Fetch the projects based on those IDs
         const { data: projects, error: projectsError } = await supabase
           .from('projects')
           .select('*')
@@ -72,19 +82,29 @@ const MyProjects = () => {
 
         if (projectsError) throw projectsError;
 
-        // Combine the projects with their application status
         const enhancedProjects = projects?.map((project) => {
           const application = applications.find(
             (app) => app.project_id === project.id
-          ) as ProjectApplication;
+          );
           
           return {
-            ...project,
-            applicationStatus: application?.status || 'pending'
+            id: project.id,
+            title: project.title,
+            description: project.description,
+            location: project.location,
+            deadline: new Date(project.deadline).toLocaleDateString(),
+            requiredRoles: project.required_roles || [],
+            ownerId: project.owner_id,
+            createdAt: new Date(project.created_at).getTime(),
+            applicationStatus: application?.status || 'pending',
+            owner_id: project.owner_id,
+            required_roles: project.required_roles,
+            created_at: project.created_at,
+            skills: [],
           };
-        });
+        }) || [];
 
-        setAppliedProjects(enhancedProjects || []);
+        setAppliedProjects(enhancedProjects);
       } else {
         setAppliedProjects([]);
       }
@@ -178,7 +198,7 @@ const MyProjects = () => {
                       </Link>
                     </CardTitle>
                     <CardDescription>
-                      Posted on {new Date(project.created_at).toLocaleDateString()}
+                      Posted on {new Date(project.created_at || project.createdAt).toLocaleDateString()}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="flex-grow">
@@ -186,19 +206,19 @@ const MyProjects = () => {
                       {project.description}
                     </p>
                     <div className="mt-4 flex flex-wrap gap-2">
-                      {project.skills?.slice(0, 3).map((skill, idx) => (
+                      {project.requiredRoles?.slice(0, 3).map((role, idx) => (
                         <Badge key={idx} variant="outline">
-                          {skill}
+                          {role}
                         </Badge>
                       ))}
-                      {project.skills && project.skills.length > 3 && (
-                        <Badge variant="outline">+{project.skills.length - 3} more</Badge>
+                      {project.requiredRoles && project.requiredRoles.length > 3 && (
+                        <Badge variant="outline">+{project.requiredRoles.length - 3} more</Badge>
                       )}
                     </div>
                   </CardContent>
                   <CardFooter className="flex justify-between pt-2 border-t">
                     <Badge variant="secondary">
-                      {project.type} • {project.budget_range}
+                      {project.type || 'Project'}
                     </Badge>
                     <Button asChild variant="outline" size="sm">
                       <Link to={`/projects/${project.id}`}>View Details</Link>
@@ -242,7 +262,7 @@ const MyProjects = () => {
                       </Badge>
                     </div>
                     <CardDescription>
-                      Applied on {new Date(project.created_at).toLocaleDateString()}
+                      Applied on {new Date(project.created_at || project.createdAt).toLocaleDateString()}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="flex-grow">
@@ -250,19 +270,19 @@ const MyProjects = () => {
                       {project.description}
                     </p>
                     <div className="mt-4 flex flex-wrap gap-2">
-                      {project.skills?.slice(0, 3).map((skill, idx) => (
+                      {project.requiredRoles?.slice(0, 3).map((role, idx) => (
                         <Badge key={idx} variant="outline">
-                          {skill}
+                          {role}
                         </Badge>
                       ))}
-                      {project.skills && project.skills.length > 3 && (
-                        <Badge variant="outline">+{project.skills.length - 3} more</Badge>
+                      {project.requiredRoles && project.requiredRoles.length > 3 && (
+                        <Badge variant="outline">+{project.requiredRoles.length - 3} more</Badge>
                       )}
                     </div>
                   </CardContent>
                   <CardFooter className="flex justify-between pt-2 border-t">
                     <Badge variant="secondary">
-                      {project.type} • {project.budget_range}
+                      {project.type || 'Project'}
                     </Badge>
                     <Button asChild variant="outline" size="sm">
                       <Link to={`/projects/${project.id}`}>View Details</Link>
