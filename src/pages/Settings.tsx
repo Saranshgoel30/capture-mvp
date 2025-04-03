@@ -6,6 +6,7 @@ import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import ProfileSettingsForm from '@/components/settings/ProfileSettingsForm';
+import AccountSettingsForm from '@/components/settings/AccountSettingsForm';
 
 const Settings: React.FC = () => {
   const { user, profile } = useAuth();
@@ -23,6 +24,17 @@ const Settings: React.FC = () => {
           <h1 className="text-3xl font-bold mb-8">Settings</h1>
           
           <div className="space-y-8">
+            {/* Account Settings Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Account Settings</CardTitle>
+                <CardDescription>Manage your email and password</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <AccountSettingsForm />
+              </CardContent>
+            </Card>
+
             {/* Profile Settings Card */}
             <Card>
               <CardHeader>
