@@ -1,16 +1,14 @@
-
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import Button from './ui-custom/Button';
 import FadeIn from './ui-custom/FadeIn';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-
 const Hero: React.FC = () => {
-  const { user } = useAuth();
-  
-  return (
-    <section id="home" className="min-h-screen pt-28 pb-16 px-6 md:px-12 flex items-center relative overflow-hidden">
+  const {
+    user
+  } = useAuth();
+  return <section id="home" className="min-h-screen pt-28 pb-16 px-6 md:px-12 flex items-center relative overflow-hidden">
       {/* Background gradient */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/70 to-background"></div>
@@ -35,8 +33,7 @@ const Hero: React.FC = () => {
             
             <FadeIn delay={300}>
               <div className="flex flex-col sm:flex-row gap-4">
-                {!user ? (
-                  <>
+                {!user ? <>
                     <Link to="/signup">
                       <Button size="lg" icon={<ArrowRight size={18} />} iconPosition="right" className="rounded-full">
                         Join Now
@@ -47,9 +44,7 @@ const Hero: React.FC = () => {
                         Browse Projects
                       </Button>
                     </Link>
-                  </>
-                ) : (
-                  <>
+                  </> : <>
                     <Link to="/projects">
                       <Button size="lg" icon={<ArrowRight size={18} />} iconPosition="right" className="rounded-full">
                         Find Projects
@@ -60,8 +55,7 @@ const Hero: React.FC = () => {
                         Find Creators
                       </Button>
                     </Link>
-                  </>
-                )}
+                  </>}
               </div>
             </FadeIn>
           </div>
@@ -72,7 +66,7 @@ const Hero: React.FC = () => {
               <div className="grid grid-cols-3 grid-rows-3 gap-4">
                 <div className="col-span-2 row-span-2 bg-primary/10 rounded-2xl p-6 backdrop-blur-sm border border-primary/20">
                   <h3 className="font-bebas text-2xl mb-3">FILMMAKERS</h3>
-                  <p className="text-muted-foreground">Connect with cinematographers, editors, and sound designers for your next film project.</p>
+                  <p className="text-muted-foreground">Connect with cinematographers, editors, actors, sound designers and many more for your next film project.</p>
                 </div>
                 <div className="col-span-1 row-span-1 bg-secondary/40 backdrop-blur-sm p-6 rounded-2xl">
                   <h3 className="font-bebas text-xl mb-2">MUSICIANS</h3>
@@ -108,8 +102,6 @@ const Hero: React.FC = () => {
           </div>
         </FadeIn>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default Hero;
