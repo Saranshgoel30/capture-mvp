@@ -4,8 +4,8 @@ import { Navigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import ProfileSettingsForm from '@/components/settings/ProfileSettingsForm';
 
 const Settings: React.FC = () => {
   const { user, profile } = useAuth();
@@ -30,22 +30,8 @@ const Settings: React.FC = () => {
                 <CardDescription>Manage your personal information</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-sm font-medium">Name</h3>
-                    <p>{profile?.full_name || 'Not set'}</p>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium">Email</h3>
-                    <p>{user?.email || 'Not set'}</p>
-                  </div>
-                </div>
+                <ProfileSettingsForm />
               </CardContent>
-              <CardFooter>
-                <Button variant="outline" asChild>
-                  <a href={`/profile/${user.id}`}>Edit Profile</a>
-                </Button>
-              </CardFooter>
             </Card>
           </div>
         </div>
