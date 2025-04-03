@@ -13,8 +13,8 @@ interface FeatureCardProps {
 const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, delay }) => {
   return (
     <FadeIn delay={delay} direction="up">
-      <div className="h-full group p-6 rounded-xl border border-border bg-card/50 hover:bg-card hover:shadow-md transition-all-300">
-        <div className="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-all-300">
+      <div className="h-full group p-6 rounded-xl border border-border bg-card/50 hover:bg-card hover:shadow-md transition-all duration-300">
+        <div className="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-all duration-300">
           {icon}
         </div>
         <h3 className="text-xl font-semibold mb-2">{title}</h3>
@@ -28,33 +28,33 @@ const Features: React.FC = () => {
   const features = [
     {
       icon: <Users size={24} />,
-      title: "Artist Community",
+      title: "Creator Community",
       description: "Connect with like-minded creatives who share your passion and vision for collaborative art."
     },
     {
       icon: <Camera size={24} />,
-      title: "Showcase Your Work",
-      description: "Build a portfolio that truly represents your artistic vision and creative capabilities."
+      title: "Portfolio Showcase",
+      description: "Build a portfolio that highlights your skills and attracts the right collaborative opportunities."
     },
     {
       icon: <Sparkles size={24} />,
-      title: "Creative Collaborations",
-      description: "Find the perfect collaborators to bring your artistic vision to life, no matter how ambitious."
+      title: "Project Matching",
+      description: "Our platform helps match your skills with projects that need your specific creative talents."
     },
     {
       icon: <Megaphone size={24} />,
-      title: "Visibility Without Gatekeepers",
-      description: "Get your work seen by those who matter without traditional industry barriers."
+      title: "Direct Communication",
+      description: "Connect directly with project leads without middlemen or gatekeepers."
     },
     {
       icon: <Globe size={24} />,
       title: "Local & Global Reach",
-      description: "Connect with artists in your community or collaborate across borders on international projects."
+      description: "Find projects in your local community or collaborate with creators around the world."
     },
     {
       icon: <Heart size={24} />,
       title: "Supportive Network",
-      description: "Build relationships with artists who understand your journey and can help you grow."
+      description: "Join a community of creatives who understand your journey and can help you grow."
     }
   ];
 
@@ -64,19 +64,19 @@ const Features: React.FC = () => {
         <div className="text-center mb-16">
           <FadeIn>
             <span className="inline-block text-sm font-medium text-primary bg-primary/10 px-3 py-1 rounded-full mb-3">
-              For Creators
+              Platform Features
             </span>
           </FadeIn>
           
           <FadeIn delay={100}>
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              The Community Artists Deserve
+              Designed for Creative Collaboration
             </h2>
           </FadeIn>
           
           <FadeIn delay={200}>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              We're breaking down the barriers that keep creative talent isolated and projects understaffed. Capture connects artists directly to opportunities and to each other.
+              Our platform brings together all the tools and connections you need to find your next creative collaboration and build your artistic career.
             </p>
           </FadeIn>
         </div>
