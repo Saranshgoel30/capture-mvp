@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   CheckCircle, 
@@ -77,14 +76,12 @@ const ProjectApplications: React.FC<ProjectApplicationsProps> = ({ projectId, pr
       const success = await updateApplicationStatus(application.id, status);
       
       if (success) {
-        // Update local state
         setApplications(prev => 
           prev.map(app => 
             app.id === application.id ? { ...app, status } : app
           )
         );
         
-        // Create notification for the applicant
         await createNotification(
           application.userId,
           'application_status',
@@ -125,7 +122,6 @@ const ProjectApplications: React.FC<ProjectApplicationsProps> = ({ projectId, pr
       );
       
       if (success) {
-        // Create notification for the applicant
         await createNotification(
           selectedApplication.userId,
           'message',
@@ -140,7 +136,6 @@ const ProjectApplications: React.FC<ProjectApplicationsProps> = ({ projectId, pr
           description: 'Your message has been sent successfully.',
         });
         
-        // Navigate to the messages page with the applicant
         navigate(`/messages/${selectedApplication.userId}`);
       } else {
         throw new Error('Failed to send message');
@@ -230,7 +225,7 @@ const ProjectApplications: React.FC<ProjectApplicationsProps> = ({ projectId, pr
                   View Profile
                 </Link>
                 <CollapsibleTrigger className="rounded-full p-1 hover:bg-secondary">
-                  {open => (
+                  {(open: boolean) => (
                     open ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />
                   )}
                 </CollapsibleTrigger>

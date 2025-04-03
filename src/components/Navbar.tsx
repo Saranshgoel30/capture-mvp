@@ -5,8 +5,8 @@
 import OriginalNavbar from './NavbarOriginal';
 import NotificationsDropdown from './NotificationsDropdown';
 
-const Navbar = (props: any) => {
-  return <OriginalNavbar {...props} NotificationsComponent={NotificationsDropdown} />;
+const Navbar = () => {
+  return <OriginalNavbar NotificationsComponent={NotificationsDropdown} />;
 };
 
 export default Navbar;

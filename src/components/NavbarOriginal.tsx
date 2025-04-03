@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from '@/hooks/use-mobile';
 import { getAnimalAvatarForUser } from '@/lib/animalAvatars';
+
 const NavbarOriginal = ({
   NotificationsComponent
 }: {
@@ -16,7 +17,7 @@ const NavbarOriginal = ({
   const {
     user,
     profile,
-    logout
+    signOut
   } = useAuth();
   const location = useLocation();
   const isMobile = useIsMobile();
@@ -25,14 +26,18 @@ const NavbarOriginal = ({
   useEffect(() => {
     setMenuOpen(false);
   }, [location.pathname]);
+  
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
   };
+  
   const isActive = (path: string) => {
     return location.pathname === path;
   };
+  
   const userAvatar = user && profile?.avatar_url ? profile.avatar_url : user ? getAnimalAvatarForUser(user.id) : '';
   const userName = profile?.full_name || user?.email?.split('@')[0] || 'User';
+  
   return <nav className="fixed top-0 left-0 right-0 bg-background border-b border-border/40 z-50 px-6 md:px-12">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center h-20">
@@ -93,7 +98,7 @@ const NavbarOriginal = ({
                         Settings
                       </Link>
                       <button className="block px-4 py-2 text-sm hover:bg-secondary w-full text-left text-destructive" onClick={() => {
-                  logout();
+                  signOut();
                   setMenuOpen(false);
                 }}>
                         Sign Out
@@ -154,4 +159,5 @@ const NavbarOriginal = ({
       </div>
     </nav>;
 };
+
 export default NavbarOriginal;

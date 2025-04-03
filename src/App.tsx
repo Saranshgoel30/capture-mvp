@@ -1,8 +1,6 @@
 
 import { Route, Routes } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
-import { ThemeProvider } from './contexts/ThemeContext';
-import { AuthProvider } from './contexts/AuthContext';
 
 // Pages
 import Index from './pages/Index';
@@ -20,26 +18,24 @@ import MyProjects from './pages/MyProjects';
 
 function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/profile/:userId" element={<Profile />} />
-          <Route path="/projects" element={<Projects />} />
-          <Route path="/projects/:projectId" element={<ProjectDetails />} />
-          <Route path="/my-projects" element={<MyProjects />} />
-          <Route path="/messages" element={<Messages />} />
-          <Route path="/messages/:userId" element={<Messages />} />
-          <Route path="/chatroom" element={<Chatroom />} />
-          <Route path="/find-creators" element={<FindCreators />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-        <Toaster />
-      </AuthProvider>
-    </ThemeProvider>
+    <>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/profile/:userId" element={<Profile />} />
+        <Route path="/projects" element={<Projects />} />
+        <Route path="/projects/:projectId" element={<ProjectDetails />} />
+        <Route path="/my-projects" element={<MyProjects />} />
+        <Route path="/messages" element={<Messages />} />
+        <Route path="/messages/:userId" element={<Messages />} />
+        <Route path="/chatroom" element={<Chatroom />} />
+        <Route path="/find-creators" element={<FindCreators />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      <Toaster />
+    </>
   );
 }
 
