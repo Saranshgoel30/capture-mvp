@@ -30,6 +30,7 @@ const Chatroom: React.FC = () => {
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -66,19 +67,40 @@ const Chatroom: React.FC = () => {
   const fetchMessages = async () => {
     try {
       setIsLoading(true);
+      setFetchError(null);
       
-      // Use the edge function to get messages
-      const { data, error } = await supabase.functions.invoke('get_chatroom_messages');
+      // Fallback to direct Supabase query if edge function fails
+      const { data, error } = await supabase
+        .from('chatroom_messages')
+        .select(`
+          *,
+          profiles!inner (
+            full_name,
+            avatar_url
+          )
+        `)
+        .order('created_at');
       
       if (error) {
         throw error;
       }
       
-      if (data) {
-        setMessages(data as ChatMessage[]);
-      }
+      // Transform the data to match the expected format
+      const formattedMessages = data.map(message => ({
+        id: message.id,
+        content: message.content,
+        user_id: message.user_id,
+        created_at: message.created_at,
+        user: {
+          full_name: message.profiles?.full_name,
+          avatar_url: message.profiles?.avatar_url
+        }
+      }));
+      
+      setMessages(formattedMessages);
     } catch (error: any) {
       console.error('Error fetching messages:', error);
+      setFetchError(error.message || 'Failed to load chat messages');
       toast({
         title: 'Error',
         description: 'Failed to load chat messages',
@@ -123,10 +145,12 @@ const Chatroom: React.FC = () => {
     try {
       setIsSending(true);
       
-      // Use the edge function to insert a message
-      const { error } = await supabase.functions.invoke('insert_chatroom_message', {
-        body: { content: newMessage }
-      });
+      const { error } = await supabase
+        .from('chatroom_messages')
+        .insert({
+          content: newMessage.trim(),
+          user_id: user.id
+        });
       
       if (error) {
         throw error;
@@ -162,7 +186,7 @@ const Chatroom: React.FC = () => {
         <div className="max-w-4xl mx-auto">
           <Card className="shadow-lg">
             <CardHeader className="bg-primary text-primary-foreground">
-              <CardTitle>CrewConnect Community Chat</CardTitle>
+              <CardTitle>Capture Community Chat</CardTitle>
             </CardHeader>
             
             <ScrollArea className="h-[60vh]">
@@ -170,6 +194,13 @@ const Chatroom: React.FC = () => {
                 {isLoading ? (
                   <div className="flex justify-center items-center h-40">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : fetchError ? (
+                  <div className="text-center text-destructive py-12">
+                    <p>Error: {fetchError}</p>
+                    <Button onClick={fetchMessages} className="mt-4">
+                      Try Again
+                    </Button>
                   </div>
                 ) : messages.length === 0 ? (
                   <div className="text-center text-muted-foreground py-12">
