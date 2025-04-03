@@ -28,33 +28,33 @@ const Features: React.FC = () => {
   const features = [
     {
       icon: <Users size={24} />,
-      title: "Creator Community",
-      description: "Connect with like-minded creatives who share your passion and vision for collaborative art."
+      title: "Creative Community",
+      description: "Connect with passionate creators in India who share your artistic vision for collaborative projects."
     },
     {
       icon: <Camera size={24} />,
       title: "Portfolio Showcase",
-      description: "Build a portfolio that highlights your skills and attracts the right collaborative opportunities."
+      description: "Build a portfolio that highlights your skills and attracts collaborative opportunities across India."
     },
     {
       icon: <Sparkles size={24} />,
       title: "Project Matching",
-      description: "Our platform helps match your skills with projects that need your specific creative talents."
+      description: "Our platform helps match your unique talents with creative projects seeking your expertise."
     },
     {
       icon: <Megaphone size={24} />,
-      title: "Direct Communication",
-      description: "Connect directly with project leads without middlemen or gatekeepers."
+      title: "Direct Networking",
+      description: "Connect directly with project leads and fellow creators without unnecessary barriers."
     },
     {
       icon: <Globe size={24} />,
-      title: "Local & Global Reach",
-      description: "Find projects in your local community or collaborate with creators around the world."
+      title: "National & Global Reach",
+      description: "Find projects in your local community or collaborate with creators across India and beyond."
     },
     {
       icon: <Heart size={24} />,
       title: "Supportive Network",
-      description: "Join a community of creatives who understand your journey and can help you grow."
+      description: "Join a community of creative professionals who understand and support your artistic journey."
     }
   ];
 

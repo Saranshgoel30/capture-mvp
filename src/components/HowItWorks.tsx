@@ -6,20 +6,20 @@ import FadeIn from './ui-custom/FadeIn';
 const steps = [
   {
     icon: <Search className="h-8 w-8 text-primary" />,
-    title: "Find Your Project",
-    description: "Browse through a diverse range of creative projects looking for talented individuals like you.",
+    title: "Discover Opportunities",
+    description: "Explore a wide range of creative projects looking for talented individuals across India.",
     delay: 100
   },
   {
     icon: <Users className="h-8 w-8 text-primary" />,
-    title: "Connect Directly",
-    description: "Reach out to project leads or respond to creator searches with your portfolio and ideas.",
+    title: "Direct Collaboration",
+    description: "Reach out to project creators and fellow artists with your portfolio and innovative ideas.",
     delay: 200
   },
   {
     icon: <Sparkles className="h-8 w-8 text-primary" />,
-    title: "Collaborate & Create",
-    description: "Work together to bring your shared creative vision to life, building your network and portfolio.",
+    title: "Create Together",
+    description: "Collaborate seamlessly to bring your shared creative vision to life, expanding your network.",
     delay: 300
   },
 ];

@@ -12,19 +12,19 @@ import {
 const testimonials = [
   {
     quote: "I found my entire film crew through Capture. The platform made it easy to connect with talented individuals who were passionate about my project.",
-    name: "Alex Rivera",
+    name: "Aarav Patel",
     role: "Independent Filmmaker",
     avatar: "https://i.pravatar.cc/150?img=32"
   },
   {
     quote: "As a photographer just starting out, Capture helped me find collaborative projects that built my portfolio and connected me with other creatives in my city.",
-    name: "Sophia Chen",
+    name: "Priya Sharma",
     role: "Photographer",
     avatar: "https://i.pravatar.cc/150?img=47"
   },
   {
     quote: "The direct connection between project creators and artists is what makes Capture special. No middlemen means better communication and more authentic collaborations.",
-    name: "Marcus Johnson",
+    name: "Vikram Singh",
     role: "Sound Designer",
     avatar: "https://i.pravatar.cc/150?img=68"
   }
