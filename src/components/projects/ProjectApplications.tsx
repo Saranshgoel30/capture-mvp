@@ -225,7 +225,7 @@ const ProjectApplications: React.FC<ProjectApplicationsProps> = ({ projectId, pr
                   View Profile
                 </Link>
                 <CollapsibleTrigger className="rounded-full p-1 hover:bg-secondary">
-                  {({ open }) => open ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                  {(props) => props.open ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
                 </CollapsibleTrigger>
               </div>
             </div>
