@@ -12,7 +12,6 @@ const CollapsibleTrigger = React.forwardRef<
   React.ElementRef<typeof CollapsiblePrimitive.CollapsibleTrigger>,
   CollapsibleTriggerProps
 >(({ children, ...props }, ref) => {
-  // Get open state from Collapsible context
   const [open, setOpen] = React.useState(false)
   
   return (
