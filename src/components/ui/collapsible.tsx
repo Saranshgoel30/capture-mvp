@@ -24,7 +24,7 @@ const CollapsibleTrigger = React.forwardRef<
       }}
     >
       {typeof children === "function" 
-        ? (children as (props: { open: boolean }) => React.ReactNode)({ open }) 
+        ? children({ open }) 
         : children}
     </CollapsiblePrimitive.CollapsibleTrigger>
   )
