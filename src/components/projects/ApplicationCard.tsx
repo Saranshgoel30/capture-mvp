@@ -56,13 +56,6 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
     }
   };
 
-  // Create a properly typed render function
-  const renderTriggerIcon = (props: { open: boolean }): React.ReactNode => {
-    return props.open 
-      ? <ChevronUp className="h-5 w-5" /> 
-      : <ChevronDown className="h-5 w-5" />;
-  };
-
   return (
     <Collapsible className="border rounded-lg overflow-hidden">
       <div className="flex items-center justify-between p-4 bg-card">
@@ -96,7 +89,9 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
             View Profile
           </Link>
           <CollapsibleTrigger className="rounded-full p-1 hover:bg-secondary">
-            {renderTriggerIcon}
+            {({ open }) => (
+              open ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />
+            )}
           </CollapsibleTrigger>
         </div>
       </div>
