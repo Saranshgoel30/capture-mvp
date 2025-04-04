@@ -1,6 +1,7 @@
 
 import { supabase } from './client';
 import { Notification } from '@/lib/types';
+import { fetchUserProfile } from './users';
 
 // Fetch notifications for a user
 export const fetchNotifications = async (userId: string): Promise<Notification[]> => {
@@ -27,11 +28,6 @@ export const fetchNotifications = async (userId: string): Promise<Notification[]
       relatedId: notification.related_id,
       relatedType: notification.related_type,
       createdAt: new Date(notification.created_at).getTime(),
-      // Database field names
-      user_id: notification.user_id,
-      related_id: notification.related_id,
-      related_type: notification.related_type,
-      created_at: notification.created_at
     }));
   } catch (error) {
     console.error('Exception fetching notifications:', error);
