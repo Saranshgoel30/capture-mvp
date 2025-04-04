@@ -40,7 +40,7 @@ const Chatroom: React.FC = () => {
     
     // Subscribe to new messages
     const subscription = supabase
-      .channel('chatroom_messages')
+      .channel('public:chatroom_messages')
       .on('postgres_changes', { 
         event: 'INSERT', 
         schema: 'public', 
@@ -69,12 +69,11 @@ const Chatroom: React.FC = () => {
       setIsLoading(true);
       setFetchError(null);
       
-      // Fallback to direct Supabase query if edge function fails
       const { data, error } = await supabase
         .from('chatroom_messages')
         .select(`
           *,
-          profiles!inner (
+          profiles:user_id (
             full_name,
             avatar_url
           )

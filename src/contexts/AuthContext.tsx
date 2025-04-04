@@ -104,13 +104,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Authentication methods
   const signInWithEmail = async (email: string, password: string): Promise<boolean> => {
     try {
+      console.log("Attempting to sign in with email:", email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Sign in error:", error);
+        throw error;
+      }
       
+      console.log("Sign in successful:", data);
       toast({
         title: 'Welcome back!',
         description: 'You have successfully signed in.',
@@ -130,13 +135,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUpWithEmail = async (email: string, password: string): Promise<boolean> => {
     try {
+      console.log("Attempting to sign up with email:", email);
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Sign up error:", error);
+        throw error;
+      }
       
+      console.log("Sign up response:", data);
       // If email confirmation is disabled, the user will be signed in automatically
       if (data.session) {
         toast({
@@ -164,10 +174,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signInWithGoogle = async (): Promise<void> => {
     try {
+      console.log("Attempting to sign in with Google");
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/projects`
+          redirectTo: `${window.location.origin}/projects`,
+          skipBrowserRedirect: false,
         }
       });
       
@@ -184,10 +197,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signInWithGithub = async (): Promise<void> => {
     try {
+      console.log("Attempting to sign in with GitHub");
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'github',
         options: {
-          redirectTo: `${window.location.origin}/projects`
+          redirectTo: `${window.location.origin}/projects`,
+          skipBrowserRedirect: false,
         }
       });
       

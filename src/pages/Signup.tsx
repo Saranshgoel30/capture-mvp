@@ -25,15 +25,15 @@ const Signup: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="pt-32 pb-24 px-6 md:px-12 flex justify-center items-center">
-        <div className="max-w-md w-full p-8 bg-secondary/40 backdrop-blur-md rounded-2xl">
-          <h1 className="text-4xl font-bebas tracking-wider mb-6 text-center">SIGN UP</h1>
+      <div className="pt-24 sm:pt-32 pb-16 sm:pb-24 px-4 sm:px-6 md:px-12 flex justify-center items-center">
+        <div className="w-full max-w-md p-4 sm:p-8 bg-secondary/40 backdrop-blur-md rounded-2xl">
+          <h1 className="text-3xl sm:text-4xl font-bebas tracking-wider mb-4 sm:mb-6 text-center">SIGN UP</h1>
           
           <div className="space-y-4">
             <Button 
               variant="outline" 
-              className="w-full justify-center rounded-xl"
-              icon={<Github size={20} />}
+              className="w-full justify-center rounded-xl text-sm sm:text-base"
+              icon={<Github size={18} />}
               onClick={() => signInWithGithub()}
             >
               Continue with Github
@@ -41,14 +41,14 @@ const Signup: React.FC = () => {
             
             <Button 
               variant="outline" 
-              className="w-full justify-center rounded-xl"
-              icon={<Mail size={20} />}
+              className="w-full justify-center rounded-xl text-sm sm:text-base"
+              icon={<Mail size={18} />}
               onClick={() => signInWithGoogle()}
             >
               Continue with Google
             </Button>
             
-            <div className="relative my-6">
+            <div className="relative my-4 sm:my-6">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-white/10"></div>
               </div>
@@ -57,8 +57,8 @@ const Signup: React.FC = () => {
               </div>
             </div>
             
-            <form onSubmit={handleSignup} className="space-y-4">
-              <div className="space-y-2">
+            <form onSubmit={handleSignup} className="space-y-3 sm:space-y-4">
+              <div className="space-y-1 sm:space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
@@ -68,10 +68,11 @@ const Signup: React.FC = () => {
                   placeholder="Enter your email"
                   className="bg-background/50"
                   required
+                  autoComplete="email"
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1 sm:space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <Input
                   id="password"
@@ -81,20 +82,21 @@ const Signup: React.FC = () => {
                   placeholder="Create a password"
                   className="bg-background/50"
                   required
+                  autoComplete="new-password"
                 />
               </div>
 
               <Button 
                 type="submit"
                 variant="primary" 
-                className="w-full justify-center rounded-xl mt-4"
+                className="w-full justify-center rounded-xl mt-2 sm:mt-4 text-sm sm:text-base"
                 isLoading={isLoading}
               >
                 Sign up with Email
               </Button>
             </form>
             
-            <div className="mt-6 text-center text-sm text-muted-foreground">
+            <div className="mt-4 sm:mt-6 text-center text-xs sm:text-sm text-muted-foreground">
               <p>Already have an account? <Link to="/login" className="text-primary hover:underline">Log in</Link></p>
               <p className="mt-2">
                 <Link to="/projects" className="text-primary hover:underline">Continue as guest</Link>

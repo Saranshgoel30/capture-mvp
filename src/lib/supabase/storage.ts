@@ -9,6 +9,17 @@ export const uploadProfileImage = async (userId: string, file: File) => {
     const fileName = `${userId}-${uuidv4()}.${fileExt}`;
     const filePath = `${fileName}`;
 
+    // Make sure the avatars bucket exists (optional check)
+    const { data: bucketExists } = await supabase
+      .storage
+      .getBucket('avatars');
+      
+    if (!bucketExists) {
+      console.log('Creating avatars bucket');
+      // Skip bucket creation as this should be done on the server side
+      // and will just fail if the user doesn't have permission
+    }
+
     // Upload the file to Supabase storage
     const { data, error } = await supabase
       .storage

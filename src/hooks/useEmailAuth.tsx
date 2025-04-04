@@ -26,7 +26,9 @@ export const useEmailAuth = () => {
     
     setIsLoading(true);
     try {
+      console.log("Login form submitted with:", { email });
       const success = await signInWithEmail(email, password);
+      console.log("Login result:", success);
       if (success) {
         navigate('/projects');
       }
@@ -51,7 +53,9 @@ export const useEmailAuth = () => {
     
     setIsLoading(true);
     try {
+      console.log("Signup form submitted with:", { email });
       const success = await signUpWithEmail(email, password);
+      console.log("Signup result:", success);
       if (success) {
         navigate('/projects');
       }

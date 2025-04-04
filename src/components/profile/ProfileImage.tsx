@@ -114,6 +114,7 @@ const ProfileImage: React.FC<ProfileImageProps> = ({
             className="hidden"
             accept="image/*"
             onChange={handleFileChange}
+            data-testid="avatar-upload"
           />
         </>
       )}
