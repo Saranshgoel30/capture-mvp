@@ -5,7 +5,8 @@ import {
   XCircle, 
   MessageSquare, 
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Clock
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -54,12 +55,6 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
       );
     }
   };
-  
-  const renderTriggerIcon = ({ open }: { open: boolean }) => {
-    return open 
-      ? <ChevronUp className="h-5 w-5" /> 
-      : <ChevronDown className="h-5 w-5" />;
-  };
 
   return (
     <Collapsible className="border rounded-lg overflow-hidden">
@@ -94,7 +89,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
             View Profile
           </Link>
           <CollapsibleTrigger className="rounded-full p-1 hover:bg-secondary">
-            {renderTriggerIcon}
+            {({ open }) => open ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
           </CollapsibleTrigger>
         </div>
       </div>
@@ -143,8 +138,5 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
     </Collapsible>
   );
 };
-
-// Need to import the Clock icon
-import { Clock } from 'lucide-react';
 
 export default ApplicationCard;
