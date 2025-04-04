@@ -1,11 +1,11 @@
 
 import { supabase } from './client';
 import { Notification } from '@/lib/types';
-import { fetchUserProfile } from './users';
 
 // Fetch notifications for a user
 export const fetchNotifications = async (userId: string): Promise<Notification[]> => {
   try {
+    // Use the notifications table type definition
     const { data, error } = await supabase
       .from('notifications')
       .select('*')
@@ -18,16 +18,17 @@ export const fetchNotifications = async (userId: string): Promise<Notification[]
       return [];
     }
     
+    // Transform the data to match the expected types
     return (data || []).map(notification => ({
       id: notification.id,
       userId: notification.user_id,
       type: notification.type,
       title: notification.title,
       message: notification.message,
-      read: notification.read,
+      read: notification.read || false,
       relatedId: notification.related_id,
       relatedType: notification.related_type,
-      createdAt: new Date(notification.created_at).getTime(),
+      createdAt: notification.created_at ? new Date(notification.created_at).getTime() : Date.now(),
     }));
   } catch (error) {
     console.error('Exception fetching notifications:', error);

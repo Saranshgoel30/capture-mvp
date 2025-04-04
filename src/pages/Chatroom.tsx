@@ -69,34 +69,43 @@ const Chatroom: React.FC = () => {
       setIsLoading(true);
       setFetchError(null);
       
+      // Use a simpler query first to get the messages
       const { data, error } = await supabase
         .from('chatroom_messages')
-        .select(`
-          *,
-          profiles:user_id (
-            full_name,
-            avatar_url
-          )
-        `)
+        .select('*')
         .order('created_at');
       
       if (error) {
         throw error;
       }
+
+      // Now fetch user data for each message separately
+      const messagesWithUsers = await Promise.all(
+        data.map(async (message) => {
+          try {
+            const { data: userData, error: userError } = await supabase
+              .from('profiles')
+              .select('full_name, avatar_url')
+              .eq('id', message.user_id)
+              .single();
+            
+            return {
+              ...message,
+              user: userError ? null : {
+                full_name: userData?.full_name,
+                avatar_url: userData?.avatar_url
+              }
+            };
+          } catch {
+            return {
+              ...message,
+              user: null
+            };
+          }
+        })
+      );
       
-      // Transform the data to match the expected format
-      const formattedMessages = data.map(message => ({
-        id: message.id,
-        content: message.content,
-        user_id: message.user_id,
-        created_at: message.created_at,
-        user: {
-          full_name: message.profiles?.full_name,
-          avatar_url: message.profiles?.avatar_url
-        }
-      }));
-      
-      setMessages(formattedMessages);
+      setMessages(messagesWithUsers);
     } catch (error: any) {
       console.error('Error fetching messages:', error);
       setFetchError(error.message || 'Failed to load chat messages');
@@ -123,8 +132,8 @@ const Chatroom: React.FC = () => {
       const enhancedMessage = {
         ...message,
         user: {
-          full_name: userData.full_name,
-          avatar_url: userData.avatar_url
+          full_name: userData?.full_name,
+          avatar_url: userData?.avatar_url
         }
       };
       
