@@ -59,11 +59,31 @@ const ProfileImage: React.FC<ProfileImageProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
     
+    // Early validation before uploading
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image smaller than 5MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsUploading(true);
+    
     try {
-      // Handle resizing if needed (for mobile uploads that might be large)
+      console.log("Starting profile image upload for user:", userId);
+      
+      // Temporary local preview for immediate feedback
+      const localPreview = URL.createObjectURL(file);
+      setAvatarUrl(localPreview);
+      
+      // Handle the actual upload
       const imageUrl = await uploadProfileImage(userId, file);
-      setAvatarUrl(imageUrl); // Update the local avatar URL immediately
+      console.log("Upload completed, image URL:", imageUrl);
+      
+      // Update the avatar URL once upload is complete
+      setAvatarUrl(imageUrl);
       
       if (onAvatarUpdate) {
         onAvatarUpdate(imageUrl);
@@ -73,11 +93,18 @@ const ProfileImage: React.FC<ProfileImageProps> = ({
         title: "Image uploaded",
         description: "Your profile image has been updated successfully.",
       });
-    } catch (error) {
+      
+      // Release the object URL to avoid memory leaks
+      URL.revokeObjectURL(localPreview);
+    } catch (error: any) {
       console.error('Error uploading image:', error);
+      
+      // Revert to previous avatar on error
+      setAvatarUrl(avatar);
+      
       toast({
         title: "Upload failed",
-        description: "Failed to upload your profile image. Please try again.",
+        description: error.message || "Failed to upload your profile image. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -89,11 +116,14 @@ const ProfileImage: React.FC<ProfileImageProps> = ({
     }
   };
   
+  // Add a cache-busting parameter to the avatar URL
+  const displayUrl = avatarUrl ? `${avatarUrl}${avatarUrl.includes('?') ? '&' : '?'}t=${Date.now()}` : animalAvatar;
+  
   return (
     <div className="relative">
       <Avatar className={sizeClasses[size]}>
         {/* Use the local state for display to avoid flickering during upload */}
-        <AvatarImage src={avatarUrl || animalAvatar} alt={name} />
+        <AvatarImage src={displayUrl} alt={name} />
         <AvatarFallback className="bg-primary text-primary-foreground">
           {name ? name.charAt(0).toUpperCase() : <User />}
         </AvatarFallback>
