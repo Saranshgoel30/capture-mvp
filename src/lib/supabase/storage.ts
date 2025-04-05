@@ -1,3 +1,4 @@
+
 import { supabase } from './client';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -20,7 +21,7 @@ export const uploadProfileImage = async (userId: string, file: File) => {
       .from('avatars')
       .upload(filePath, file, {
         cacheControl: '3600',
-        upsert: true // Change to true to overwrite existing files
+        upsert: true // Overwrite existing files with the same name
       });
 
     if (error) {
@@ -56,6 +57,12 @@ export const uploadProfileImage = async (userId: string, file: File) => {
 
 export const uploadPortfolioMedia = async (userId: string, file: File) => {
   try {
+    // Check file size - mobile uploads can be very large
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB for portfolio files
+    if (file.size > MAX_FILE_SIZE) {
+      throw new Error('File size must be less than 10MB');
+    }
+    
     // Create a unique file name
     const fileExt = file.name.split('.').pop();
     const fileName = `${userId}-${uuidv4()}.${fileExt}`;
@@ -72,7 +79,7 @@ export const uploadPortfolioMedia = async (userId: string, file: File) => {
       .from(bucketName)
       .upload(filePath, file, {
         cacheControl: '3600',
-        upsert: false
+        upsert: true // Change to true to overwrite existing files
       });
 
     if (error) {
@@ -86,7 +93,8 @@ export const uploadPortfolioMedia = async (userId: string, file: File) => {
       .from(bucketName)
       .getPublicUrl(filePath);
 
-    return publicUrl;
+    // Return with cache-busting parameter
+    return `${publicUrl}?t=${Date.now()}`;
   } catch (error) {
     console.error('Exception in uploadPortfolioMedia:', error);
     throw error;
