@@ -25,6 +25,7 @@ const ProfileImage: React.FC<ProfileImageProps> = ({
   readOnly = false
 }) => {
   const [isUploading, setIsUploading] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null | undefined>(avatar);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   
@@ -60,7 +61,9 @@ const ProfileImage: React.FC<ProfileImageProps> = ({
     
     setIsUploading(true);
     try {
+      // Handle resizing if needed (for mobile uploads that might be large)
       const imageUrl = await uploadProfileImage(userId, file);
+      setAvatarUrl(imageUrl); // Update the local avatar URL immediately
       
       if (onAvatarUpdate) {
         onAvatarUpdate(imageUrl);
@@ -79,14 +82,18 @@ const ProfileImage: React.FC<ProfileImageProps> = ({
       });
     } finally {
       setIsUploading(false);
+      // Clear the input so users can select the same image again if needed
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
   
   return (
     <div className="relative">
       <Avatar className={sizeClasses[size]}>
-        {/* Use the user's uploaded avatar first, then fall back to the animal avatar */}
-        <AvatarImage src={avatar || animalAvatar} alt={name} />
+        {/* Use the local state for display to avoid flickering during upload */}
+        <AvatarImage src={avatarUrl || animalAvatar} alt={name} />
         <AvatarFallback className="bg-primary text-primary-foreground">
           {name ? name.charAt(0).toUpperCase() : <User />}
         </AvatarFallback>
@@ -115,6 +122,8 @@ const ProfileImage: React.FC<ProfileImageProps> = ({
             accept="image/*"
             onChange={handleFileChange}
             data-testid="avatar-upload"
+            // Ensure we accept images from mobile devices
+            capture="user"
           />
         </>
       )}

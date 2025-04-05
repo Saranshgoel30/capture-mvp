@@ -1,24 +1,18 @@
-
 import { supabase } from './client';
 import { v4 as uuidv4 } from 'uuid';
 
 export const uploadProfileImage = async (userId: string, file: File) => {
   try {
+    // Check file size - mobile uploads can be very large
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    if (file.size > MAX_FILE_SIZE) {
+      throw new Error('File size must be less than 5MB');
+    }
+
     // Create a unique file name
     const fileExt = file.name.split('.').pop();
     const fileName = `${userId}-${uuidv4()}.${fileExt}`;
     const filePath = `${fileName}`;
-
-    // Make sure the avatars bucket exists (optional check)
-    const { data: bucketExists } = await supabase
-      .storage
-      .getBucket('avatars');
-      
-    if (!bucketExists) {
-      console.log('Creating avatars bucket');
-      // Skip bucket creation as this should be done on the server side
-      // and will just fail if the user doesn't have permission
-    }
 
     // Upload the file to Supabase storage
     const { data, error } = await supabase
@@ -26,7 +20,7 @@ export const uploadProfileImage = async (userId: string, file: File) => {
       .from('avatars')
       .upload(filePath, file, {
         cacheControl: '3600',
-        upsert: false
+        upsert: true // Change to true to overwrite existing files
       });
 
     if (error) {
@@ -51,7 +45,9 @@ export const uploadProfileImage = async (userId: string, file: File) => {
       throw updateError;
     }
 
-    return publicUrl;
+    // Return the public URL with a cache-busting parameter
+    // This ensures the browser doesn't show the old image due to caching
+    return `${publicUrl}?t=${Date.now()}`;
   } catch (error) {
     console.error('Exception in uploadProfileImage:', error);
     throw error;

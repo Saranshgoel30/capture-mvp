@@ -175,12 +175,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signInWithGoogle = async (): Promise<void> => {
     try {
       console.log("Attempting to sign in with Google");
+      
+      // Get current device information to optimize the auth flow
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/projects`,
+          // Don't skip browser redirect - let Supabase handle the full flow
           skipBrowserRedirect: false,
+          // Add query parameters for better mobile auth flow
+          queryParams: isMobile ? {
+            prompt: 'select_account',
+            access_type: 'offline'
+          } : undefined
         }
       });
       
@@ -198,11 +207,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signInWithGithub = async (): Promise<void> => {
     try {
       console.log("Attempting to sign in with GitHub");
+      
+      // Get current device information
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'github',
         options: {
           redirectTo: `${window.location.origin}/projects`,
-          skipBrowserRedirect: false,
+          skipBrowserRedirect: false
         }
       });
       
