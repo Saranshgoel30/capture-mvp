@@ -1,143 +1,156 @@
 
 import React from 'react';
-import { 
-  CheckCircle, 
-  XCircle, 
-  MessageSquare, 
-  ChevronDown,
-  ChevronUp,
-  Clock
-} from 'lucide-react';
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Clock, MessageSquare, User, Check, X } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import MessageDialog from './MessageDialog';
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
-import { ProjectApplication } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase/client';
+import { getAnimalAvatarForUser } from '@/lib/animalAvatars';
 
 interface ApplicationCardProps {
-  application: ProjectApplication;
-  onStatusUpdate: (application: ProjectApplication, status: 'approved' | 'rejected') => Promise<void>;
-  onMessageClick: (application: ProjectApplication) => void;
-  isActionInProgress: boolean;
+  application: {
+    id: string;
+    projectId: string;
+    project?: {
+      title: string;
+    };
+    applicantId: string;
+    applicant?: {
+      full_name?: string;
+      avatar_url?: string;
+    };
+    status: 'pending' | 'accepted' | 'rejected';
+    message: string;
+    created_at: string;
+  };
+  viewType: 'owner' | 'applicant';
+  onStatusChange?: (id: string, status: 'accepted' | 'rejected') => Promise<void>;
 }
 
 const ApplicationCard: React.FC<ApplicationCardProps> = ({ 
   application, 
-  onStatusUpdate, 
-  onMessageClick,
-  isActionInProgress 
+  viewType, 
+  onStatusChange 
 }) => {
-  const applicantAvatar = application.applicant?.avatar;
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = React.useState(false);
   
-  const renderStatusBadge = () => {
-    if (application.status === 'pending') {
-      return (
-        <Badge variant="outline" className="bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800">
-          <Clock className="h-3 w-3 mr-1" /> Pending
-        </Badge>
-      );
-    } else if (application.status === 'approved') {
-      return (
-        <Badge variant="outline" className="bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300 border-green-200 dark:border-green-800">
-          <CheckCircle className="h-3 w-3 mr-1" /> Approved
-        </Badge>
-      );
-    } else {
-      return (
-        <Badge variant="outline" className="bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800">
-          <XCircle className="h-3 w-3 mr-1" /> Rejected
-        </Badge>
-      );
+  const handleStatusChange = async (status: 'accepted' | 'rejected') => {
+    if (!onStatusChange) return;
+    
+    setIsLoading(true);
+    try {
+      await onStatusChange(application.id, status);
+      toast({
+        title: `Application ${status}`,
+        description: `You have ${status} the application.`,
+      });
+    } catch (error) {
+      console.error('Error changing application status:', error);
+      toast({
+        title: 'Error',
+        description: 'There was an error updating the application status.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
-
+  
+  // Get applicant avatar or use animal avatar
+  const avatarUrl = application.applicant?.avatar_url || getAnimalAvatarForUser(application.applicantId);
+  
   return (
-    <Collapsible className="border rounded-lg overflow-hidden">
-      <div className="flex items-center justify-between p-4 bg-card">
-        <div className="flex items-center space-x-3">
-          <Avatar className="h-10 w-10">
-            <AvatarImage src={applicantAvatar} />
-            <AvatarFallback>{application.applicant?.name?.charAt(0) || 'U'}</AvatarFallback>
-          </Avatar>
-          <div>
-            <div className="flex items-center space-x-2">
-              <h4 className="font-medium">
-                {application.applicant?.name || 'Unknown User'}
-              </h4>
-              {renderStatusBadge()}
+    <Card>
+      <CardContent className="pt-6">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={avatarUrl} />
+              <AvatarFallback>
+                <User size={20} />
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <h3 className="font-medium">
+                {application.applicant?.full_name || 'Anonymous Creator'}
+              </h3>
+              <MessageDialog
+                receiverId={application.applicantId}
+                triggerButton={
+                  <Button variant="ghost" size="sm" className="h-6 px-2 text-xs gap-1">
+                    <MessageSquare size={12} />
+                    Message
+                  </Button>
+                }
+              />
             </div>
-            <div className="flex flex-wrap gap-1 mt-1">
-              {application.applicant?.roles?.map((role, i) => (
-                <Badge key={i} variant="secondary" className="text-xs">
-                  {role}
-                </Badge>
-              ))}
+          </div>
+          
+          <div className="flex flex-col items-end">
+            <Badge 
+              variant={
+                application.status === 'accepted' ? 'success' :
+                application.status === 'rejected' ? 'destructive' : 'outline'
+              }
+              className="mb-1"
+            >
+              {application.status.charAt(0).toUpperCase() + application.status.slice(1)}
+            </Badge>
+            
+            <div className="flex items-center gap-1 text-muted-foreground text-xs">
+              <Clock size={12} />
+              <span>{formatDistanceToNow(new Date(application.created_at), { addSuffix: true })}</span>
             </div>
           </div>
         </div>
         
-        <div className="flex items-center space-x-2">
-          <Link
-            to={`/profile/${application.userId}`}
-            className="text-sm text-muted-foreground hover:text-foreground"
-          >
-            View Profile
-          </Link>
-          <CollapsibleTrigger className="rounded-full p-1 hover:bg-secondary">
-            {open => (
-              open ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />
-            )}
-          </CollapsibleTrigger>
+        <div className="my-4">
+          <p className="text-sm text-muted-foreground whitespace-pre-line">
+            {application.message}
+          </p>
         </div>
-      </div>
+        
+        {viewType === 'applicant' && application.project && (
+          <div className="mt-4">
+            <p className="text-sm font-medium">Applied to</p>
+            <Link to={`/projects/${application.projectId}`} className="text-primary hover:underline">
+              {application.project.title}
+            </Link>
+          </div>
+        )}
+      </CardContent>
       
-      <CollapsibleContent>
-        <div className="p-4 border-t bg-card/50">
-          <h5 className="text-sm font-medium mb-2">Cover Letter</h5>
-          <div className="bg-background/50 p-3 rounded-md text-sm whitespace-pre-line mb-4">
-            {application.coverLetter || 'No cover letter provided.'}
-          </div>
-          
-          <div className="flex flex-wrap gap-2">
-            {application.status === 'pending' && (
-              <>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-950"
-                  onClick={() => onStatusUpdate(application, 'approved')}
-                  disabled={isActionInProgress}
-                >
-                  <CheckCircle className="h-4 w-4 mr-1" /> Approve
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="border-red-500 text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
-                  onClick={() => onStatusUpdate(application, 'rejected')}
-                  disabled={isActionInProgress}
-                >
-                  <XCircle className="h-4 w-4 mr-1" /> Reject
-                </Button>
-              </>
-            )}
-            
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => onMessageClick(application)}
-            >
-              <MessageSquare className="h-4 w-4 mr-1" /> Message
-            </Button>
-          </div>
-        </div>
-      </CollapsibleContent>
-    </Collapsible>
+      {viewType === 'owner' && application.status === 'pending' && (
+        <CardFooter className="flex gap-2 pt-0">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="w-full gap-1" 
+            disabled={isLoading}
+            onClick={() => handleStatusChange('rejected')}
+          >
+            <X size={14} />
+            Decline
+          </Button>
+          <Button 
+            variant="default" 
+            size="sm" 
+            className="w-full gap-1" 
+            disabled={isLoading}
+            onClick={() => handleStatusChange('accepted')}
+          >
+            <Check size={14} />
+            Accept
+          </Button>
+        </CardFooter>
+      )}
+    </Card>
   );
 };
 
