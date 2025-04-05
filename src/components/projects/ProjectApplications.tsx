@@ -1,189 +1,150 @@
-
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Dialog, DialogTrigger } from '@/components/ui/dialog';
-import { toast } from '@/hooks/use-toast';
-import { fetchProjectApplications, updateApplicationStatus, startMessageWithApplicant } from '@/lib/supabase/projectApplications';
-import { ProjectApplication } from '@/lib/types';
-import { createNotification } from '@/lib/supabase/notifications';
-import { getAnimalAvatarForUser } from '@/lib/animalAvatars';
+import React, { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import ApplicationCard from './ApplicationCard';
-import MessageDialog from './MessageDialog';
-import LoadingApplications from './LoadingApplications';
-import NoApplications from './NoApplications';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 interface ProjectApplicationsProps {
   projectId: string;
-  projectTitle: string;
+  isOwner: boolean;
 }
 
-const ProjectApplications: React.FC<ProjectApplicationsProps> = ({ projectId, projectTitle }) => {
-  const navigate = useNavigate();
-  const [applications, setApplications] = useState<ProjectApplication[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [message, setMessage] = useState('');
-  const [selectedApplication, setSelectedApplication] = useState<ProjectApplication | null>(null);
-  const [isActionInProgress, setIsActionInProgress] = useState(false);
-  
+const ProjectApplications: React.FC<ProjectApplicationsProps> = ({ projectId, isOwner }) => {
+  const [applications, setApplications] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
+
   useEffect(() => {
-    const loadApplications = async () => {
-      setIsLoading(true);
-      try {
-        const data = await fetchProjectApplications(projectId);
-        setApplications(data);
-      } catch (error) {
-        console.error('Failed to load applications:', error);
-        toast({
-          title: 'Error loading applications',
-          description: 'Could not retrieve applications for this project.',
-          variant: 'destructive',
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    loadApplications();
+    fetchApplications();
   }, [projectId]);
-  
-  const handleStatusUpdate = async (application: ProjectApplication, status: 'approved' | 'rejected') => {
-    if (!application || !application.id) return;
-    
-    setIsActionInProgress(true);
+
+  const fetchApplications = async () => {
     try {
-      const success = await updateApplicationStatus(application.id, status);
-      
-      if (success) {
-        setApplications(prev => 
-          prev.map(app => 
-            app.id === application.id ? { ...app, status } : app
+      setLoading(true);
+      setError(null);
+
+      let query = supabase
+        .from('applications')
+        .select(`
+          *,
+          applicant_profile:applicant_id (
+            id,
+            full_name,
+            avatar_url,
+            bio,
+            city,
+            roles,
+            skills
           )
-        );
-        
-        await createNotification(
-          application.userId,
-          'application_status',
-          `Application ${status === 'approved' ? 'Accepted' : 'Rejected'}`,
-          `Your application for the project "${projectTitle}" has been ${status === 'approved' ? 'accepted' : 'rejected'}.`,
-          projectId,
-          'project'
-        );
-        
-        toast({
-          title: `Application ${status === 'approved' ? 'Approved' : 'Rejected'}`,
-          description: `Successfully ${status === 'approved' ? 'approved' : 'rejected'} the application.`,
-        });
-      } else {
-        throw new Error('Failed to update application status');
+        `)
+        .eq('project_id', projectId);
+
+      // If not the owner, only show the current user's applications
+      if (!isOwner) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          query = query.eq('applicant_id', user.id);
+        }
       }
-    } catch (error) {
-      console.error(`Error ${status === 'approved' ? 'approving' : 'rejecting'} application:`, error);
-      toast({
-        title: `Failed to ${status === 'approved' ? 'approve' : 'reject'} application`,
-        description: 'Please try again later.',
-        variant: 'destructive',
-      });
+
+      const { data, error: fetchError } = await query.order('created_at', { ascending: false });
+
+      if (fetchError) {
+        throw fetchError;
+      }
+
+      setApplications(data || []);
+    } catch (err: any) {
+      console.error('Error fetching applications:', err);
+      setError(err.message || 'Failed to load applications');
     } finally {
-      setIsActionInProgress(false);
+      setLoading(false);
     }
   };
-  
-  const handleMessageClick = (application: ProjectApplication) => {
-    setSelectedApplication(application);
-  };
-  
-  const handleSendMessage = async () => {
-    if (!selectedApplication || !message.trim()) return;
-    
-    setIsActionInProgress(true);
+
+  const handleStatusChange = async (applicationId: string, status: string) => {
     try {
-      const success = await startMessageWithApplicant(
-        projectId,
-        selectedApplication.userId,
-        message
-      );
-      
-      if (success) {
-        await createNotification(
-          selectedApplication.userId,
-          'message',
-          'New message',
-          `You have a new message regarding your application to "${projectTitle}".`,
-          selectedApplication.userId,
-          'message'
-        );
-        
-        toast({
-          title: 'Message sent',
-          description: 'Your message has been sent successfully.',
-        });
-        
-        navigate(`/messages/${selectedApplication.userId}`);
-      } else {
-        throw new Error('Failed to send message');
-      }
-    } catch (error) {
-      console.error('Error sending message:', error);
+      const { error } = await supabase
+        .from('applications')
+        .update({ status })
+        .eq('id', applicationId);
+
+      if (error) throw error;
+
+      // Update local state
+      setApplications(applications.map(app => 
+        app.id === applicationId ? { ...app, status } : app
+      ));
+
       toast({
-        title: 'Failed to send message',
-        description: 'Please try again later.',
+        title: `Application ${status}`,
+        description: `The application has been ${status}.`,
+      });
+    } catch (err: any) {
+      console.error('Error updating application:', err);
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to update application status',
         variant: 'destructive',
       });
-    } finally {
-      setMessage('');
-      setSelectedApplication(null);
-      setIsActionInProgress(false);
     }
   };
-  
-  const handleCancelMessage = () => {
-    setMessage('');
-    setSelectedApplication(null);
-  };
-  
-  if (isLoading) {
-    return <LoadingApplications />;
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-24 w-full" />
+      </div>
+    );
   }
-  
-  if (!applications || applications.length === 0) {
-    return <NoApplications />;
+
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
   }
-  
+
   return (
-    <div className="space-y-4">
-      <Dialog>
-        {applications.map((application) => (
-          <React.Fragment key={application.id}>
+    <div className="space-y-6">
+      <h3 className="text-xl font-semibold">
+        {isOwner ? 'Applications' : 'Your Applications'}
+      </h3>
+      
+      {applications.length > 0 ? (
+        <div className="space-y-4">
+          {applications.map((application) => (
             <ApplicationCard
+              key={application.id}
               application={{
                 ...application,
-                applicant: {
-                  ...application.applicant,
-                  avatar: application.applicant?.avatar || getAnimalAvatarForUser(application.userId)
+                applicant_profile: {
+                  ...application.applicant_profile,
+                  // Replace avatar with avatar_url
+                  avatar_url: application.applicant_profile?.avatar_url || ""
                 }
               }}
-              onStatusUpdate={handleStatusUpdate}
-              onMessageClick={handleMessageClick}
-              isActionInProgress={isActionInProgress}
+              onAccept={() => handleStatusChange(application.id, "accepted")}
+              onReject={() => handleStatusChange(application.id, "rejected")}
+              isOwner={isOwner}
             />
-            
-            {selectedApplication?.id === application.id && (
-              <DialogTrigger className="hidden" />
-            )}
-          </React.Fragment>
-        ))}
-        
-        {selectedApplication && (
-          <MessageDialog
-            selectedApplication={selectedApplication}
-            message={message}
-            onMessageChange={setMessage}
-            onSendMessage={handleSendMessage}
-            onCancel={handleCancelMessage}
-            isActionInProgress={isActionInProgress}
-          />
-        )}
-      </Dialog>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-8 text-muted-foreground">
+          {isOwner 
+            ? "No applications yet. When creators apply to your project, they'll appear here."
+            : "You haven't applied to this project yet."}
+        </div>
+      )}
     </div>
   );
 };

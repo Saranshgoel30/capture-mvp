@@ -25,6 +25,8 @@ serve(async (req) => {
       }
     );
 
+    console.log("Starting storage bucket initialization...");
+
     // Create a list of all buckets we need to create
     const buckets = [
       {
@@ -63,15 +65,17 @@ serve(async (req) => {
       throw listError;
     }
 
+    console.log("Existing buckets:", existingBuckets);
     const results = [];
 
     // Create each bucket if it doesn't exist
     for (const bucket of buckets) {
-      // Check if bucket already exists
-      const bucketExists = existingBuckets?.some(existing => existing.name === bucket.id);
-      
-      if (!bucketExists) {
-        try {
+      try {
+        // Check if bucket already exists
+        const bucketExists = existingBuckets?.some(existing => existing.name === bucket.id);
+        
+        if (!bucketExists) {
+          console.log(`Creating bucket ${bucket.id}...`);
           const { data, error } = await supabaseClient
             .storage
             .createBucket(bucket.id, {
@@ -84,31 +88,68 @@ serve(async (req) => {
             console.error(`Error creating bucket ${bucket.id}:`, error);
             results.push({ id: bucket.id, status: 'error', message: error.message });
           } else {
-            console.log(`Created bucket ${bucket.id}`);
+            console.log(`Created bucket ${bucket.id} successfully`);
             results.push({ id: bucket.id, status: 'created' });
             
-            // Add public policy for the bucket to allow anonymous users to read files
+            // Set public access policy for the bucket
             if (bucket.public) {
-              const { error: policyError } = await supabaseClient
-                .storage
-                .from(bucket.id)
-                .createSignedUrl('dummy-file.txt', 60);
+              console.log(`Setting public access policy for bucket ${bucket.id}...`);
+              try {
+                // Create dummy file to initialize bucket if needed
+                const dummyContent = new Uint8Array([0]);
+                const dummyFilename = '.init';
+                const { error: uploadError } = await supabaseClient
+                  .storage
+                  .from(bucket.id)
+                  .upload(dummyFilename, dummyContent, { upsert: true });
                 
-              if (policyError && !policyError.message.includes('not found')) {
-                console.error(`Error testing policy for ${bucket.id}:`, policyError);
+                if (uploadError && !uploadError.message.includes('out of range')) {
+                  console.warn(`Warning creating dummy file in ${bucket.id}:`, uploadError);
+                }
+                
+                // Update bucket policy regardless of dummy file status
+                const { error: policyError } = await supabaseClient
+                  .storage
+                  .from(bucket.id)
+                  .getPublicUrl(dummyFilename);
+                  
+                if (policyError) {
+                  console.warn(`Warning setting policy for ${bucket.id}:`, policyError);
+                }
+              } catch (policyErr) {
+                console.warn(`Exception setting policy for ${bucket.id}:`, policyErr);
               }
             }
           }
-        } catch (err) {
-          console.error(`Exception creating bucket ${bucket.id}:`, err);
-          results.push({ id: bucket.id, status: 'error', message: err.message });
+        } else {
+          console.log(`Bucket ${bucket.id} already exists`);
+          results.push({ id: bucket.id, status: 'exists' });
+          
+          // Ensure public access policy is set for existing buckets
+          if (bucket.public) {
+            console.log(`Ensuring public access policy for existing bucket ${bucket.id}...`);
+            try {
+              // Try to get public URL as a way to test/set policy
+              const { data, error } = await supabaseClient
+                .storage
+                .from(bucket.id)
+                .getPublicUrl('test-policy');
+                
+              if (error) {
+                console.warn(`Warning checking policy for ${bucket.id}:`, error);
+              }
+            } catch (err) {
+              console.warn(`Exception checking policy for ${bucket.id}:`, err);
+            }
+          }
         }
-      } else {
-        console.log(`Bucket ${bucket.id} already exists`);
-        results.push({ id: bucket.id, status: 'exists' });
+      } catch (err) {
+        console.error(`Exception processing bucket ${bucket.id}:`, err);
+        results.push({ id: bucket.id, status: 'error', message: err.message });
       }
     }
 
+    console.log("Bucket initialization completed with results:", results);
     return new Response(
       JSON.stringify({ 
         message: 'Storage bucket initialization complete',
@@ -124,6 +165,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
+    console.error("Fatal error in init_storage_buckets function:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {

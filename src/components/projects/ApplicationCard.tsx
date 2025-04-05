@@ -1,156 +1,127 @@
-
-import React from 'react';
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Clock, MessageSquare, User, Check, X } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import MessageDialog from './MessageDialog';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Application } from '@/lib/supabase/types';
+import { Button } from '@/components/ui-custom/Button';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabase/client';
-import { getAnimalAvatarForUser } from '@/lib/animalAvatars';
+import MessageDialog from '../messages/MessageDialog';
 
 interface ApplicationCardProps {
-  application: {
-    id: string;
-    projectId: string;
-    project?: {
-      title: string;
-    };
-    applicantId: string;
-    applicant?: {
-      full_name?: string;
-      avatar_url?: string;
-    };
-    status: 'pending' | 'accepted' | 'rejected';
-    message: string;
-    created_at: string;
-  };
-  viewType: 'owner' | 'applicant';
-  onStatusChange?: (id: string, status: 'accepted' | 'rejected') => Promise<void>;
+  application: Application & { applicant_profile: { avatar_url: string; full_name: string; }; };
+  onAccept: () => void;
+  onReject: () => void;
+  isOwner: boolean;
 }
 
-const ApplicationCard: React.FC<ApplicationCardProps> = ({ 
-  application, 
-  viewType, 
-  onStatusChange 
-}) => {
+// Within the ApplicationCard component where the MessageDialog is used
+const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onAccept, onReject, isOwner }) => {
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = React.useState(false);
-  
-  const handleStatusChange = async (status: 'accepted' | 'rejected') => {
-    if (!onStatusChange) return;
-    
-    setIsLoading(true);
+  const [isAccepting, setIsAccepting] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
+  const [messageDialogTrigger, setMessageDialogTrigger] = useState<React.ReactNode>(null);
+
+  const handleAccept = async () => {
+    setIsAccepting(true);
     try {
-      await onStatusChange(application.id, status);
+      await onAccept();
       toast({
-        title: `Application ${status}`,
-        description: `You have ${status} the application.`,
+        title: "Application Accepted",
+        description: "You have accepted this application.",
       });
-    } catch (error) {
-      console.error('Error changing application status:', error);
+    } catch (error: any) {
       toast({
-        title: 'Error',
-        description: 'There was an error updating the application status.',
-        variant: 'destructive',
+        title: "Error",
+        description: error.message || "Failed to accept application.",
+        variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsAccepting(false);
     }
   };
-  
-  // Get applicant avatar or use animal avatar
-  const avatarUrl = application.applicant?.avatar_url || getAnimalAvatarForUser(application.applicantId);
-  
+
+  const handleReject = async () => {
+    setIsRejecting(true);
+    try {
+      await onReject();
+      toast({
+        title: "Application Rejected",
+        description: "You have rejected this application.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to reject application.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRejecting(false);
+    }
+  };
+
+  // Fix the MessageDialog props
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Avatar className="h-10 w-10">
-              <AvatarImage src={avatarUrl} />
-              <AvatarFallback>
-                <User size={20} />
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <h3 className="font-medium">
-                {application.applicant?.full_name || 'Anonymous Creator'}
-              </h3>
-              <MessageDialog
-                receiverId={application.applicantId}
-                triggerButton={
-                  <Button variant="ghost" size="sm" className="h-6 px-2 text-xs gap-1">
-                    <MessageSquare size={12} />
-                    Message
-                  </Button>
-                }
-              />
-            </div>
-          </div>
-          
-          <div className="flex flex-col items-end">
-            <Badge 
-              variant={
-                application.status === 'accepted' ? 'success' :
-                application.status === 'rejected' ? 'destructive' : 'outline'
-              }
-              className="mb-1"
-            >
-              {application.status.charAt(0).toUpperCase() + application.status.slice(1)}
-            </Badge>
-            
-            <div className="flex items-center gap-1 text-muted-foreground text-xs">
-              <Clock size={12} />
-              <span>{formatDistanceToNow(new Date(application.created_at), { addSuffix: true })}</span>
-            </div>
-          </div>
+    <div className="border rounded-lg p-4 bg-card">
+      <div className="flex items-center space-x-4">
+        <img
+          src={application.applicant_profile?.avatar_url}
+          alt="Applicant Avatar"
+          className="w-10 h-10 rounded-full"
+        />
+        <div>
+          <h3 className="text-lg font-semibold">{application.applicant_profile?.full_name}</h3>
+          <p className="text-sm text-muted-foreground">Applied on {new Date(application.created_at).toLocaleDateString()}</p>
         </div>
-        
-        <div className="my-4">
-          <p className="text-sm text-muted-foreground whitespace-pre-line">
-            {application.message}
-          </p>
-        </div>
-        
-        {viewType === 'applicant' && application.project && (
-          <div className="mt-4">
-            <p className="text-sm font-medium">Applied to</p>
-            <Link to={`/projects/${application.projectId}`} className="text-primary hover:underline">
-              {application.project.title}
-            </Link>
-          </div>
-        )}
-      </CardContent>
+      </div>
       
-      {viewType === 'owner' && application.status === 'pending' && (
-        <CardFooter className="flex gap-2 pt-0">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="w-full gap-1" 
-            disabled={isLoading}
-            onClick={() => handleStatusChange('rejected')}
-          >
-            <X size={14} />
-            Decline
+      {messageDialogTrigger || setMessageDialogTrigger(
+        <Button variant="ghost" size="sm" onClick={() => setMessageDialogTrigger(
+          <Button variant="ghost" size="sm">
+            Message
           </Button>
-          <Button 
-            variant="default" 
-            size="sm" 
-            className="w-full gap-1" 
-            disabled={isLoading}
-            onClick={() => handleStatusChange('accepted')}
+        )}>
+          Message
+        </Button>
+      )}
+      {messageDialogTrigger && (
+        <MessageDialog 
+          userId={application.applicant_id} // Changed from receiverId to userId to match expected props
+          triggerButton={messageDialogTrigger}
+        />
+      )}
+      
+      <p className="mt-2 text-sm">
+        <strong>Motivation:</strong> {application.motivation}
+      </p>
+      
+      {isOwner && application.status === "pending" && (
+        <div className="flex space-x-2 mt-4">
+          <Button
+            onClick={handleAccept}
+            // Fix variant to use only allowed values
+            variant="outline"
+            className="text-green-500 border-green-500 hover:bg-green-50"
+            isLoading={isAccepting}
+            disabled={isAccepting || isRejecting}
           >
-            <Check size={14} />
             Accept
           </Button>
-        </CardFooter>
+          
+          <Button
+            onClick={handleReject}
+            variant="destructive"
+            className="hover:bg-red-50"
+            isLoading={isRejecting}
+            disabled={isAccepting || isRejecting}
+          >
+            Reject
+          </Button>
+        </div>
       )}
-    </Card>
+      
+      {!isOwner && (
+        <div className="mt-4">
+          <p className="text-sm"><strong>Status:</strong> {application.status}</p>
+        </div>
+      )}
+    </div>
   );
 };
 
