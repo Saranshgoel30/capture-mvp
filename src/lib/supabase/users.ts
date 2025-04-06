@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 
 export const getCurrentUser = async () => {
@@ -52,6 +51,7 @@ export const updateUserProfile = async (userId: string, updates: any) => {
   }
 };
 
+// Rename this function to be clearer about its source and purpose
 export const fetchNotifications = async (userId: string) => {
   // In a real app, you would have a notifications table
   // For now, we'll simulate notifications based on applications

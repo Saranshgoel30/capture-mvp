@@ -1,14 +1,26 @@
 
 // Re-export everything from individual modules
 export * from './client';
-export * from './users';
+// Export users functions, but rename the fetchNotifications function
+export { 
+  getCurrentUser, 
+  fetchUserProfile, 
+  updateUserProfile,
+  fetchNotifications as fetchUserNotificationsFromApplications 
+} from './users';
 export * from './projects';
 export * from './storage';
 export * from './portfolio';
 export * from './creators';
 export * from './projectApplications';
 export * from './messages';
-export * from './notifications';
+// Export the notifications module explicitly
+export { 
+  fetchNotifications,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+  createNotification
+} from './notifications';
 
 import { supabase } from './client';
 
