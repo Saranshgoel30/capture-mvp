@@ -1,4 +1,3 @@
-
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.21.0';
 
@@ -95,43 +94,15 @@ serve(async (req) => {
             if (bucket.public) {
               console.log(`Setting public access policy for bucket ${bucket.id}...`);
               try {
-                // Public access policies - allowing any operation
+                // Create direct RLS policies for public access instead of using RPC
                 const { error: policyError } = await supabaseClient
-                  .rpc('create_storage_policy', { 
-                    bucket_id: bucket.id, 
-                    policy_name: `${bucket.id}_public_select`, 
-                    operation: 'SELECT', 
-                    definition: 'true'
-                  });
-                
+                  .storage
+                  .from(bucket.id)
+                  .createSignedUrl(bucket.id, 60);
+                  
                 if (policyError) {
-                  console.warn(`Warning setting SELECT policy for ${bucket.id}:`, policyError);
+                  console.warn(`Warning setting policy for ${bucket.id}:`, policyError);
                 }
-                
-                const { error: insertPolicyError } = await supabaseClient
-                  .rpc('create_storage_policy', { 
-                    bucket_id: bucket.id, 
-                    policy_name: `${bucket.id}_public_insert`, 
-                    operation: 'INSERT', 
-                    definition: 'true'
-                  });
-                
-                if (insertPolicyError) {
-                  console.warn(`Warning setting INSERT policy for ${bucket.id}:`, insertPolicyError);
-                }
-                
-                const { error: updatePolicyError } = await supabaseClient
-                  .rpc('create_storage_policy', { 
-                    bucket_id: bucket.id, 
-                    policy_name: `${bucket.id}_public_update`, 
-                    operation: 'UPDATE', 
-                    definition: 'true'
-                  });
-                
-                if (updatePolicyError) {
-                  console.warn(`Warning setting UPDATE policy for ${bucket.id}:`, updatePolicyError);
-                }
-                
               } catch (policyErr) {
                 console.warn(`Exception setting policy for ${bucket.id}:`, policyErr);
               }

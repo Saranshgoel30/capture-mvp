@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -20,30 +19,24 @@ const ensureBucketExists = async (bucketName: string) => {
     if (!bucketExists) {
       console.log(`Bucket ${bucketName} doesn't exist, attempting to create...`);
       
-      // Try to create the bucket directly
-      const { error: createError } = await supabase
-        .storage
-        .createBucket(bucketName, {
-          public: true,
-          fileSizeLimit: bucketName === 'portfolio_videos' ? 50 * 1024 * 1024 : 5 * 1024 * 1024,
-        });
+      // Invoke the edge function to create buckets
+      const { error: fnError } = await supabase.functions.invoke('init_storage_buckets');
       
-      if (createError) {
-        console.warn(`Error creating bucket directly, trying edge function: ${createError.message}`);
-        
-        // If direct creation fails, try via edge function
-        const { error: fnError } = await supabase.functions.invoke('init_storage_buckets');
-        
-        if (fnError) {
-          console.error('Error invoking init_storage_buckets function:', fnError);
-          throw new Error(`Could not create storage bucket. Please try again or contact support if the issue persists. (${fnError.message})`);
-        }
-        
-        // Check again if bucket was created by edge function
-        const { data: bucketsAfter } = await supabase.storage.listBuckets();
-        if (!bucketsAfter?.some(bucket => bucket.name === bucketName)) {
-          throw new Error(`Bucket ${bucketName} still doesn't exist after initialization attempt`);
-        }
+      if (fnError) {
+        console.error('Error invoking init_storage_buckets function:', fnError);
+        throw new Error(`Could not create storage bucket. Please try again or contact support if the issue persists. (${fnError.message})`);
+      }
+      
+      // Check if bucket was created
+      const { data: bucketsAfter, error: checkError } = await supabase.storage.listBuckets();
+      
+      if (checkError) {
+        console.error('Error checking if bucket was created:', checkError);
+        throw new Error('Failed to verify bucket creation');
+      }
+      
+      if (!bucketsAfter?.some(bucket => bucket.name === bucketName)) {
+        throw new Error(`Bucket ${bucketName} still doesn't exist after initialization attempt`);
       }
       
       console.log(`Successfully created bucket: ${bucketName}`);

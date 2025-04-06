@@ -27,6 +27,8 @@ import { supabase } from './client';
 // Function to initialize storage buckets if needed
 export const initializeStorage = async () => {
   try {
+    console.log('Initializing storage buckets...');
+    
     // Try to invoke the init_storage_buckets function to ensure all buckets exist
     const { data, error } = await supabase.functions.invoke('init_storage_buckets');
     

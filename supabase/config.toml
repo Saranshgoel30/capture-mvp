@@ -63,6 +63,12 @@ backend = "postgres"
 [functions]
 enabled = true
 
+[functions.create_storage_bucket]
+verify_jwt = true
+
+[functions.init_storage_buckets]
+verify_jwt = true
+
 [functions.get_chatroom_messages]
 verify_jwt = true
 

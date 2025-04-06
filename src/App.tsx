@@ -3,6 +3,7 @@ import { Route, Routes, useNavigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 import { useEffect } from 'react';
 import { initializeStorage } from '@/lib/supabase';
+import { useToast } from '@/hooks/use-toast';
 
 // Pages
 import Index from './pages/Index';
@@ -19,19 +20,33 @@ import NotFound from './pages/NotFound';
 import MyProjects from './pages/MyProjects';
 
 function App() {
+  const { toast } = useToast();
+  
   // Initialize storage buckets when the app loads
   useEffect(() => {
     // Run storage initialization in the background
     const initStorage = async () => {
       try {
-        await initializeStorage();
+        console.log('Starting storage initialization...');
+        const result = await initializeStorage();
+        if (result) {
+          console.log('Storage initialization successful');
+        } else {
+          console.warn('Storage initialization may not have completed successfully');
+          // Don't show an error to the user, just log it
+        }
       } catch (error) {
         console.error('Failed to initialize storage:', error);
+        toast({
+          title: "Storage Initialization Warning",
+          description: "Some features like file uploads might not work properly. Please refresh the page or contact support if issues persist.",
+          variant: "destructive",
+        });
       }
     };
     
     initStorage();
-  }, []);
+  }, [toast]);
 
   return (
     <>

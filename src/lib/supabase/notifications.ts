@@ -1,49 +1,45 @@
 
 import { supabase } from './client';
-import { Notification } from '@/lib/types';
 
-// Fetch notifications for a user
-export const fetchNotifications = async (userId: string): Promise<Notification[]> => {
+/**
+ * Fetches notifications for a user
+ * 
+ * @param userId The user ID to fetch notifications for
+ * @returns An array of notifications
+ */
+export const fetchNotifications = async (userId: string) => {
   try {
-    // Use the notifications table type definition
     const { data, error } = await supabase
       .from('notifications')
       .select('*')
       .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(50);
-    
+      .order('created_at', { ascending: false });
+      
     if (error) {
       console.error('Error fetching notifications:', error);
       return [];
     }
     
-    // Transform the data to match the expected types
-    return (data || []).map(notification => ({
-      id: notification.id,
-      userId: notification.user_id,
-      type: notification.type,
-      title: notification.title,
-      message: notification.message,
-      read: notification.read || false,
-      relatedId: notification.related_id,
-      relatedType: notification.related_type,
-      createdAt: notification.created_at ? new Date(notification.created_at).getTime() : Date.now(),
-    }));
+    return data || [];
   } catch (error) {
     console.error('Exception fetching notifications:', error);
     return [];
   }
 };
 
-// Mark a notification as read
-export const markNotificationAsRead = async (notificationId: string): Promise<boolean> => {
+/**
+ * Marks a notification as read
+ * 
+ * @param notificationId The ID of the notification to mark as read
+ * @returns True if the operation was successful, false otherwise
+ */
+export const markNotificationAsRead = async (notificationId: string) => {
   try {
     const { error } = await supabase
       .from('notifications')
       .update({ read: true })
       .eq('id', notificationId);
-    
+      
     if (error) {
       console.error('Error marking notification as read:', error);
       return false;
@@ -56,14 +52,20 @@ export const markNotificationAsRead = async (notificationId: string): Promise<bo
   }
 };
 
-// Mark all notifications as read
-export const markAllNotificationsAsRead = async (userId: string): Promise<boolean> => {
+/**
+ * Marks all notifications for a user as read
+ * 
+ * @param userId The user ID to mark all notifications as read for
+ * @returns True if the operation was successful, false otherwise
+ */
+export const markAllNotificationsAsRead = async (userId: string) => {
   try {
     const { error } = await supabase
       .from('notifications')
       .update({ read: true })
-      .eq('user_id', userId);
-    
+      .eq('user_id', userId)
+      .eq('read', false);
+      
     if (error) {
       console.error('Error marking all notifications as read:', error);
       return false;
@@ -76,36 +78,48 @@ export const markAllNotificationsAsRead = async (userId: string): Promise<boolea
   }
 };
 
-// Create a notification
+/**
+ * Creates a new notification for a user
+ * 
+ * @param userId The user ID to create the notification for
+ * @param type The type of notification
+ * @param title The notification title
+ * @param message The notification message
+ * @param relatedType Optional related entity type
+ * @param relatedId Optional related entity ID
+ * @returns The created notification object, or null if creation failed
+ */
 export const createNotification = async (
-  userId: string,
-  type: string,
-  title: string,
+  userId: string, 
+  type: string, 
+  title: string, 
   message: string,
-  relatedId?: string,
-  relatedType?: string
-): Promise<boolean> => {
+  relatedType?: string,
+  relatedId?: string
+) => {
   try {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('notifications')
       .insert({
         user_id: userId,
         type,
         title,
         message,
-        related_id: relatedId,
         related_type: relatedType,
+        related_id: relatedId,
         read: false
-      });
-    
+      })
+      .select()
+      .single();
+      
     if (error) {
       console.error('Error creating notification:', error);
-      return false;
+      return null;
     }
     
-    return true;
+    return data;
   } catch (error) {
     console.error('Exception creating notification:', error);
-    return false;
+    return null;
   }
 };

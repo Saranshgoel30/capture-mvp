@@ -14,7 +14,23 @@ serve(async (req) => {
   }
 
   try {
-    // Create a Supabase client with the Auth context of the logged in user
+    // Parse request body
+    const { bucketName } = await req.json();
+    
+    if (!bucketName) {
+      return new Response(
+        JSON.stringify({ error: 'Bucket name is required' }),
+        {
+          headers: { 
+            'Content-Type': 'application/json',
+            ...corsHeaders
+          },
+          status: 400,
+        }
+      );
+    }
+
+    // Create a Supabase client with the service role key
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -25,66 +41,57 @@ serve(async (req) => {
       }
     );
 
-    // Create storage buckets
-    const { data: avatarsData, error: avatarsError } = await supabaseClient
+    console.log(`Attempting to create bucket: ${bucketName}`);
+
+    // Check if bucket already exists
+    const { data: buckets, error: listError } = await supabaseClient
       .storage
-      .createBucket('avatars', {
+      .listBuckets();
+    
+    if (listError) {
+      console.error('Error listing buckets:', listError);
+      throw listError;
+    }
+    
+    const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
+    
+    if (bucketExists) {
+      console.log(`Bucket ${bucketName} already exists`);
+      return new Response(
+        JSON.stringify({ 
+          message: `Bucket ${bucketName} already exists`,
+          exists: true
+        }),
+        {
+          headers: { 
+            'Content-Type': 'application/json',
+            ...corsHeaders
+          },
+          status: 200,
+        }
+      );
+    }
+
+    // Create the bucket
+    const { data, error } = await supabaseClient
+      .storage
+      .createBucket(bucketName, {
         public: true,
-        fileSizeLimit: 1024 * 1024 * 2, // 2MB limit
+        fileSizeLimit: 5 * 1024 * 1024, // 5MB
         allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp']
       });
 
-    if (avatarsError) {
-      // Bucket might already exist, which is fine
-      console.log('Error creating avatars bucket:', avatarsError);
+    if (error) {
+      console.error(`Error creating bucket ${bucketName}:`, error);
+      throw error;
     }
 
-    // Create portfolio image bucket
-    const { data: portfolioImagesData, error: portfolioImagesError } = await supabaseClient
-      .storage
-      .createBucket('portfolio_images', {
-        public: true,
-        fileSizeLimit: 1024 * 1024 * 5, // 5MB limit
-        allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp']
-      });
-
-    if (portfolioImagesError) {
-      console.log('Error creating portfolio_images bucket:', portfolioImagesError);
-    }
-
-    // Create portfolio video bucket
-    const { data: portfolioVideosData, error: portfolioVideosError } = await supabaseClient
-      .storage
-      .createBucket('portfolio_videos', {
-        public: true,
-        fileSizeLimit: 1024 * 1024 * 50, // 50MB limit
-        allowedMimeTypes: ['video/mp4', 'video/webm', 'video/quicktime']
-      });
-
-    if (portfolioVideosError) {
-      console.log('Error creating portfolio_videos bucket:', portfolioVideosError);
-    }
-
-    // Create portfolio files bucket
-    const { data: portfolioFilesData, error: portfolioFilesError } = await supabaseClient
-      .storage
-      .createBucket('portfolio_files', {
-        public: true,
-        fileSizeLimit: 1024 * 1024 * 10, // 10MB limit
-        allowedMimeTypes: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
-      });
-
-    if (portfolioFilesError) {
-      console.log('Error creating portfolio_files bucket:', portfolioFilesError);
-    }
-
+    console.log(`Successfully created bucket: ${bucketName}`);
+    
     return new Response(
       JSON.stringify({ 
-        message: 'Storage buckets created or already exist',
-        avatars: avatarsError ? 'Error or already exists' : 'Created',
-        portfolio_images: portfolioImagesError ? 'Error or already exists' : 'Created',
-        portfolio_videos: portfolioVideosError ? 'Error or already exists' : 'Created',
-        portfolio_files: portfolioFilesError ? 'Error or already exists' : 'Created'
+        message: `Bucket ${bucketName} created successfully`,
+        created: true
       }),
       {
         headers: { 
@@ -96,6 +103,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
+    console.error("Error in create_storage_bucket function:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {

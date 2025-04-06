@@ -27,6 +27,7 @@ const ProfileImage: React.FC<ProfileImageProps> = ({
 }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null | undefined>(avatar);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   
@@ -59,6 +60,9 @@ const ProfileImage: React.FC<ProfileImageProps> = ({
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    
+    // Clear previous error
+    setUploadError(null);
     
     // Early validation before uploading
     if (file.size > 5 * 1024 * 1024) {
@@ -102,6 +106,9 @@ const ProfileImage: React.FC<ProfileImageProps> = ({
       URL.revokeObjectURL(localPreview);
     } catch (error: any) {
       console.error('Error uploading image:', error);
+      
+      // Set the error message
+      setUploadError(error.message || "Failed to upload image");
       
       // Revert to previous avatar on error
       setAvatarUrl(avatar);
@@ -159,6 +166,12 @@ const ProfileImage: React.FC<ProfileImageProps> = ({
             // Ensure we accept images from mobile devices
             capture="user"
           />
+          
+          {uploadError && (
+            <div className="text-xs text-red-500 mt-1 max-w-[200px]">
+              {uploadError}
+            </div>
+          )}
         </>
       )}
     </div>
