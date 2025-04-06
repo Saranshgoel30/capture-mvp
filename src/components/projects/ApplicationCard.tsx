@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Application } from '@/lib/supabase/types';
-import Button from '@/components/ui-custom/Button'; // Fixed import
+import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Dialog,
@@ -162,20 +162,18 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onAccept
             onClick={handleAccept}
             variant="outline"
             className="text-green-500 border-green-500 hover:bg-green-50"
-            isLoading={isAccepting}
             disabled={isAccepting || isRejecting}
           >
-            Accept
+            {isAccepting ? "Accepting..." : "Accept"}
           </Button>
           
           <Button
             onClick={handleReject}
             variant="destructive"
             className="hover:bg-red-50"
-            isLoading={isRejecting}
             disabled={isAccepting || isRejecting}
           >
-            Reject
+            {isRejecting ? "Rejecting..." : "Reject"}
           </Button>
         </div>
       )}
