@@ -6,6 +6,7 @@ import { Camera, Loader2, User } from 'lucide-react';
 import { uploadProfileImage } from '@/lib/supabase/storage';
 import { useToast } from '@/hooks/use-toast';
 import { getAnimalAvatarForUser } from '@/lib/animalAvatars';
+import { initializeStorage } from '@/lib/supabase';
 
 interface ProfileImageProps {
   avatar?: string | null;
@@ -73,6 +74,9 @@ const ProfileImage: React.FC<ProfileImageProps> = ({
     
     try {
       console.log("Starting profile image upload for user:", userId);
+      
+      // Initialize storage if needed
+      await initializeStorage();
       
       // Temporary local preview for immediate feedback
       const localPreview = URL.createObjectURL(file);

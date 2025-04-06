@@ -95,27 +95,43 @@ serve(async (req) => {
             if (bucket.public) {
               console.log(`Setting public access policy for bucket ${bucket.id}...`);
               try {
-                // Create dummy file to initialize bucket if needed
-                const dummyContent = new Uint8Array([0]);
-                const dummyFilename = '.init';
-                const { error: uploadError } = await supabaseClient
-                  .storage
-                  .from(bucket.id)
-                  .upload(dummyFilename, dummyContent, { upsert: true });
-                
-                if (uploadError && !uploadError.message.includes('out of range')) {
-                  console.warn(`Warning creating dummy file in ${bucket.id}:`, uploadError);
-                }
-                
-                // Update bucket policy regardless of dummy file status
+                // Public access policies - allowing any operation
                 const { error: policyError } = await supabaseClient
-                  .storage
-                  .from(bucket.id)
-                  .getPublicUrl(dummyFilename);
-                  
+                  .rpc('create_storage_policy', { 
+                    bucket_id: bucket.id, 
+                    policy_name: `${bucket.id}_public_select`, 
+                    operation: 'SELECT', 
+                    definition: 'true'
+                  });
+                
                 if (policyError) {
-                  console.warn(`Warning setting policy for ${bucket.id}:`, policyError);
+                  console.warn(`Warning setting SELECT policy for ${bucket.id}:`, policyError);
                 }
+                
+                const { error: insertPolicyError } = await supabaseClient
+                  .rpc('create_storage_policy', { 
+                    bucket_id: bucket.id, 
+                    policy_name: `${bucket.id}_public_insert`, 
+                    operation: 'INSERT', 
+                    definition: 'true'
+                  });
+                
+                if (insertPolicyError) {
+                  console.warn(`Warning setting INSERT policy for ${bucket.id}:`, insertPolicyError);
+                }
+                
+                const { error: updatePolicyError } = await supabaseClient
+                  .rpc('create_storage_policy', { 
+                    bucket_id: bucket.id, 
+                    policy_name: `${bucket.id}_public_update`, 
+                    operation: 'UPDATE', 
+                    definition: 'true'
+                  });
+                
+                if (updatePolicyError) {
+                  console.warn(`Warning setting UPDATE policy for ${bucket.id}:`, updatePolicyError);
+                }
+                
               } catch (policyErr) {
                 console.warn(`Exception setting policy for ${bucket.id}:`, policyErr);
               }
@@ -124,24 +140,6 @@ serve(async (req) => {
         } else {
           console.log(`Bucket ${bucket.id} already exists`);
           results.push({ id: bucket.id, status: 'exists' });
-          
-          // Ensure public access policy is set for existing buckets
-          if (bucket.public) {
-            console.log(`Ensuring public access policy for existing bucket ${bucket.id}...`);
-            try {
-              // Try to get public URL as a way to test/set policy
-              const { data, error } = await supabaseClient
-                .storage
-                .from(bucket.id)
-                .getPublicUrl('test-policy');
-                
-              if (error) {
-                console.warn(`Warning checking policy for ${bucket.id}:`, error);
-              }
-            } catch (err) {
-              console.warn(`Exception checking policy for ${bucket.id}:`, err);
-            }
-          }
         }
       } catch (err) {
         console.error(`Exception processing bucket ${bucket.id}:`, err);

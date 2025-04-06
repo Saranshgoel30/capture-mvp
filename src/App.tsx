@@ -1,6 +1,8 @@
 
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, useNavigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
+import { useEffect } from 'react';
+import { initializeStorage } from '@/lib/supabase';
 
 // Pages
 import Index from './pages/Index';
@@ -17,6 +19,20 @@ import NotFound from './pages/NotFound';
 import MyProjects from './pages/MyProjects';
 
 function App() {
+  // Initialize storage buckets when the app loads
+  useEffect(() => {
+    // Run storage initialization in the background
+    const initStorage = async () => {
+      try {
+        await initializeStorage();
+      } catch (error) {
+        console.error('Failed to initialize storage:', error);
+      }
+    };
+    
+    initStorage();
+  }, []);
+
   return (
     <>
       <Routes>

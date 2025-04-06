@@ -2,6 +2,62 @@
 import { supabase } from './client';
 import { v4 as uuidv4 } from 'uuid';
 
+// Helper function to ensure buckets exist
+const ensureBucketExists = async (bucketName: string) => {
+  try {
+    // Check if bucket exists
+    const { data: buckets, error: listError } = await supabase
+      .storage
+      .listBuckets();
+    
+    if (listError) {
+      console.error('Error listing buckets:', listError);
+      throw new Error('Unable to check if bucket exists');
+    }
+    
+    const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
+    
+    if (!bucketExists) {
+      console.log(`Bucket ${bucketName} doesn't exist, attempting to create...`);
+      
+      // Try to create the bucket directly
+      const { error: createError } = await supabase
+        .storage
+        .createBucket(bucketName, {
+          public: true,
+          fileSizeLimit: bucketName === 'portfolio_videos' ? 50 * 1024 * 1024 : 5 * 1024 * 1024,
+        });
+      
+      if (createError) {
+        console.warn(`Error creating bucket directly, trying edge function: ${createError.message}`);
+        
+        // If direct creation fails, try via edge function
+        const { error: fnError } = await supabase.functions.invoke('init_storage_buckets');
+        
+        if (fnError) {
+          console.error('Error invoking init_storage_buckets function:', fnError);
+          throw new Error(`Could not create storage bucket. Please try again or contact support if the issue persists. (${fnError.message})`);
+        }
+        
+        // Check again if bucket was created by edge function
+        const { data: bucketsAfter } = await supabase.storage.listBuckets();
+        if (!bucketsAfter?.some(bucket => bucket.name === bucketName)) {
+          throw new Error(`Bucket ${bucketName} still doesn't exist after initialization attempt`);
+        }
+      }
+      
+      console.log(`Successfully created bucket: ${bucketName}`);
+    } else {
+      console.log(`Bucket ${bucketName} already exists`);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error ensuring bucket exists:', error);
+    throw error;
+  }
+};
+
 export const uploadProfileImage = async (userId: string, file: File) => {
   try {
     // Check file size - mobile uploads can be very large
@@ -17,43 +73,8 @@ export const uploadProfileImage = async (userId: string, file: File) => {
       size: `${(file.size / 1024).toFixed(2)} KB`
     });
 
-    // Check if bucket exists and create it if needed
-    console.log('Checking if avatars bucket exists...');
-    const { data: buckets, error: bucketsError } = await supabase
-      .storage
-      .listBuckets();
-    
-    if (bucketsError) {
-      console.error('Error checking buckets:', bucketsError);
-      throw new Error('Failed to check storage buckets');
-    }
-    
-    const avatarBucketExists = buckets?.some(bucket => bucket.name === 'avatars');
-    
-    if (!avatarBucketExists) {
-      console.log('Avatars bucket not found, attempting to create...');
-      try {
-        // Try creating the bucket
-        const { data: createData, error: createError } = await supabase
-          .storage
-          .createBucket('avatars', {
-            public: true,
-            fileSizeLimit: 5242880
-          });
-        
-        if (createError) {
-          console.error('Error creating avatars bucket:', createError);
-          throw new Error('Failed to create avatars bucket');
-        }
-        
-        console.log('Successfully created avatars bucket');
-      } catch (bucketCreateError) {
-        console.error('Exception creating bucket:', bucketCreateError);
-        throw new Error('Could not create storage bucket. You may need to run the create_storage_bucket function.');
-      }
-    } else {
-      console.log('Avatars bucket exists');
-    }
+    // Ensure the avatars bucket exists before uploading
+    await ensureBucketExists('avatars');
 
     // Create a unique file name
     const fileExt = file.name.split('.').pop();
@@ -134,43 +155,8 @@ export const uploadPortfolioMedia = async (userId: string, file: File) => {
     const isVideo = file.type.startsWith('video/');
     const bucketName = isImage ? 'portfolio_images' : isVideo ? 'portfolio_videos' : 'portfolio_files';
 
-    // Check if bucket exists and create it if needed
-    console.log(`Checking if ${bucketName} bucket exists...`);
-    const { data: buckets, error: bucketsError } = await supabase
-      .storage
-      .listBuckets();
-    
-    if (bucketsError) {
-      console.error('Error checking buckets:', bucketsError);
-      throw new Error('Failed to check storage buckets');
-    }
-    
-    const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
-    
-    if (!bucketExists) {
-      console.log(`${bucketName} bucket not found, attempting to create...`);
-      try {
-        // Try creating the bucket
-        const { data: createData, error: createError } = await supabase
-          .storage
-          .createBucket(bucketName, {
-            public: true,
-            fileSizeLimit: bucketName === 'portfolio_videos' ? 52428800 : 10485760 // 50MB for videos, 10MB for others
-          });
-        
-        if (createError) {
-          console.error(`Error creating ${bucketName} bucket:`, createError);
-          throw new Error(`Failed to create ${bucketName} bucket`);
-        }
-        
-        console.log(`Successfully created ${bucketName} bucket`);
-      } catch (bucketCreateError) {
-        console.error('Exception creating bucket:', bucketCreateError);
-        throw new Error('Could not create storage bucket. You may need to run the create_storage_bucket function.');
-      }
-    } else {
-      console.log(`${bucketName} bucket exists`);
-    }
+    // Ensure the bucket exists
+    await ensureBucketExists(bucketName);
 
     console.log(`Uploading to ${bucketName}/${filePath}`);
 
