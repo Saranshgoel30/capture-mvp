@@ -43,7 +43,6 @@ const ProjectDetails: React.FC = () => {
         const projectData = await fetchProjectById(projectId);
         setProject(projectData);
         
-        // Check if the project deadline has passed
         if (projectData) {
           const deadlineDate = new Date(projectData.deadline);
           const today = new Date();
@@ -151,7 +150,6 @@ const ProjectDetails: React.FC = () => {
     );
   }
   
-  // Get avatar for the project owner
   const ownerAvatar = getAnimalAvatarForUser(project.postedById);
   
   return (
@@ -231,7 +229,7 @@ const ProjectDetails: React.FC = () => {
                     </div>
                     
                     {showApplications && (
-                      <ProjectApplications projectId={project.id} projectTitle={project.title} />
+                      <ProjectApplications projectId={project.id} isOwner={isOwner} />
                     )}
                   </CardContent>
                 </Card>

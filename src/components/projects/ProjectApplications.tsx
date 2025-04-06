@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -128,7 +129,6 @@ const ProjectApplications: React.FC<ProjectApplicationsProps> = ({ projectId, is
                 ...application,
                 applicant_profile: {
                   ...application.applicant_profile,
-                  // Replace avatar with avatar_url
                   avatar_url: application.applicant_profile?.avatar_url || ""
                 }
               }}
