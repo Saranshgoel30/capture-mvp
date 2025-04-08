@@ -1,3 +1,4 @@
+
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.21.0';
 
@@ -13,16 +14,36 @@ serve(async (req) => {
   }
 
   try {
-    // Create a Supabase client with the Auth context of the logged in user
-    const supabaseClient = createClient(
+    // Create a Supabase client with the service role key to bypass RLS
+    const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    );
+    
+    // Also create a regular client to check if the user is authenticated
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       {
         global: {
           headers: { Authorization: req.headers.get('Authorization')! },
         },
       }
     );
+
+    // Check if the user is authenticated (optional for bucket creation but good for security)
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    
+    // Log any auth errors but continue (we'll use admin client anyway)
+    if (authError) {
+      console.warn("Authentication check failed, but proceeding with admin rights:", authError.message);
+    }
 
     console.log("Starting storage bucket initialization...");
 
@@ -55,7 +76,7 @@ serve(async (req) => {
     ];
 
     // First get existing buckets
-    const { data: existingBuckets, error: listError } = await supabaseClient
+    const { data: existingBuckets, error: listError } = await supabaseAdmin
       .storage
       .listBuckets();
 
@@ -75,7 +96,7 @@ serve(async (req) => {
         
         if (!bucketExists) {
           console.log(`Creating bucket ${bucket.id}...`);
-          const { data, error } = await supabaseClient
+          const { data, error } = await supabaseAdmin
             .storage
             .createBucket(bucket.id, {
               public: bucket.public,
@@ -90,19 +111,57 @@ serve(async (req) => {
             console.log(`Created bucket ${bucket.id} successfully`);
             results.push({ id: bucket.id, status: 'created' });
             
-            // Set public access policy for the bucket
+            // Set up RLS policies for the bucket to allow public access
             if (bucket.public) {
-              console.log(`Setting public access policy for bucket ${bucket.id}...`);
               try {
-                // Create direct RLS policies for public access instead of using RPC
-                const { error: policyError } = await supabaseClient
-                  .storage
-                  .from(bucket.id)
-                  .createSignedUrl(bucket.id, 60);
-                  
+                // First, try to add a policy to allow public downloads
+                const { error: policyError } = await supabaseAdmin.rpc('create_storage_policy', {
+                  bucket_name: bucket.id,
+                  policy_name: `${bucket.id}_public_select`,
+                  definition: 'true', // Anyone can download
+                  operation: 'SELECT',
+                });
+                
                 if (policyError) {
-                  console.warn(`Warning setting policy for ${bucket.id}:`, policyError);
+                  console.warn(`Warning setting SELECT policy for ${bucket.id}:`, policyError);
                 }
+                
+                // Add policy for authenticated users to upload
+                const { error: insertPolicyError } = await supabaseAdmin.rpc('create_storage_policy', {
+                  bucket_name: bucket.id,
+                  policy_name: `${bucket.id}_auth_insert`,
+                  definition: '(auth.role() = \'authenticated\')', // Only authenticated users can upload
+                  operation: 'INSERT',
+                });
+                
+                if (insertPolicyError) {
+                  console.warn(`Warning setting INSERT policy for ${bucket.id}:`, insertPolicyError);
+                }
+                
+                // Add policy for users to update/delete their own files
+                const { error: updatePolicyError } = await supabaseAdmin.rpc('create_storage_policy', {
+                  bucket_name: bucket.id,
+                  policy_name: `${bucket.id}_auth_update`,
+                  definition: '(auth.uid() = owner)', // Only the owner can update
+                  operation: 'UPDATE',
+                });
+                
+                if (updatePolicyError) {
+                  console.warn(`Warning setting UPDATE policy for ${bucket.id}:`, updatePolicyError);
+                }
+                
+                // Add policy for users to delete their own files
+                const { error: deletePolicyError } = await supabaseAdmin.rpc('create_storage_policy', {
+                  bucket_name: bucket.id,
+                  policy_name: `${bucket.id}_auth_delete`,
+                  definition: '(auth.uid() = owner)', // Only the owner can delete
+                  operation: 'DELETE',
+                });
+                
+                if (deletePolicyError) {
+                  console.warn(`Warning setting DELETE policy for ${bucket.id}:`, deletePolicyError);
+                }
+                
               } catch (policyErr) {
                 console.warn(`Exception setting policy for ${bucket.id}:`, policyErr);
               }

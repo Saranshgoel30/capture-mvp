@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Bell, CheckCircle, Circle, Mail, AlertCircle, Briefcase } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -31,7 +30,17 @@ const NotificationsDropdown: React.FC = () => {
       setIsLoading(true);
       try {
         const data = await fetchNotifications(user.id);
-        setNotifications(data);
+        const transformedNotifications: Notification[] = data.map(n => ({
+          id: n.id,
+          type: n.type,
+          title: n.title,
+          message: n.message,
+          read: n.read,
+          relatedId: n.related_id,
+          userId: n.user_id,
+          createdAt: new Date(n.created_at).getTime()
+        }));
+        setNotifications(transformedNotifications);
       } catch (error) {
         console.error('Failed to load notifications:', error);
       } finally {
@@ -41,14 +50,12 @@ const NotificationsDropdown: React.FC = () => {
     
     loadNotifications();
     
-    // Set up polling for new notifications every 30 seconds
     const intervalId = setInterval(loadNotifications, 30000);
     
     return () => clearInterval(intervalId);
   }, [user]);
   
   const handleNotificationClick = async (notification: Notification) => {
-    // Mark as read
     if (!notification.read) {
       await markNotificationAsRead(notification.id);
       setNotifications(prev => 
@@ -56,7 +63,6 @@ const NotificationsDropdown: React.FC = () => {
       );
     }
     
-    // Navigate based on notification type
     if (notification.type === 'message') {
       navigate(`/messages/${notification.relatedId}`);
     } else if (notification.type === 'application') {
