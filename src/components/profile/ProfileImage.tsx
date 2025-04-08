@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Camera, Loader2, User } from 'lucide-react';
 import { uploadProfileImage } from '@/lib/supabase/storage';
 import { useToast } from '@/hooks/use-toast';
-import { getAnimalAvatarForUser } from '@/lib/animalAvatars';
+import { getAnimalEmojiForUser } from '@/lib/animalAvatars';
 
 interface ProfileImageProps {
   avatar?: string | null;
@@ -48,8 +48,8 @@ const ProfileImage: React.FC<ProfileImageProps> = ({
     lg: 24
   };
 
-  // Get animal avatar for this user
-  const animalAvatar = getAnimalAvatarForUser(userId);
+  // Get animal emoji for this user as fallback
+  const animalEmoji = getAnimalEmojiForUser(userId);
   
   const handleAvatarClick = () => {
     if (readOnly) return;
@@ -123,16 +123,13 @@ const ProfileImage: React.FC<ProfileImageProps> = ({
     }
   };
   
-  // Add a cache-busting parameter to the avatar URL
-  const displayUrl = avatarUrl ? `${avatarUrl}${avatarUrl.includes('?') ? '&' : '?'}t=${Date.now()}` : animalAvatar;
-  
   return (
     <div className="relative">
       <Avatar className={sizeClasses[size]}>
         {/* Use the local state for display to avoid flickering during upload */}
-        <AvatarImage src={displayUrl} alt={name} />
+        <AvatarImage src={avatarUrl} alt={name} />
         <AvatarFallback className="bg-primary text-primary-foreground">
-          {name ? name.charAt(0).toUpperCase() : <User />}
+          {name ? name.charAt(0).toUpperCase() : animalEmoji}
         </AvatarFallback>
       </Avatar>
       

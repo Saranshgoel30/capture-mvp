@@ -1,33 +1,50 @@
 
-// Collection of animated animal avatars
-const animalAvatars = [
-  "/animals/fox.gif",
-  "/animals/panda.gif",
-  "/animals/penguin.gif",
-  "/animals/cat.gif",
-  "/animals/dog.gif",
-  "/animals/koala.gif",
-  "/animals/lion.gif",
-  "/animals/tiger.gif",
-  "/animals/bear.gif",
-  "/animals/rabbit.gif",
-  "/animals/elephant.gif",
-  "/animals/monkey.gif",
-  "/animals/owl.gif",
-  "/animals/wolf.gif",
-  "/animals/raccoon.gif",
-];
-
-// Get a random animal avatar
-export const getRandomAnimalAvatar = (): string => {
-  const randomIndex = Math.floor(Math.random() * animalAvatars.length);
-  return animalAvatars[randomIndex];
+const animalEmojis: Record<string, string> = {
+  fox: '🦊',
+  panda: '🐼',
+  penguin: '🐧',
+  cat: '🐱',
+  dog: '🐶',
+  koala: '🐨',
+  lion: '🦁',
+  tiger: '🐯',
+  bear: '🐻',
+  rabbit: '🐰',
+  elephant: '🐘',
+  monkey: '🐵',
+  owl: '🦉',
+  wolf: '🐺',
+  raccoon: '🦝',
 };
 
-// Get a consistent animal avatar based on user ID
+// List of animal names
+const animalNames = Object.keys(animalEmojis);
+
+// Function to get a deterministic animal for a user based on their user ID
 export const getAnimalAvatarForUser = (userId: string): string => {
-  // Use the userId to deterministically select an animal
-  const charSum = userId.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
-  const index = charSum % animalAvatars.length;
-  return animalAvatars[index];
+  if (!userId) return '/placeholder.svg';
+  
+  // Get a number from the user ID to use as a seed
+  const seed = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  
+  // Select an animal based on the seed
+  const animalIndex = seed % animalNames.length;
+  const animalName = animalNames[animalIndex];
+  
+  // Return the emoji as a fallback
+  return animalEmojis[animalName] || '👤';
+};
+
+// Get a consistent emoji for a user based on their ID
+export const getAnimalEmojiForUser = (userId: string): string => {
+  if (!userId) return '👤';
+  
+  // Get a number from the user ID to use as a seed
+  const seed = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  
+  // Select an animal based on the seed
+  const animalIndex = seed % animalNames.length;
+  const animalName = animalNames[animalIndex];
+  
+  return animalEmojis[animalName] || '👤';
 };
