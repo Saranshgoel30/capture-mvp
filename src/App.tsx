@@ -1,4 +1,3 @@
-
 import { Route, Routes, useNavigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 import { useEffect } from 'react';
@@ -18,6 +17,7 @@ import FindCreators from './pages/FindCreators';
 import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
 import MyProjects from './pages/MyProjects';
+import OwnerDashboard from './pages/OwnerDashboard';
 
 function App() {
   const { toast } = useToast();
@@ -63,6 +63,7 @@ function App() {
         <Route path="/chatroom" element={<Chatroom />} />
         <Route path="/find-creators" element={<FindCreators />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/owner-dashboard" element={<OwnerDashboard />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Toaster />
