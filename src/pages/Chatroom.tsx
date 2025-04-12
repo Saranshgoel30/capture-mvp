@@ -64,24 +64,29 @@ const Chatroom: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Add pagination to fetchMessages
   const fetchMessages = async () => {
     try {
       setIsLoading(true);
       setFetchError(null);
       
-      // Use a simpler query first to get the messages
+      // Limit to last 50 messages initially
       const { data, error } = await supabase
         .from('chatroom_messages')
         .select('*')
-        .order('created_at');
+        .order('created_at', { ascending: false })
+        .limit(50);
       
       if (error) {
         throw error;
       }
-
-      // Now fetch user data for each message separately
+  
+      // Reverse to show in chronological order
+      const reversedData = [...data].reverse();
+  
+      // Now fetch user data for each message
       const messagesWithUsers = await Promise.all(
-        data.map(async (message) => {
+        reversedData.map(async (message) => {
           try {
             const { data: userData, error: userError } = await supabase
               .from('profiles')
@@ -145,28 +150,54 @@ const Chatroom: React.FC = () => {
     }
   };
 
+  // Add optimistic updates for messages
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!newMessage.trim() || !user) return;
     
+    // Create an optimistic message
+    const optimisticMessage: ChatMessage = {
+      id: `temp-${Date.now()}`,
+      content: newMessage.trim(),
+      user_id: user.id,
+      created_at: new Date().toISOString(),
+      user: {
+        full_name: profile?.full_name,
+        avatar_url: profile?.avatar_url
+      }
+    };
+    
+    // Add optimistic message to UI immediately
+    setMessages(prev => [...prev, optimisticMessage]);
+    
+    // Clear input right away
+    setNewMessage('');
+    
     try {
       setIsSending(true);
       
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('chatroom_messages')
         .insert({
-          content: newMessage.trim(),
+          content: optimisticMessage.content,
           user_id: user.id
-        });
+        })
+        .select()
+        .single();
       
       if (error) {
         throw error;
       }
       
-      setNewMessage('');
+      // Replace optimistic message with real one if needed
+      // This step might be unnecessary with Supabase realtime as it will come through subscription
     } catch (error: any) {
       console.error('Error sending message:', error);
+      // Remove the optimistic message on error
+      setMessages(prev => prev.filter(msg => msg.id !== optimisticMessage.id));
+      setNewMessage(optimisticMessage.content); // Restore the message to input
+      
       toast({
         title: 'Error',
         description: 'Failed to send message',
@@ -177,6 +208,31 @@ const Chatroom: React.FC = () => {
     }
   };
 
+  // Improve subscription to be more efficient
+  useEffect(() => {
+    fetchMessages();
+    
+    // Subscribe to new messages with a more efficient approach
+    const subscription = supabase
+      .channel('public:chatroom_messages')
+      .on('postgres_changes', { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: 'chatroom_messages' 
+      }, (payload) => {
+        // Only add messages from other users (our messages are added optimistically)
+        if (payload.new.user_id !== user?.id) {
+          fetchUserForMessage(payload.new as ChatMessage);
+        }
+      })
+      .subscribe();
+    
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [user?.id]);
+
+  // Add debounced typing indicator (optional)
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });

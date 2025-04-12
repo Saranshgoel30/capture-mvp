@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -18,6 +18,12 @@ const MyProjects = () => {
   const [myProjects, setMyProjects] = useState<Project[]>([]);
   const [appliedProjects, setAppliedProjects] = useState<(Project & { applicationStatus?: string })[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  // Add the handleCreateProject function
+  const handleCreateProject = () => {
+    navigate('/projects', { state: { openNewProjectModal: true } });
+  };
 
   useEffect(() => {
     if (user) {
@@ -157,11 +163,9 @@ const MyProjects = () => {
       <div className="container max-w-7xl mx-auto py-24 px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-extrabold">My Projects</h1>
-          <Button asChild>
-            <Link to="/new-project">
-              <Plus className="mr-2 h-4 w-4" />
-              Create Project
-            </Link>
+          <Button onClick={handleCreateProject}>
+            <Plus className="mr-2 h-4 w-4" />
+            Create Project
           </Button>
         </div>
 
@@ -188,11 +192,9 @@ const MyProjects = () => {
                 <p className="text-muted-foreground mb-6">
                   You haven't created any projects yet. Start by creating your first project.
                 </p>
-                <Button asChild>
-                  <Link to="/new-project">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Create Project
-                  </Link>
+                <Button onClick={handleCreateProject}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Project
                 </Button>
               </div>
             ) : (

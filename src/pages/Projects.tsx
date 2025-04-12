@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom'; // Add useLocation
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Button } from "@/components/ui/button";
@@ -16,13 +16,25 @@ import NewProjectForm from '@/components/projects/NewProjectForm';
 
 const Projects: React.FC = () => {
   const { user } = useAuth();
+  const location = useLocation(); // Add this line
   const [searchQuery, setSearchQuery] = useState('');
   const [projects, setProjects] = useState<Project[]>([]);
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [isLoading, setIsLoading] = useState(true);
-  const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
+  // Initialize modal state based on location state
+  const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(
+    location.state?.openNewProjectModal || false
+  );
   const navigate = useNavigate();
+  
+  // Clear the location state after using it
+  useEffect(() => {
+    if (location.state?.openNewProjectModal) {
+      // Replace the current entry in the history stack to clear the state
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location, navigate]);
   
   // Categories for filtering
   const categories = ["All", "Documentary", "Short Film", "Music Video", "Podcast", "Marketing", "Photography"];
