@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Send } from 'lucide-react';
+import { getAnimalEmojiForUser } from '@/lib/animalAvatars'; // Import the emoji function
 
 interface ChatMessage {
   id: string;
@@ -244,17 +245,17 @@ const Chatroom: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col"> {/* Ensure flex column layout */}
       <Navbar />
-      <div className="pt-32 pb-24 px-6 md:px-12">
-        <div className="max-w-4xl mx-auto">
-          <Card className="shadow-lg">
-            <CardHeader className="bg-primary text-primary-foreground">
+      <div className="flex-grow pt-20 pb-4 px-6 md:px-12 flex justify-center"> {/* Adjust padding and allow growth */}
+        <div className="w-full max-w-4xl flex flex-col h-[calc(100vh-10rem)]"> {/* Set height for chat area */}
+          <Card className="shadow-lg flex-grow flex flex-col">
+            <CardHeader className="bg-primary text-primary-foreground flex-shrink-0">
               <CardTitle>Capture Community Chat</CardTitle>
             </CardHeader>
-            
-            <ScrollArea className="h-[60vh]">
-              <CardContent className="p-6">
+
+            <ScrollArea className="flex-grow"> {/* Allow scroll area to grow */}
+              <CardContent className="p-4 md:p-6"> {/* Adjust padding */}
                 {isLoading ? (
                   <div className="flex justify-center items-center h-40">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -271,63 +272,71 @@ const Chatroom: React.FC = () => {
                     <p>No messages yet. Be the first to say hello!</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {messages.map((message) => (
-                      <div
-                        key={message.id}
-                        className={`flex gap-3 ${
-                          message.user_id === user.id ? 'justify-end' : 'justify-start'
-                        }`}
-                      >
-                        {message.user_id !== user.id && (
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={message.user?.avatar_url || ''} />
-                            <AvatarFallback>
-                              {message.user?.full_name?.charAt(0) || '?'}
-                            </AvatarFallback>
-                          </Avatar>
-                        )}
-                        
-                        <div className="max-w-[80%]">
-                          <div className="flex items-baseline gap-2">
-                            {message.user_id !== user.id && (
-                              <span className="text-sm font-medium">
-                                {message.user?.full_name || 'Anonymous'}
-                              </span>
-                            )}
-                            <span className="text-xs text-muted-foreground">
-                              {formatTime(message.created_at)}
-                            </span>
-                          </div>
-                          
+                  <div className="space-y-2"> {/* Reduce spacing slightly */}
+                    {messages.map((message) => {
+                      const isCurrentUser = message.user_id === user.id;
+                      const senderName = message.user?.full_name || 'Anonymous';
+                      const senderAvatarUrl = message.user?.avatar_url;
+                      const currentUserAvatarUrl = profile?.avatar_url;
+                      const senderEmoji = getAnimalEmojiForUser(message.user_id); // Get emoji for sender
+                      const currentUserEmoji = getAnimalEmojiForUser(user.id); // Get emoji for current user
+
+                      return (
+                        <div
+                          key={message.id}
+                          className={`flex items-end gap-2 ${
+                            isCurrentUser ? 'justify-end' : 'justify-start'
+                          }`}
+                        >
+                          {/* Avatar for other users (left) */}
+                          {!isCurrentUser && (
+                            <Avatar className="h-8 w-8 flex-shrink-0">
+                              <AvatarImage src={senderAvatarUrl || undefined} />
+                              <AvatarFallback>{senderEmoji}</AvatarFallback> {/* Use emoji */}
+                            </Avatar>
+                          )}
+
+                          {/* Message Bubble */}
                           <div
-                            className={`rounded-lg px-4 py-2 mt-1 text-sm ${
-                              message.user_id === user.id
-                                ? 'bg-primary text-primary-foreground'
-                                : 'bg-secondary'
+                            className={`max-w-[75%] rounded-lg px-3 py-2 ${ // Adjusted padding
+                              isCurrentUser
+                                ? 'bg-primary text-primary-foreground rounded-br-none' // WhatsApp style bubble
+                                : 'bg-secondary text-secondary-foreground rounded-bl-none' // WhatsApp style bubble
                             }`}
                           >
-                            {message.content}
+                            {/* Sender Name (only for others) */}
+                            {!isCurrentUser && (
+                              <p className="text-xs font-semibold mb-1 text-primary"> {/* Optional: Color name */}
+                                {senderName}
+                              </p>
+                            )}
+                            {/* Message Content with Line Breaks */}
+                            <p className="text-sm whitespace-pre-line break-words"> {/* Added whitespace-pre-line and break-words */}
+                              {message.content}
+                            </p>
+                            {/* Timestamp */}
+                            <p className={`text-xs mt-1 ${isCurrentUser ? 'text-primary-foreground/80 text-right' : 'text-muted-foreground text-right'}`}> {/* Right align timestamp */}
+                              {formatTime(message.created_at)}
+                            </p>
                           </div>
+
+                          {/* Avatar for current user (right) */}
+                          {isCurrentUser && (
+                            <Avatar className="h-8 w-8 flex-shrink-0">
+                              <AvatarImage src={currentUserAvatarUrl || undefined} />
+                              <AvatarFallback>{currentUserEmoji}</AvatarFallback> {/* Use emoji */}
+                            </Avatar>
+                          )}
                         </div>
-                        
-                        {message.user_id === user.id && (
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={profile?.avatar_url || ''} />
-                            <AvatarFallback>
-                              {profile?.full_name?.charAt(0) || user.email?.charAt(0) || '?'}
-                            </AvatarFallback>
-                          </Avatar>
-                        )}
-                      </div>
-                    ))}
+                      );
+                    })}
                     <div ref={messagesEndRef} />
                   </div>
                 )}
               </CardContent>
             </ScrollArea>
-            
-            <CardFooter className="p-4 border-t">
+
+            <CardFooter className="p-4 border-t flex-shrink-0"> {/* Ensure footer doesn't shrink */}
               <form onSubmit={handleSendMessage} className="flex w-full gap-2">
                 <Input
                   value={newMessage}
@@ -349,7 +358,8 @@ const Chatroom: React.FC = () => {
           </Card>
         </div>
       </div>
-      <Footer />
+      {/* Footer removed or placed outside the flex container if needed */}
+      {/* <Footer /> */}
     </div>
   );
 };
