@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { fetchProjectById, applyForProject } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase/client';
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -47,6 +48,23 @@ const ProjectDetails: React.FC = () => {
           const deadlineDate = new Date(projectData.deadline);
           const today = new Date();
           setIsExpired(deadlineDate < today);
+        }
+
+        // Check if the user has already applied to this project
+        if (user) {
+          try {
+            const { data: existingApplication } = await supabase
+              .from('applications')
+              .select('id')
+              .eq('project_id', projectId)
+              .eq('applicant_id', user.id)
+              .maybeSingle();
+            
+            setHasApplied(!!existingApplication);
+          } catch (checkError) {
+            console.error('Error checking application status:', checkError);
+            // Don't set an error toast here as it's not critical
+          }
         }
       } catch (error) {
         console.error('Error loading project:', error);
