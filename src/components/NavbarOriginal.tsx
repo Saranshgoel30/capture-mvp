@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from '@/hooks/use-mobile';
 import { getAnimalAvatarForUser } from '@/lib/animalAvatars';
+import { getAnimalEmojiForUser } from '@/lib/animalAvatars';
 
 const NavbarOriginal = ({
   NotificationsComponent
@@ -57,6 +58,11 @@ const NavbarOriginal = ({
             <Link to="/chatroom" className={`px-4 py-2 rounded-md transition-colors ${isActive('/chatroom') ? 'bg-secondary text-foreground' : 'hover:bg-secondary/50'}`}>
               Community
             </Link>
+            {user?.email === 'saranshsgoel@gmail.com' && (
+              <Link to="/owner-dashboard" className={`px-4 py-2 rounded-md transition-colors ${isActive('/owner-dashboard') ? 'bg-secondary text-foreground' : 'hover:bg-secondary/50'}`}>
+                Owner Dashboard
+              </Link>
+            )}
           </div>
           
           {/* Right section - auth, theme, etc. */}
@@ -77,7 +83,7 @@ const NavbarOriginal = ({
                   <div className="flex items-center space-x-1 cursor-pointer p-1 rounded-full hover:bg-secondary" onClick={() => setMenuOpen(!menuOpen)}>
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={userAvatar} />
-                      <AvatarFallback>{userName.charAt(0)}</AvatarFallback>
+                      <AvatarFallback>{getAnimalEmojiForUser(user.id)}</AvatarFallback>
                     </Avatar>
                     <ChevronDown className="h-4 w-4" />
                   </div>
@@ -139,6 +145,11 @@ const NavbarOriginal = ({
               <Link to="/chatroom" className={`px-4 py-2 rounded-md transition-colors ${isActive('/chatroom') ? 'bg-secondary text-foreground' : 'hover:bg-secondary/50'}`} onClick={() => setMenuOpen(false)}>
                 Community
               </Link>
+              {user?.email === 'saranshsgoel@gmail.com' && (
+                <Link to="/owner-dashboard" className={`px-4 py-2 rounded-md transition-colors ${isActive('/owner-dashboard') ? 'bg-secondary text-foreground' : 'hover:bg-secondary/50'}`} onClick={() => setMenuOpen(false)}>
+                  Owner Dashboard
+                </Link>
+              )}
               {user && <>
                   <div className="border-t border-border/40 my-2"></div>
                   <Link to={`/profile/${user.id}`} className={`px-4 py-2 rounded-md transition-colors hover:bg-secondary/50`} onClick={() => setMenuOpen(false)}>

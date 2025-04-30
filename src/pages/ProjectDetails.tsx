@@ -16,7 +16,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Project } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { getAnimalAvatarForUser } from '@/lib/animalAvatars';
+import { getAnimalEmojiForUser } from '@/lib/animalAvatars';
 import ProjectApplications from '@/components/projects/ProjectApplications';
 
 const ProjectDetails: React.FC = () => {
@@ -150,7 +150,7 @@ const ProjectDetails: React.FC = () => {
     );
   }
   
-  const ownerAvatar = getAnimalAvatarForUser(project.postedById);
+  const ownerAvatar = getAnimalEmojiForUser(project.postedById);
   
   return (
     <div className="min-h-screen bg-background">
@@ -243,7 +243,7 @@ const ProjectDetails: React.FC = () => {
                   <div className="flex items-center mb-6">
                     <Avatar className="h-10 w-10 mr-3">
                       <AvatarImage src={project.postedByAvatar || ownerAvatar} />
-                      <AvatarFallback>{project.postedBy.charAt(0)}</AvatarFallback>
+                      <AvatarFallback>{getAnimalEmojiForUser(project.postedById)}</AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col">
                       <p className="font-medium">{project.postedBy}</p>

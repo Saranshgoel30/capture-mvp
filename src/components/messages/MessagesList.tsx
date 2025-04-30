@@ -6,6 +6,7 @@ import { getMessages, listenToMessages } from '@/lib/supabase/messages';
 import { useAuth } from '@/contexts/AuthContext';
 import { getAnimalAvatarForUser } from '@/lib/animalAvatars';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { getAnimalEmojiForUser } from '@/lib/animalAvatars';
 
 interface MessagesListProps {
   otherId: string;
@@ -80,9 +81,8 @@ const MessagesList: React.FC<MessagesListProps> = ({ otherId }) => {
             {!isCurrentUser && (
               <Avatar className="h-8 w-8 mr-2">
                 <AvatarImage src={message.sender?.avatar_url || senderAvatar} />
-                <AvatarFallback>
-                  {message.sender?.full_name?.charAt(0) || '?'}
-                </AvatarFallback>
+                {/* Use message.senderId here */}
+                <AvatarFallback>{getAnimalEmojiForUser(message.senderId)}</AvatarFallback>
               </Avatar>
             )}
             <div 
@@ -100,9 +100,8 @@ const MessagesList: React.FC<MessagesListProps> = ({ otherId }) => {
             {isCurrentUser && (
               <Avatar className="h-8 w-8 ml-2">
                 <AvatarImage src={profile?.avatar_url || senderAvatar} />
-                <AvatarFallback>
-                  {profile?.full_name?.charAt(0) || '?'}
-                </AvatarFallback>
+                 {/* Use user.id here */}
+                <AvatarFallback>{getAnimalEmojiForUser(user.id)}</AvatarFallback>
               </Avatar>
             )}
           </div>

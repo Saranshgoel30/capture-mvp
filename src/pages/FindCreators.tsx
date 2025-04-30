@@ -1,4 +1,5 @@
 
+import { getAnimalEmojiForUser } from '@/lib/animalAvatars';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
@@ -90,8 +91,8 @@ const FindCreators: React.FC = () => {
                 <Card key={creator.id} className="hover:shadow-md transition-all duration-200">
                   <CardHeader className="flex flex-row items-center gap-4 pb-2">
                     <Avatar className="h-12 w-12">
-                      <AvatarImage src={creator.avatar || 'https://i.pravatar.cc/100'} />
-                      <AvatarFallback>{creator.name.charAt(0)}</AvatarFallback>
+                      <AvatarImage src={creator.avatar || undefined} />
+                      <AvatarFallback>{getAnimalEmojiForUser(creator.userId)}</AvatarFallback>
                     </Avatar>
                     <div>
                       <CardTitle className="text-lg">{creator.name}</CardTitle>

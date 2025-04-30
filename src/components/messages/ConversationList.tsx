@@ -66,7 +66,7 @@ const ConversationList = () => {
           >
             <Avatar>
               <AvatarImage src={otherUser.avatar || animalAvatar} />
-              <AvatarFallback>{otherUser.name[0]}</AvatarFallback>
+              <AvatarFallback>{getAnimalEmojiForUser(otherUser.userId)}</AvatarFallback>
             </Avatar>
             <div className="flex-1 min-width-0">
               <div className="flex justify-between items-center">
