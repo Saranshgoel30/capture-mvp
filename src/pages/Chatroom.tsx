@@ -259,13 +259,13 @@ const Chatroom: React.FC = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
       <div className="flex-grow pt-20 pb-4 px-6 md:px-12 flex justify-center">
-        <div className="w-full max-w-4xl flex flex-col h-[calc(100vh-10rem)]">
+        <div className="w-full max-w-4xl flex flex-col h-[calc(100vh-10rem)]"> {/* <-- Fixed height container */}
           <Card className="shadow-lg flex-grow flex flex-col">
             <CardHeader className="bg-primary text-primary-foreground flex-shrink-0">
               <CardTitle>Capture Community Chat</CardTitle>
             </CardHeader>
 
-            <ScrollArea className="flex-grow">
+            <ScrollArea className="flex-grow"> {/* <-- ScrollArea wraps content */}
               <CardContent className="p-4 md:p-6">
                 {isLoading ? (
                   <div className="flex justify-center items-center h-40">
@@ -341,7 +341,7 @@ const Chatroom: React.FC = () => {
                         </div>
                       );
                     })}
-                    <div ref={messagesEndRef} />
+                    <div ref={messagesEndRef} /> {/* Ref to scroll to bottom */}
                   </div>
                 )}
               </CardContent>
