@@ -2,9 +2,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Navigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
+// Footer import removed as it's commented out later
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+// Replace Input with Textarea
+import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -152,15 +153,16 @@ const Chatroom: React.FC = () => {
   };
 
   // Add optimistic updates for messages
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleSendMessage = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault(); // Prevent default form submission if event exists
+
     if (!newMessage.trim() || !user) return;
-    
+
     // Create an optimistic message
     const optimisticMessage: ChatMessage = {
       id: `temp-${Date.now()}`,
-      content: newMessage.trim(),
+      // Use newMessage directly, trim() might remove intended whitespace/newlines
+      content: newMessage,
       user_id: user.id,
       created_at: new Date().toISOString(),
       user: {
@@ -168,37 +170,36 @@ const Chatroom: React.FC = () => {
         avatar_url: profile?.avatar_url
       }
     };
-    
+
     // Add optimistic message to UI immediately
     setMessages(prev => [...prev, optimisticMessage]);
-    
+
     // Clear input right away
     setNewMessage('');
-    
+
     try {
       setIsSending(true);
-      
+
       const { data, error } = await supabase
         .from('chatroom_messages')
         .insert({
-          content: optimisticMessage.content,
+          content: optimisticMessage.content, // Send the untrimmed content
           user_id: user.id
         })
         .select()
         .single();
-      
+
       if (error) {
         throw error;
       }
-      
-      // Replace optimistic message with real one if needed
-      // This step might be unnecessary with Supabase realtime as it will come through subscription
+
+      // Realtime subscription should handle adding the confirmed message
     } catch (error: any) {
       console.error('Error sending message:', error);
       // Remove the optimistic message on error
       setMessages(prev => prev.filter(msg => msg.id !== optimisticMessage.id));
       setNewMessage(optimisticMessage.content); // Restore the message to input
-      
+
       toast({
         title: 'Error',
         description: 'Failed to send message',
@@ -208,6 +209,16 @@ const Chatroom: React.FC = () => {
       setIsSending(false);
     }
   };
+
+  // Handle Enter/Shift+Enter in Textarea
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault(); // Prevent default newline on Enter
+      handleSendMessage(); // Send message
+    }
+    // Shift+Enter will create a newline by default
+  };
+
 
   // Improve subscription to be more efficient
   useEffect(() => {
@@ -245,17 +256,17 @@ const Chatroom: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col"> {/* Ensure flex column layout */}
+    <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
-      <div className="flex-grow pt-20 pb-4 px-6 md:px-12 flex justify-center"> {/* Adjust padding and allow growth */}
-        <div className="w-full max-w-4xl flex flex-col h-[calc(100vh-10rem)]"> {/* Set height for chat area */}
+      <div className="flex-grow pt-20 pb-4 px-6 md:px-12 flex justify-center">
+        <div className="w-full max-w-4xl flex flex-col h-[calc(100vh-10rem)]">
           <Card className="shadow-lg flex-grow flex flex-col">
             <CardHeader className="bg-primary text-primary-foreground flex-shrink-0">
               <CardTitle>Capture Community Chat</CardTitle>
             </CardHeader>
 
-            <ScrollArea className="flex-grow"> {/* Allow scroll area to grow */}
-              <CardContent className="p-4 md:p-6"> {/* Adjust padding */}
+            <ScrollArea className="flex-grow">
+              <CardContent className="p-4 md:p-6">
                 {isLoading ? (
                   <div className="flex justify-center items-center h-40">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -272,7 +283,7 @@ const Chatroom: React.FC = () => {
                     <p>No messages yet. Be the first to say hello!</p>
                   </div>
                 ) : (
-                  <div className="space-y-2"> {/* Reduce spacing slightly */}
+                  <div className="space-y-2">
                     {messages.map((message) => {
                       const isCurrentUser = message.user_id === user.id;
                       const senderName = message.user?.full_name || 'Anonymous';
@@ -298,10 +309,10 @@ const Chatroom: React.FC = () => {
 
                           {/* Message Bubble */}
                           <div
-                            className={`max-w-[75%] rounded-lg px-3 py-2 ${ // Adjusted padding
+                            className={`max-w-[75%] rounded-lg px-3 py-2 ${
                               isCurrentUser
-                                ? 'bg-primary text-primary-foreground rounded-br-none' // WhatsApp style bubble
-                                : 'bg-secondary text-secondary-foreground rounded-bl-none' // WhatsApp style bubble
+                                ? 'bg-primary text-primary-foreground rounded-br-none'
+                                : 'bg-secondary text-secondary-foreground rounded-bl-none'
                             }`}
                           >
                             {/* Sender Name (only for others) */}
@@ -336,29 +347,32 @@ const Chatroom: React.FC = () => {
               </CardContent>
             </ScrollArea>
 
-            <CardFooter className="p-4 border-t flex-shrink-0"> {/* Ensure footer doesn't shrink */}
-              <form onSubmit={handleSendMessage} className="flex w-full gap-2">
-                <Input
+            <CardFooter className="p-4 border-t flex-shrink-0">
+              {/* Use form tag for accessibility, handle submit via button/enter */}
+              <form onSubmit={handleSendMessage} className="flex w-full gap-2 items-end">
+                {/* Replace Input with Textarea */}
+                <Textarea
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Type your message..."
+                  onKeyDown={handleKeyDown} // Add keydown handler
+                  placeholder="Type your message... (Shift+Enter for new line)"
                   disabled={isSending}
-                  className="flex-1"
+                  className="flex-1 resize-none" // Prevent manual resize
+                  rows={1} // Start with 1 row, auto-expand if needed (requires more CSS/JS)
                 />
-                <Button type="submit" disabled={isSending || !newMessage.trim()}>
+                <Button type="submit" disabled={isSending || !newMessage.trim()} size="icon">
                   {isSending ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <Send className="h-4 w-4" />
                   )}
-                  <span className="ml-2 hidden sm:inline">Send</span>
+                  <span className="sr-only">Send</span>
                 </Button>
               </form>
             </CardFooter>
           </Card>
         </div>
       </div>
-      {/* Footer removed or placed outside the flex container if needed */}
       {/* <Footer /> */}
     </div>
   );
