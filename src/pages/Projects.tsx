@@ -113,7 +113,7 @@ const Projects: React.FC = () => {
   // Function to check if a project deadline has passed
   const isProjectActive = (deadline: string) => {
     try {
-      // Parse the deadline string which could be in format MM/DD/YYYY or DD/MM/YYYY
+      // Parse the deadline string in D/M/YYYY format
       const deadlineParts = deadline.split('/');
       
       // Ensure we have 3 parts
@@ -122,25 +122,14 @@ const Projects: React.FC = () => {
         return true; // Default to active if format is invalid
       }
       
-      // Try to determine the format and create a valid date
-      // First assume MM/DD/YYYY (most likely format)
-      let deadlineDate = new Date(
+      // Create date using D/M/YYYY format
+      const deadlineDate = new Date(
         parseInt(deadlineParts[2]), // Year
-        parseInt(deadlineParts[0]) - 1, // Month (0-indexed)
-        parseInt(deadlineParts[1]) // Day
+        parseInt(deadlineParts[1]) - 1, // Month (0-indexed)
+        parseInt(deadlineParts[0]) // Day
       );
       
-      // If the date is invalid (e.g., because it was actually DD/MM/YYYY)
-      if (isNaN(deadlineDate.getTime())) {
-        // Try DD/MM/YYYY format instead
-        deadlineDate = new Date(
-          parseInt(deadlineParts[2]), // Year
-          parseInt(deadlineParts[1]) - 1, // Month (0-indexed)
-          parseInt(deadlineParts[0]) // Day
-        );
-      }
-      
-      // If still invalid, log error and default to active
+      // If the date is invalid, log error and default to active
       if (isNaN(deadlineDate.getTime())) {
         console.error('Could not parse deadline:', deadline);
         return true;
@@ -365,15 +354,9 @@ const Projects: React.FC = () => {
         <NewProjectForm 
           isOpen={isNewProjectModalOpen} 
           onClose={() => setIsNewProjectModalOpen(false)}
-          onSuccess={async () => {
-            try {
-              const newProjects = await fetchProjects();
-              setProjects(newProjects);
-            } catch (error) {
-              console.error('Error refreshing projects:', error);
-            } finally {
-              setIsNewProjectModalOpen(false);
-            }
+          onSuccess={() => {
+            setIsNewProjectModalOpen(false);
+            setTimeout(() => fetchProjects().then(setProjects), 100);
           }}
         />
       )}
