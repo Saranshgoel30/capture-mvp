@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom'; // Add useLocation
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Button } from "@/components/ui/button";
@@ -13,15 +13,19 @@ import { useAuth } from '@/contexts/AuthContext';
 import { fetchProjects } from '@/lib/supabase';
 import { Project } from '@/lib/types';
 import NewProjectForm from '@/components/projects/NewProjectForm';
+import { supabase } from '@/lib/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const Projects: React.FC = () => {
   const { user } = useAuth();
-  const location = useLocation(); // Add this line
+  const location = useLocation();
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [projects, setProjects] = useState<Project[]>([]);
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [isLoading, setIsLoading] = useState(true);
+  const [userApplications, setUserApplications] = useState<string[]>([]);
   // Initialize modal state based on location state
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(
     location.state?.openNewProjectModal || false
@@ -38,6 +42,30 @@ const Projects: React.FC = () => {
   
   // Categories for filtering
   const categories = ["All", "Documentary", "Short Film", "Music Video", "Podcast", "Marketing", "Photography"];
+
+  // Fetch user's applications
+  useEffect(() => {
+    if (user) {
+      const fetchUserApplications = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('applications')
+            .select('project_id')
+            .eq('applicant_id', user.id);
+            
+          if (error) throw error;
+          
+          if (data) {
+            setUserApplications(data.map(app => app.project_id));
+          }
+        } catch (error) {
+          console.error('Error fetching user applications:', error);
+        }
+      };
+      
+      fetchUserApplications();
+    }
+  }, [user]);
 
   useEffect(() => {
     const loadProjects = async () => {
@@ -85,13 +113,38 @@ const Projects: React.FC = () => {
   // Function to check if a project deadline has passed
   const isProjectActive = (deadline: string) => {
     try {
-      // Parse the deadline string which is in format MM/DD/YYYY or DD/MM/YYYY
+      // Parse the deadline string which could be in format MM/DD/YYYY or DD/MM/YYYY
       const deadlineParts = deadline.split('/');
-      const deadlineDate = new Date(
+      
+      // Ensure we have 3 parts
+      if (deadlineParts.length !== 3) {
+        console.error('Invalid deadline format:', deadline);
+        return true; // Default to active if format is invalid
+      }
+      
+      // Try to determine the format and create a valid date
+      // First assume MM/DD/YYYY (most likely format)
+      let deadlineDate = new Date(
         parseInt(deadlineParts[2]), // Year
         parseInt(deadlineParts[0]) - 1, // Month (0-indexed)
         parseInt(deadlineParts[1]) // Day
       );
+      
+      // If the date is invalid (e.g., because it was actually DD/MM/YYYY)
+      if (isNaN(deadlineDate.getTime())) {
+        // Try DD/MM/YYYY format instead
+        deadlineDate = new Date(
+          parseInt(deadlineParts[2]), // Year
+          parseInt(deadlineParts[1]) - 1, // Month (0-indexed)
+          parseInt(deadlineParts[0]) // Day
+        );
+      }
+      
+      // If still invalid, log error and default to active
+      if (isNaN(deadlineDate.getTime())) {
+        console.error('Could not parse deadline:', deadline);
+        return true;
+      }
       
       // Reset hours to compare just the dates
       const today = new Date();
@@ -102,6 +155,60 @@ const Projects: React.FC = () => {
     } catch (error) {
       console.error('Error parsing deadline:', error);
       return true; // Default to active if parsing fails
+    }
+  };
+
+  // Function to handle project application
+  const handleApply = async (projectId: string) => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to apply for projects",
+        variant: "destructive",
+      });
+      navigate('/login');
+      return;
+    }
+
+    try {
+      // Check if user has already applied
+      if (userApplications.includes(projectId)) {
+        toast({
+          title: "Already applied",
+          description: "You have already applied to this project",
+          variant: "default",
+        });
+        return;
+      }
+
+      // Create application
+      const { error } = await supabase
+        .from('applications')
+        .insert({
+          id: crypto.randomUUID(), // Generate a unique ID
+          project_id: projectId,
+          applicant_id: user.id,
+          status: 'pending',
+          cover_letter: '', // Add empty cover letter
+          created_at: new Date().toISOString(),
+        });
+
+      if (error) throw error;
+
+      // Update local state
+      setUserApplications([...userApplications, projectId]);
+
+      toast({
+        title: "Application submitted",
+        description: "Your application has been submitted successfully",
+      });
+    } catch (error: any) {
+      console.error('Error applying to project:', error);
+      toast({
+        title: "Application failed",
+        description: error.message || "Failed to submit application",
+        variant: "destructive",
+      });
     }
   };
 
@@ -164,89 +271,112 @@ const Projects: React.FC = () => {
           {/* Projects Grid */}
           {!isLoading && filteredProjects.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProjects.map(project => (
-                <Card key={project.id} className="overflow-hidden flex flex-col h-full hover:shadow-md transition-all duration-200">
-                  <CardHeader className="pb-3">
-                    <div className="flex justify-between">
-                      <Badge variant="outline" className="mb-2">{project.type}</Badge>
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <Users size={14} className="mr-1" />
-                        <span>{project.applicants}</span>
+              {filteredProjects.map(project => {
+                const projectActive = isProjectActive(project.deadline);
+                const hasApplied = userApplications.includes(project.id);
+                
+                return (
+                  <Card key={project.id} className="overflow-hidden flex flex-col h-full hover:shadow-md transition-all duration-200">
+                    <CardHeader className="pb-3">
+                      <div className="flex justify-between">
+                        <Badge variant="outline" className="mb-2">{project.type}</Badge>
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <Users size={14} className="mr-1" />
+                          <span>{project.applicants}</span>
+                        </div>
                       </div>
-                    </div>
-                    <CardTitle className="text-xl">{project.title}</CardTitle>
-                    <CardDescription className="flex items-center">
-                      <MapPin size={14} className="mr-1" />
-                      {project.location}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="py-2 flex-grow">
-                    <div className="flex items-center text-sm mb-3 text-muted-foreground">
-                      <Clock size={14} className="mr-1" />
-                      <span>{project.timeline}</span>
-                      <span className="mx-2">•</span>
-                      <Calendar size={14} className="mr-1" />
-                      <span>Due {project.deadline}</span>
-                    </div>
-                    <p className="text-sm mb-4 line-clamp-3">{project.description}</p>
-                    <div>
-                      <h4 className="text-sm font-medium mb-2">Roles Needed:</h4>
-                      <div className="flex flex-wrap gap-1.5">
-                        {project.rolesNeeded.map((role, index) => (
-                          <Badge key={index} variant="secondary" className="text-xs">
-                            {role}
-                          </Badge>
-                        ))}
+                      <CardTitle className="text-xl">{project.title}</CardTitle>
+                      <CardDescription className="flex items-center">
+                        <MapPin size={14} className="mr-1" />
+                        {project.location}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="py-2 flex-grow">
+                      <div className="flex items-center text-sm mb-3 text-muted-foreground">
+                        <Clock size={14} className="mr-1" />
+                        <span>{project.timeline}</span>
+                        <span className="mx-2">•</span>
+                        <Calendar size={14} className="mr-1" />
+                        <span>Due {project.deadline}</span>
+                        {!projectActive && (
+                          <Badge variant="destructive" className="ml-2 text-xs">Expired</Badge>
+                        )}
                       </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="border-t pt-4 flex justify-between">
-                    <div className="flex items-center">
-                      <div className="w-6 h-6 rounded-full overflow-hidden mr-2">
-                        <img 
-                          src={project.postedByAvatar || 'https://i.pravatar.cc/150?img=5'} 
-                          alt={project.postedBy} 
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.src = 'https://i.pravatar.cc/150?img=5';
-                          }}
-                        />
+                      <p className="text-sm mb-4 line-clamp-3">{project.description}</p>
+                      <div>
+                        <h4 className="text-sm font-medium mb-2">Roles Needed:</h4>
+                        <div className="flex flex-wrap gap-1.5">
+                          {project.rolesNeeded.map((role, index) => (
+                            <Badge key={index} variant="secondary" className="text-xs">
+                              {role}
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
-                      <span className="text-sm">{project.postedBy}</span>
-                    </div>
-                    <Button 
-                      size="sm"
-                      onClick={() => navigate(`/projects/${project.id}`)}
-                    >
-                      View Details
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
+                    </CardContent>
+                    <CardFooter className="pt-2 border-t">
+                      <div className="w-full flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="flex-1"
+                          asChild
+                        >
+                          <Link to={`/projects/${project.id}`}>View Details</Link>
+                        </Button>
+                        <Button 
+                          variant="default" 
+                          size="sm" 
+                          className="flex-1"
+                          disabled={!projectActive || hasApplied}
+                          onClick={() => handleApply(project.id)}
+                        >
+                          {hasApplied ? 'Applied' : 'Apply Now'}
+                        </Button>
+                      </div>
+                    </CardFooter>
+                  </Card>
+                );
+              })}
             </div>
           )}
           
-          {/* Empty state */}
+          {/* No Projects Found */}
           {!isLoading && filteredProjects.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-20">
-              <div className="bg-secondary/40 p-6 rounded-full mb-4">
-                <Search className="h-10 w-10 text-muted-foreground" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">No projects found</h3>
-              <p className="text-muted-foreground text-center max-w-md">
-                We couldn't find any projects matching your search criteria. Try adjusting your filters or check back later.
+            <div className="text-center py-20 border rounded-lg">
+              <h3 className="text-xl font-medium mb-2">No projects found</h3>
+              <p className="text-muted-foreground mb-6">
+                Try adjusting your search or filters to find what you're looking for.
               </p>
+              <Button variant="outline" onClick={() => {
+                setSearchQuery('');
+                setSelectedCategory('All');
+              }}>
+                Clear Filters
+              </Button>
             </div>
           )}
         </div>
       </div>
       <Footer />
       
-      {/* New Project Form Modal */}
-      <NewProjectForm 
-        isOpen={isNewProjectModalOpen} 
-        onClose={() => setIsNewProjectModalOpen(false)} 
-      />
+      {/* New Project Modal */}
+      {isNewProjectModalOpen && (
+        <NewProjectForm 
+          isOpen={isNewProjectModalOpen} 
+          onClose={() => setIsNewProjectModalOpen(false)}
+          onSuccess={async () => {
+            try {
+              const newProjects = await fetchProjects();
+              setProjects(newProjects);
+            } catch (error) {
+              console.error('Error refreshing projects:', error);
+            } finally {
+              setIsNewProjectModalOpen(false);
+            }
+          }}
+        />
+      )}
     </div>
   );
 };

@@ -39,6 +39,9 @@ const NavbarOriginal = ({
   const userAvatar = user && profile?.avatar_url ? profile.avatar_url : user ? getAnimalAvatarForUser(user.id) : '';
   const userName = profile?.full_name || user?.email?.split('@')[0] || 'User';
   
+  // Check if user is admin
+  const isAdmin = user && ['saransh.goel_ug25@ashoka.edu.in', 'saranshsgoel@gmail.com'].includes(user.email || '');
+  
   return <nav className="fixed top-0 left-0 right-0 bg-background border-b border-border/40 z-50 px-6 md:px-12">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center h-20">
@@ -58,9 +61,9 @@ const NavbarOriginal = ({
             <Link to="/chatroom" className={`px-4 py-2 rounded-md transition-colors ${isActive('/chatroom') ? 'bg-secondary text-foreground' : 'hover:bg-secondary/50'}`}>
               Community
             </Link>
-            {user?.email === 'saranshsgoel@gmail.com' && (
+            {isAdmin && (
               <Link to="/owner-dashboard" className={`px-4 py-2 rounded-md transition-colors ${isActive('/owner-dashboard') ? 'bg-secondary text-foreground' : 'hover:bg-secondary/50'}`}>
-                Owner Dashboard
+                Admin Dashboard
               </Link>
             )}
           </div>
@@ -103,6 +106,11 @@ const NavbarOriginal = ({
                       <Link to="/settings" className="block px-4 py-2 text-sm hover:bg-secondary w-full text-left" onClick={() => setMenuOpen(false)}>
                         Settings
                       </Link>
+                      {isAdmin && (
+                        <Link to="/owner-dashboard" className="block px-4 py-2 text-sm hover:bg-secondary w-full text-left" onClick={() => setMenuOpen(false)}>
+                          Admin Dashboard
+                        </Link>
+                      )}
                       <button className="block px-4 py-2 text-sm hover:bg-secondary w-full text-left text-destructive" onClick={() => {
                   signOut();
                   setMenuOpen(false);
@@ -145,9 +153,9 @@ const NavbarOriginal = ({
               <Link to="/chatroom" className={`px-4 py-2 rounded-md transition-colors ${isActive('/chatroom') ? 'bg-secondary text-foreground' : 'hover:bg-secondary/50'}`} onClick={() => setMenuOpen(false)}>
                 Community
               </Link>
-              {user?.email === 'saranshsgoel@gmail.com' && (
+              {isAdmin && (
                 <Link to="/owner-dashboard" className={`px-4 py-2 rounded-md transition-colors ${isActive('/owner-dashboard') ? 'bg-secondary text-foreground' : 'hover:bg-secondary/50'}`} onClick={() => setMenuOpen(false)}>
-                  Owner Dashboard
+                  Admin Dashboard
                 </Link>
               )}
               {user && <>
