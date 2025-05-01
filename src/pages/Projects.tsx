@@ -84,9 +84,25 @@ const Projects: React.FC = () => {
 
   // Function to check if a project deadline has passed
   const isProjectActive = (deadline: string) => {
-    const deadlineDate = new Date(deadline);
-    const today = new Date();
-    return deadlineDate >= today;
+    try {
+      // Parse the deadline string which is in format MM/DD/YYYY or DD/MM/YYYY
+      const deadlineParts = deadline.split('/');
+      const deadlineDate = new Date(
+        parseInt(deadlineParts[2]), // Year
+        parseInt(deadlineParts[0]) - 1, // Month (0-indexed)
+        parseInt(deadlineParts[1]) // Day
+      );
+      
+      // Reset hours to compare just the dates
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      deadlineDate.setHours(0, 0, 0, 0);
+      
+      return deadlineDate >= today;
+    } catch (error) {
+      console.error('Error parsing deadline:', error);
+      return true; // Default to active if parsing fails
+    }
   };
 
   return (

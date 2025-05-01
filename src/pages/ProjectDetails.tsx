@@ -45,8 +45,21 @@ const ProjectDetails: React.FC = () => {
         setProject(projectData);
         
         if (projectData) {
-          const deadlineDate = new Date(projectData.deadline);
+          // Fix the date parsing issue - the deadline comes as a formatted string
+          // We need to parse it correctly
+          const deadlineParts = projectData.deadline.split('/');
+          // Handle both MM/DD/YYYY and DD/MM/YYYY formats
+          const deadlineDate = new Date(
+            parseInt(deadlineParts[2]), // Year
+            parseInt(deadlineParts[0]) - 1, // Month (0-indexed)
+            parseInt(deadlineParts[1]) // Day
+          );
           const today = new Date();
+          
+          // Reset hours to compare just the dates
+          today.setHours(0, 0, 0, 0);
+          deadlineDate.setHours(0, 0, 0, 0);
+          
           setIsExpired(deadlineDate < today);
         }
 
