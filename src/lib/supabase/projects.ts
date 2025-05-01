@@ -200,7 +200,7 @@ export const applyForProject = async (projectId: string, userId: string, coverLe
     // Check if the user has already applied
     const { data: existingApplication, error: checkError } = await supabase
       .from('applications')
-      .select('id')
+      .select('id, status, cover_letter, created_at')
       .eq('project_id', projectId)
       .eq('applicant_id', userId)
       .maybeSingle();
@@ -216,13 +216,14 @@ export const applyForProject = async (projectId: string, userId: string, coverLe
         id: existingApplication.id,
         projectId,
         userId,
-        status: 'pending',
-        coverLetter,
-        createdAt: Date.now(),
+        status: existingApplication.status as 'pending' | 'approved' | 'rejected',
+        coverLetter: existingApplication.cover_letter || '',
+        createdAt: new Date(existingApplication.created_at).getTime(),
         // Add database field names for compatibility
         project_id: projectId,
         applicant_id: userId,
-        cover_letter: coverLetter
+        cover_letter: existingApplication.cover_letter || '',
+        created_at: existingApplication.created_at
       };
     }
 

@@ -174,15 +174,27 @@ const Projects: React.FC = () => {
       const { error } = await supabase
         .from('applications')
         .insert({
-          id: crypto.randomUUID(), // Generate a unique ID
           project_id: projectId,
           applicant_id: user.id,
           status: 'pending',
           cover_letter: '', // Add empty cover letter
-          created_at: new Date().toISOString(),
         });
 
-      if (error) throw error;
+      if (error) {
+        // Check if it's a unique constraint violation (user already applied)
+        if (error.code === '23505') { // PostgreSQL unique violation code
+          // Update local state to reflect the user has already applied
+          setUserApplications([...userApplications, projectId]);
+          
+          toast({
+            title: "Already applied",
+            description: "You have already applied to this project",
+            variant: "default",
+          });
+          return;
+        }
+        throw error;
+      }
 
       // Update local state
       setUserApplications([...userApplications, projectId]);
