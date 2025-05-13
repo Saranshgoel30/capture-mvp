@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { Application } from '@/lib/supabase/types';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -14,9 +13,10 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { MessageSquare, Clock } from 'lucide-react';
+import { startMessageWithApplicant } from '@/lib/supabase/projectApplications';
 
 interface ApplicationCardProps {
-  application: Application & { applicant_profile: { avatar_url: string; full_name: string; }; };
+  application: any; // Use any to handle both data structures
   onAccept: () => void;
   onReject: () => void;
   isOwner: boolean;
@@ -30,6 +30,13 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onAccept
   const [message, setMessage] = useState('');
   const [isSendingMessage, setIsSendingMessage] = useState(false);
 
+  // Extract applicant data from either data structure
+  const applicantProfile = application.applicant_profile;
+  const applicantName = applicantProfile?.full_name || 'Unnamed Applicant';
+  const applicantAvatar = applicantProfile?.avatar_url || '';
+  const applicationDate = application.created_at ? new Date(application.created_at).toLocaleDateString() : 'Unknown date';
+  const applicationMotivation = application.cover_letter || application.motivation || '';
+  
   const handleAccept = async () => {
     setIsAccepting(true);
     try {
@@ -71,7 +78,20 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onAccept
   const handleSendMessage = async () => {
     setIsSendingMessage(true);
     try {
-      // Here you would implement the message sending functionality
+      // Extract the necessary IDs based on the data structure
+      const projectId = application.project_id;
+      const applicantId = application.applicant_id;
+      
+      if (!projectId || !applicantId) {
+        throw new Error("Missing project or applicant information");
+      }
+      
+      const success = await startMessageWithApplicant(projectId, applicantId, message);
+      
+      if (!success) {
+        throw new Error("Failed to send message");
+      }
+      
       toast({
         title: "Message Sent",
         description: "Your message has been sent to the applicant.",
@@ -93,13 +113,13 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onAccept
     <div className="border rounded-lg p-4 bg-card">
       <div className="flex items-center space-x-4">
         <img
-          src={application.applicant_profile?.avatar_url}
+          src={applicantAvatar}
           alt="Applicant Avatar"
           className="w-10 h-10 rounded-full"
         />
         <div>
-          <h3 className="text-lg font-semibold">{application.applicant_profile?.full_name}</h3>
-          <p className="text-sm text-muted-foreground">Applied on {new Date(application.created_at).toLocaleDateString()}</p>
+          <h3 className="text-lg font-semibold">{applicantName}</h3>
+          <p className="text-sm text-muted-foreground">Applied on {applicationDate}</p>
         </div>
       </div>
       
@@ -111,7 +131,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onAccept
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Message to {application.applicant_profile?.full_name || 'Applicant'}</DialogTitle>
+            <DialogTitle>Message to {applicantName}</DialogTitle>
             <DialogDescription>
               This will start a conversation with the applicant.
             </DialogDescription>
@@ -153,7 +173,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onAccept
       </Dialog>
       
       <p className="mt-2 text-sm">
-        <strong>Motivation:</strong> {application.motivation}
+        <strong>Motivation:</strong> {applicationMotivation}
       </p>
       
       {isOwner && application.status === "pending" && (

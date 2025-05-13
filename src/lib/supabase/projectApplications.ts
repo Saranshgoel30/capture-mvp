@@ -1,3 +1,4 @@
+
 import { supabase } from './client';
 import { ProjectApplication } from '@/lib/types';
 import { fetchUserProfile } from './users';
@@ -19,7 +20,7 @@ export const fetchProjectApplications = async (projectId: string): Promise<Proje
       return [];
     }
 
-    // Fetch applicant profiles separately since the join is causing type errors
+    // Fetch applicant profiles separately to avoid relationship errors
     const enhancedApplications = await Promise.all(
       data.map(async (app) => {
         const profile = await fetchUserProfile(app.applicant_id);

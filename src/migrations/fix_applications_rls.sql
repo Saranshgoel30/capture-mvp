@@ -1,3 +1,4 @@
+
 -- Fix infinite recursion in RLS policies and add unique constraint for applications table
 
 -- First, let's check if the applications table exists

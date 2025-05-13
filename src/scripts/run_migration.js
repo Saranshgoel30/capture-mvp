@@ -1,3 +1,4 @@
+
 // Script to run the SQL migration files to fix the RLS policies for applications and portfolio_items tables
 const { createClient } = require('@supabase/supabase-js');
 const fs = require('fs');

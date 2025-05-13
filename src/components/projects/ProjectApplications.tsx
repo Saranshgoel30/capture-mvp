@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -6,6 +5,8 @@ import ApplicationCard from './ApplicationCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
+import { ProjectApplication } from '@/lib/types';
+import { fetchProjectApplications, updateApplicationStatus } from '@/lib/supabase/projectApplications';
 
 interface ProjectApplicationsProps {
   projectId: string;
@@ -13,7 +14,7 @@ interface ProjectApplicationsProps {
 }
 
 const ProjectApplications: React.FC<ProjectApplicationsProps> = ({ projectId, isOwner }) => {
-  const [applications, setApplications] = useState<any[]>([]);
+  const [applications, setApplications] = useState<ProjectApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
@@ -27,37 +28,61 @@ const ProjectApplications: React.FC<ProjectApplicationsProps> = ({ projectId, is
       setLoading(true);
       setError(null);
 
-      let query = supabase
-        .from('applications')
-        .select(`
-          *,
-          applicant_profile:applicant_id (
-            id,
-            full_name,
-            avatar_url,
-            bio,
-            city,
-            roles,
-            skills
-          )
-        `)
-        .eq('project_id', projectId);
-
-      // If not the owner, only show the current user's applications
       if (!isOwner) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          query = query.eq('applicant_id', user.id);
+        // If not the owner, only show the current user's applications
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData && userData.user) {
+          const { data, error: fetchError } = await supabase
+            .from('applications')
+            .select(`
+              *
+            `)
+            .eq('project_id', projectId)
+            .eq('applicant_id', userData.user.id);
+
+          if (fetchError) throw fetchError;
+
+          // Format the applications data
+          const formattedApplications = await Promise.all((data || []).map(async app => {
+            // Get applicant profile data
+            const { data: profileData } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', app.applicant_id)
+              .single();
+
+            return {
+              id: app.id,
+              projectId: app.project_id,
+              userId: app.applicant_id,
+              status: app.status as 'pending' | 'approved' | 'rejected',
+              coverLetter: app.cover_letter || '',
+              createdAt: new Date(app.created_at || '').getTime(),
+              applicant: profileData ? {
+                id: profileData.id,
+                name: profileData.full_name || 'Unnamed User',
+                avatar: profileData.avatar_url || '',
+                roles: profileData.roles || []
+              } : undefined,
+              // Keep original fields for compatibility
+              project_id: app.project_id,
+              applicant_id: app.applicant_id,
+              cover_letter: app.cover_letter,
+              created_at: app.created_at
+            };
+          }));
+
+          setApplications(formattedApplications);
+          setLoading(false);
+          return;
         }
+      } else {
+        // For project owners, use the improved fetchProjectApplications function
+        const projectApps = await fetchProjectApplications(projectId);
+        setApplications(projectApps);
+        setLoading(false);
+        return;
       }
-
-      const { data, error: fetchError } = await query.order('created_at', { ascending: false });
-
-      if (fetchError) {
-        throw fetchError;
-      }
-
-      setApplications(data || []);
     } catch (err: any) {
       console.error('Error fetching applications:', err);
       setError(err.message || 'Failed to load applications');
@@ -66,14 +91,11 @@ const ProjectApplications: React.FC<ProjectApplicationsProps> = ({ projectId, is
     }
   };
 
-  const handleStatusChange = async (applicationId: string, status: string) => {
+  const handleStatusChange = async (applicationId: string, status: 'pending' | 'approved' | 'rejected') => {
     try {
-      const { error } = await supabase
-        .from('applications')
-        .update({ status })
-        .eq('id', applicationId);
-
-      if (error) throw error;
+      const success = await updateApplicationStatus(applicationId, status);
+      
+      if (!success) throw new Error('Failed to update application status');
 
       // Update local state
       setApplications(applications.map(app => 
@@ -128,11 +150,13 @@ const ProjectApplications: React.FC<ProjectApplicationsProps> = ({ projectId, is
               application={{
                 ...application,
                 applicant_profile: {
-                  ...application.applicant_profile,
-                  avatar_url: application.applicant_profile?.avatar_url || ""
+                  id: application.applicant?.id || application.userId,
+                  full_name: application.applicant?.name || 'Unknown User',
+                  avatar_url: application.applicant?.avatar || '',
+                  roles: application.applicant?.roles
                 }
               }}
-              onAccept={() => handleStatusChange(application.id, "accepted")}
+              onAccept={() => handleStatusChange(application.id, "approved")}
               onReject={() => handleStatusChange(application.id, "rejected")}
               isOwner={isOwner}
             />
