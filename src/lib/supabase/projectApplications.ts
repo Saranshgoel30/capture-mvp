@@ -31,6 +31,7 @@ export const fetchProjectApplications = async (projectId: string): Promise<Proje
           userId: app.applicant_id,
           status: app.status as 'pending' | 'approved' | 'rejected',
           coverLetter: app.cover_letter,
+          selectedRole: app.selected_role,
           createdAt: new Date(app.created_at).getTime(),
           applicant: profile ? {
             id: profile.id,
@@ -42,6 +43,7 @@ export const fetchProjectApplications = async (projectId: string): Promise<Proje
           project_id: app.project_id,
           applicant_id: app.applicant_id,
           cover_letter: app.cover_letter,
+          selected_role: app.selected_role,
           created_at: app.created_at
         };
       })

@@ -1,46 +1,48 @@
 
-// Re-export everything from individual modules
-export * from './client';
-// Export users functions, but rename the fetchNotifications function
-export { 
-  getCurrentUser, 
-  fetchUserProfile, 
+// Re-export all functions from supabase subdirectories
+import { fetchUserProfile, updateUserProfile } from './users';
+import { fetchProjects, fetchProjectById, applyForProject } from './projects';
+import { fetchPortfolioProjects, addPortfolioProject, getPortfolioItemDetails } from './portfolio';
+import { uploadImageToStorage, getPublicUrlForFile } from './storage';
+import { fetchCurrentProjects, addCurrentProject } from './creators';
+import { fetchMessages, sendMessage } from './messages';
+import { fetchNotifications, markNotificationAsRead, markAllNotificationsAsRead } from './notifications';
+import { fetchProjectApplications, updateApplicationStatus, startMessageWithApplicant } from './projectApplications';
+
+export {
+  // Users
+  fetchUserProfile,
   updateUserProfile,
-  fetchNotifications as fetchUserNotificationsFromApplications 
-} from './users';
-export * from './projects';
-export * from './storage';
-export * from './portfolio';
-export * from './creators';
-export * from './projectApplications';
-export * from './messages';
-// Export the notifications module explicitly
-export { 
+  
+  // Projects
+  fetchProjects,
+  fetchProjectById,
+  applyForProject,
+  
+  // Portfolio
+  fetchPortfolioProjects,
+  addPortfolioProject,
+  getPortfolioItemDetails,
+  
+  // Storage
+  uploadImageToStorage,
+  getPublicUrlForFile,
+  
+  // Creators
+  fetchCurrentProjects,
+  addCurrentProject,
+  
+  // Messages
+  fetchMessages,
+  sendMessage,
+  
+  // Notifications
   fetchNotifications,
   markNotificationAsRead,
   markAllNotificationsAsRead,
-  createNotification
-} from './notifications';
-
-import { supabase } from './client';
-
-// Function to initialize storage buckets if needed
-export const initializeStorage = async () => {
-  try {
-    console.log('Initializing storage buckets...');
-    
-    // Try to invoke the init_storage_buckets function to ensure all buckets exist
-    const { data, error } = await supabase.functions.invoke('init_storage_buckets');
-    
-    if (error) {
-      console.error('Error initializing storage buckets:', error);
-      return false;
-    }
-    
-    console.log('Storage buckets initialized:', data);
-    return true;
-  } catch (error) {
-    console.error('Exception initializing storage buckets:', error);
-    return false;
-  }
+  
+  // Project Applications
+  fetchProjectApplications,
+  updateApplicationStatus,
+  startMessageWithApplicant,
 };

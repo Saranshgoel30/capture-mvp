@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
@@ -19,6 +20,14 @@ import { Project } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { getAnimalEmojiForUser } from '@/lib/animalAvatars';
 import ProjectApplications from '@/components/projects/ProjectApplications';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
 const ProjectDetails: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -28,6 +37,7 @@ const ProjectDetails: React.FC = () => {
   
   const [project, setProject] = useState<Project | null>(null);
   const [coverLetter, setCoverLetter] = useState('');
+  const [selectedRole, setSelectedRole] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isApplying, setIsApplying] = useState(false);
   const [isExpired, setIsExpired] = useState(false);
@@ -112,13 +122,22 @@ const ProjectDetails: React.FC = () => {
       });
       return;
     }
+
+    if (!selectedRole) {
+      toast({
+        title: 'Role Required',
+        description: 'Please select a role you want to apply for.',
+        variant: 'destructive',
+      });
+      return;
+    }
     
     setIsApplying(true);
     try {
-      await applyForProject(projectId, user.id, coverLetter);
+      await applyForProject(projectId, user.id, coverLetter, selectedRole);
       toast({
         title: 'Application Submitted',
-        description: 'Your application has been successfully submitted!',
+        description: `Your application for the role of ${selectedRole} has been successfully submitted!`,
       });
       setHasApplied(true);
     } catch (error) {
@@ -308,38 +327,69 @@ const ProjectDetails: React.FC = () => {
                             </div>
                           ) : (
                             <>
-                              <Textarea
-                                placeholder="Write a brief message explaining why you're a good fit for this project..."
-                                className="mb-4"
-                                rows={5}
-                                value={coverLetter}
-                                onChange={(e) => setCoverLetter(e.target.value)}
-                                disabled={isApplying || isExpired}
-                              />
-                              <Button 
-                                className="w-full" 
-                                onClick={handleApply}
-                                disabled={isApplying || isExpired}
-                              >
-                                {isApplying ? (
-                                  <>
-                                    <span className="mr-2">Submitting...</span>
-                                    <div className="animate-spin">
-                                      <Clock className="h-4 w-4" />
-                                    </div>
-                                  </>
-                                ) : (
-                                  <>
-                                    <CheckCircle className="mr-2 h-4 w-4" />
-                                    Apply Now
-                                  </>
+                              <div className="space-y-4">
+                                <div className="space-y-2">
+                                  <FormLabel>Select Role</FormLabel>
+                                  <Select 
+                                    value={selectedRole} 
+                                    onValueChange={setSelectedRole}
+                                    disabled={isApplying || isExpired}
+                                  >
+                                    <SelectTrigger className="w-full">
+                                      <SelectValue placeholder="Select a role to apply for" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {project.rolesNeeded.map((role, index) => (
+                                        <SelectItem key={index} value={role}>
+                                          {role}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  {!selectedRole && (
+                                    <p className="text-sm text-muted-foreground">
+                                      Choose a role that best matches your skills
+                                    </p>
+                                  )}
+                                </div>
+
+                                <div className="space-y-2">
+                                  <FormLabel>Cover Letter</FormLabel>
+                                  <Textarea
+                                    placeholder="Write a brief message explaining why you're a good fit for this role..."
+                                    className="mb-4"
+                                    rows={5}
+                                    value={coverLetter}
+                                    onChange={(e) => setCoverLetter(e.target.value)}
+                                    disabled={isApplying || isExpired}
+                                  />
+                                </div>
+                                
+                                <Button 
+                                  className="w-full" 
+                                  onClick={handleApply}
+                                  disabled={isApplying || isExpired || !selectedRole}
+                                >
+                                  {isApplying ? (
+                                    <>
+                                      <span className="mr-2">Submitting...</span>
+                                      <div className="animate-spin">
+                                        <Clock className="h-4 w-4" />
+                                      </div>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <CheckCircle className="mr-2 h-4 w-4" />
+                                      Apply Now
+                                    </>
+                                  )}
+                                </Button>
+                                {isExpired && (
+                                  <p className="text-destructive text-sm mt-2">
+                                    This project has passed its deadline and is no longer accepting applications.
+                                  </p>
                                 )}
-                              </Button>
-                              {isExpired && (
-                                <p className="text-destructive text-sm mt-2">
-                                  This project has passed its deadline and is no longer accepting applications.
-                                </p>
-                              )}
+                              </div>
                             </>
                           )}
                         </>

@@ -110,12 +110,14 @@ export type ProjectApplication = {
   userId: string;
   status: 'pending' | 'approved' | 'rejected';
   coverLetter?: string;
+  selectedRole?: string; // New field to store the selected role
   createdAt: number;
   
   // Database field names
   project_id?: string;
   applicant_id?: string;
   cover_letter?: string;
+  selected_role?: string; // New database field name
   created_at?: string;
   
   // Related data

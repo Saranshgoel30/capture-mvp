@@ -1,209 +1,164 @@
 
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
-import { 
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
-import { MessageSquare, Clock } from 'lucide-react';
-import { startMessageWithApplicant } from '@/lib/supabase/projectApplications';
+import React from 'react';
+import { MessageSquare, CheckCircle, XCircle } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ProjectApplication } from '@/lib/types';
+import { updateApplicationStatus } from '@/lib/supabase/projectApplications';
+import { useToast } from "@/hooks/use-toast";
+import MessageDialog from './MessageDialog';
+import { getAnimalEmojiForUser } from '@/lib/animalAvatars';
 
 interface ApplicationCardProps {
-  application: any; // Use any to handle both data structures
-  onAccept: () => void;
-  onReject: () => void;
+  application: ProjectApplication;
   isOwner: boolean;
+  onStatusChange?: () => void;
 }
 
-const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onAccept, onReject, isOwner }) => {
+const ApplicationCard: React.FC<ApplicationCardProps> = ({ 
+  application, 
+  isOwner,
+  onStatusChange
+}) => {
   const { toast } = useToast();
-  const [isAccepting, setIsAccepting] = useState(false);
-  const [isRejecting, setIsRejecting] = useState(false);
-  const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
-  const [message, setMessage] = useState('');
-  const [isSendingMessage, setIsSendingMessage] = useState(false);
-
-  // Extract applicant data from either data structure
-  const applicantProfile = application.applicant_profile;
-  const applicantName = applicantProfile?.full_name || 'Unnamed Applicant';
-  const applicantAvatar = applicantProfile?.avatar_url || '';
-  const applicationDate = application.created_at ? new Date(application.created_at).toLocaleDateString() : 'Unknown date';
-  const applicationMotivation = application.cover_letter || application.motivation || '';
+  const [showMessageDialog, setShowMessageDialog] = React.useState(false);
+  const [isUpdating, setIsUpdating] = React.useState(false);
   
-  const handleAccept = async () => {
-    setIsAccepting(true);
+  const handleStatusChange = async (newStatus: 'approved' | 'rejected') => {
+    if (!isOwner) return;
+    
+    setIsUpdating(true);
     try {
-      await onAccept();
-      toast({
-        title: "Application Accepted",
-        description: "You have accepted this application.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to accept application.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsAccepting(false);
-    }
-  };
-
-  const handleReject = async () => {
-    setIsRejecting(true);
-    try {
-      await onReject();
-      toast({
-        title: "Application Rejected",
-        description: "You have rejected this application.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to reject application.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsRejecting(false);
-    }
-  };
-
-  const handleSendMessage = async () => {
-    setIsSendingMessage(true);
-    try {
-      // Extract the necessary IDs based on the data structure
-      const projectId = application.project_id;
-      const applicantId = application.applicant_id;
+      const success = await updateApplicationStatus(application.id, newStatus);
       
-      if (!projectId || !applicantId) {
-        throw new Error("Missing project or applicant information");
+      if (success) {
+        toast({
+          title: `Application ${newStatus === 'approved' ? 'Approved' : 'Rejected'}`,
+          description: `You have successfully ${newStatus} the application.`
+        });
+        
+        if (onStatusChange) {
+          onStatusChange();
+        }
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to update application status.",
+          variant: "destructive",
+        });
       }
-      
-      const success = await startMessageWithApplicant(projectId, applicantId, message);
-      
-      if (!success) {
-        throw new Error("Failed to send message");
-      }
-      
-      toast({
-        title: "Message Sent",
-        description: "Your message has been sent to the applicant.",
-      });
-      setMessage('');
-      setIsMessageDialogOpen(false);
-    } catch (error: any) {
+    } catch (error) {
+      console.error('Error updating application status:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to send message.",
+        description: "An unexpected error occurred.",
         variant: "destructive",
       });
     } finally {
-      setIsSendingMessage(false);
+      setIsUpdating(false);
     }
   };
-
+  
+  const getStatusBadgeColor = () => {
+    switch (application.status) {
+      case 'approved': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+      case 'rejected': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+      default: return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
+    }
+  };
+  
+  const avatarImage = application.applicant?.avatar;
+  const avatarFallback = getAnimalEmojiForUser(application.userId);
+  
   return (
-    <div className="border rounded-lg p-4 bg-card">
-      <div className="flex items-center space-x-4">
-        <img
-          src={applicantAvatar}
-          alt="Applicant Avatar"
-          className="w-10 h-10 rounded-full"
-        />
-        <div>
-          <h3 className="text-lg font-semibold">{applicantName}</h3>
-          <p className="text-sm text-muted-foreground">Applied on {applicationDate}</p>
-        </div>
-      </div>
-      
-      <Dialog open={isMessageDialogOpen} onOpenChange={setIsMessageDialogOpen}>
-        <DialogTrigger asChild>
-          <Button variant="ghost" size="sm" className="mt-2">
-            Message
-          </Button>
-        </DialogTrigger>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Message to {applicantName}</DialogTitle>
-            <DialogDescription>
-              This will start a conversation with the applicant.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-2">
-            <Textarea
-              placeholder="Write your message here..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              rows={5}
-              className="w-full"
-            />
+    <Card className="mb-4">
+      <CardContent className="pt-5">
+        <div className="flex items-start justify-between">
+          <div className="flex items-start space-x-4">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={avatarImage} />
+              <AvatarFallback>{avatarFallback}</AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="font-semibold">{application.applicant?.name || 'Unknown User'}</p>
+              <div className="flex gap-2 flex-wrap mt-1">
+                {application.selectedRole && (
+                  <Badge variant="outline" className="text-xs">
+                    Applied for: {application.selectedRole}
+                  </Badge>
+                )}
+                <Badge className={`text-xs ${getStatusBadgeColor()}`}>
+                  {application.status.charAt(0).toUpperCase() + application.status.slice(1)}
+                </Badge>
+                {application.applicant?.roles?.map((role, index) => (
+                  <Badge variant="secondary" key={index} className="text-xs">
+                    {role}
+                  </Badge>
+                ))}
+              </div>
+              <p className="text-sm text-muted-foreground mt-2">
+                Applied on {new Date(application.createdAt).toLocaleDateString()}
+              </p>
+            </div>
           </div>
           
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsMessageDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSendMessage}
-              disabled={!message.trim() || isSendingMessage}
-            >
-              {isSendingMessage ? (
-                <>
-                  <Clock className="animate-spin h-4 w-4 mr-1" /> Sending...
-                </>
-              ) : (
-                <>
-                  <MessageSquare className="h-4 w-4 mr-1" /> Send Message
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      <p className="mt-2 text-sm">
-        <strong>Motivation:</strong> {applicationMotivation}
-      </p>
-      
-      {isOwner && application.status === "pending" && (
-        <div className="flex space-x-2 mt-4">
-          <Button
-            onClick={handleAccept}
-            variant="outline"
-            className="text-green-500 border-green-500 hover:bg-green-50"
-            disabled={isAccepting || isRejecting}
-          >
-            {isAccepting ? "Accepting..." : "Accept"}
-          </Button>
-          
-          <Button
-            onClick={handleReject}
-            variant="destructive"
-            className="hover:bg-red-50"
-            disabled={isAccepting || isRejecting}
-          >
-            {isRejecting ? "Rejecting..." : "Reject"}
-          </Button>
+          {isOwner && application.status === 'pending' && (
+            <div className="space-x-2">
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="border-green-500 hover:bg-green-500 hover:text-white"
+                onClick={() => handleStatusChange('approved')}
+                disabled={isUpdating}
+              >
+                <CheckCircle className="h-4 w-4 mr-1" />
+                Approve
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline"
+                className="border-red-500 hover:bg-red-500 hover:text-white"
+                onClick={() => handleStatusChange('rejected')}
+                disabled={isUpdating}
+              >
+                <XCircle className="h-4 w-4 mr-1" />
+                Reject
+              </Button>
+            </div>
+          )}
         </div>
-      )}
-      
-      {!isOwner && (
-        <div className="mt-4">
-          <p className="text-sm"><strong>Status:</strong> {application.status}</p>
-        </div>
-      )}
-    </div>
+        
+        {application.coverLetter && (
+          <div className="mt-4 p-3 bg-muted/50 rounded-md">
+            <p className="text-sm whitespace-pre-line">{application.coverLetter}</p>
+          </div>
+        )}
+        
+        {isOwner && (
+          <div className="mt-4 flex justify-end">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="flex items-center text-muted-foreground hover:text-foreground"
+              onClick={() => setShowMessageDialog(true)}
+            >
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Message Applicant
+            </Button>
+            
+            <MessageDialog 
+              isOpen={showMessageDialog}
+              onClose={() => setShowMessageDialog(false)}
+              projectId={application.projectId}
+              applicantId={application.userId}
+              applicantName={application.applicant?.name || 'Applicant'}
+            />
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

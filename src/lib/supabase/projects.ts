@@ -195,12 +195,12 @@ export const fetchProjectById = async (projectId: string): Promise<Project | nul
 };
 
 // Function to apply for a project
-export const applyForProject = async (projectId: string, userId: string, coverLetter: string = ''): Promise<ProjectApplication> => {
+export const applyForProject = async (projectId: string, userId: string, coverLetter: string = '', selectedRole: string = ''): Promise<ProjectApplication> => {
   try {
     // Check if the user has already applied
     const { data: existingApplication, error: checkError } = await supabase
       .from('applications')
-      .select('id, status, cover_letter, created_at')
+      .select('id, status, cover_letter, selected_role, created_at')
       .eq('project_id', projectId)
       .eq('applicant_id', userId)
       .maybeSingle();
@@ -218,11 +218,13 @@ export const applyForProject = async (projectId: string, userId: string, coverLe
         userId,
         status: existingApplication.status as 'pending' | 'approved' | 'rejected',
         coverLetter: existingApplication.cover_letter || '',
+        selectedRole: existingApplication.selected_role || '',
         createdAt: new Date(existingApplication.created_at).getTime(),
         // Add database field names for compatibility
         project_id: projectId,
         applicant_id: userId,
         cover_letter: existingApplication.cover_letter || '',
+        selected_role: existingApplication.selected_role || '',
         created_at: existingApplication.created_at
       };
     }
@@ -234,6 +236,7 @@ export const applyForProject = async (projectId: string, userId: string, coverLe
         project_id: projectId,
         applicant_id: userId,
         cover_letter: coverLetter,
+        selected_role: selectedRole,
         status: 'pending'
       })
       .select()
@@ -250,11 +253,13 @@ export const applyForProject = async (projectId: string, userId: string, coverLe
       userId: data.applicant_id,
       status: data.status as 'pending' | 'approved' | 'rejected',
       coverLetter: data.cover_letter,
+      selectedRole: data.selected_role,
       createdAt: new Date(data.created_at).getTime(),
       // Keep original fields for compatibility
       project_id: data.project_id,
       applicant_id: data.applicant_id,
       cover_letter: data.cover_letter,
+      selected_role: data.selected_role,
       created_at: data.created_at
     };
   } catch (error) {
@@ -289,6 +294,7 @@ export const fetchUserApplications = async (userId: string): Promise<ProjectAppl
       userId: app.applicant_id,
       status: app.status as 'pending' | 'approved' | 'rejected',
       coverLetter: app.cover_letter,
+      selectedRole: app.selected_role,
       createdAt: new Date(app.created_at).getTime(),
       project: app.projects ? {
         id: app.projects.id,
@@ -304,6 +310,7 @@ export const fetchUserApplications = async (userId: string): Promise<ProjectAppl
       project_id: app.project_id,
       applicant_id: app.applicant_id,
       cover_letter: app.cover_letter,
+      selected_role: app.selected_role,
       created_at: app.created_at
     }));
   } catch (error) {
