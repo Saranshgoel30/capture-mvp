@@ -1,40 +1,9 @@
 import { supabase } from './client';
 import { PortfolioProject } from '../types';
 
-// Function to add portfolio item
-export const addPortfolioItem = async (userId: string, itemData: any) => {
-  try {
-    const { data, error } = await supabase
-      .from('portfolio_items')
-      .insert({
-        profile_id: userId,
-        title: itemData.title,
-        type: itemData.type,
-        description: itemData.description,
-        media_url: itemData.mediaUrl || null,
-        media_type: itemData.mediaType || 'link',
-        role: itemData.role || '',
-        date: itemData.date || '',
-        collaborators: itemData.collaborators || []
-      })
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error adding portfolio item:', error);
-      throw error;
-    }
-
-    return data;
-  } catch (error) {
-    console.error('Error in addPortfolioItem:', error);
-    throw error;
-  }
-};
-
-// Function to fetch portfolio items for a user
 export const fetchPortfolioItems = async (userId: string): Promise<PortfolioProject[]> => {
   try {
+    // Use profile_id instead of profileId to match the database column name
     const { data, error } = await supabase
       .from('portfolio_items')
       .select('*')
@@ -46,51 +15,88 @@ export const fetchPortfolioItems = async (userId: string): Promise<PortfolioProj
       return [];
     }
     
-    // Convert Supabase data to our app's format with proper type casting
-    return data.map(item => ({
+    // Transform the data to match our frontend types
+    const portfolioItems: PortfolioProject[] = data?.map(item => ({
       id: item.id,
       userId: userId,
       title: item.title,
       type: item.type,
-      thumbnail: item.media_url,
-      // Ensure mediaType is one of the allowed values, defaulting to 'link' if not
-      mediaType: (item.media_type === 'image' || item.media_type === 'video') 
-        ? item.media_type as 'image' | 'video' 
-        : 'link',
-      role: item.role || 'Creator',
-      date: item.date || new Date(item.created_at).toLocaleDateString(),
-      collaborators: item.collaborators || [],
+      role: item.role || '',
+      date: item.date || '',
       description: item.description || '',
-      createdAt: new Date(item.created_at).getTime(),
+      collaborators: item.collaborators || [],
+      thumbnail: item.media_url,
+      mediaType: item.media_type || 'link',
+      createdAt: item.created_at ? new Date(item.created_at).getTime() : Date.now(),
       // Keep original fields for compatibility
       profile_id: item.profile_id,
       media_url: item.media_url,
       media_type: item.media_type,
       created_at: item.created_at
-    }));
+    })) || [];
+    
+    return portfolioItems;
   } catch (error) {
-    console.error('Error in fetchPortfolioItems:', error);
+    console.error('Exception fetching portfolio items:', error);
     return [];
   }
 };
 
-// Function to delete a portfolio item
-export const deletePortfolioItem = async (userId: string, itemId: string) => {
+export const addPortfolioItem = async (item: {
+  profileId: string;
+  title: string;
+  type: string;
+  role?: string;
+  date?: string;
+  description?: string;
+  collaborators?: string[];
+  mediaType: 'image' | 'video' | 'link';
+  thumbnail: string;
+}): Promise<string | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('portfolio_items')
+      .insert({
+        profile_id: item.profileId,
+        title: item.title,
+        type: item.type,
+        role: item.role || null,
+        date: item.date || null,
+        description: item.description || null,
+        collaborators: item.collaborators || [],
+        media_type: item.mediaType,
+        media_url: item.thumbnail
+      })
+      .select()
+      .maybeSingle();
+      
+    if (error) {
+      console.error('Error adding portfolio item:', error);
+      throw new Error(error.message);
+    }
+    
+    return data?.id || null;
+  } catch (error) {
+    console.error('Exception adding portfolio item:', error);
+    throw error;
+  }
+};
+
+export const deletePortfolioItem = async (itemId: string): Promise<boolean> => {
   try {
     const { error } = await supabase
       .from('portfolio_items')
       .delete()
-      .eq('id', itemId)
-      .eq('profile_id', userId);
+      .eq('id', itemId);
       
     if (error) {
       console.error('Error deleting portfolio item:', error);
-      throw error;
+      return false;
     }
     
     return true;
   } catch (error) {
-    console.error('Error in deletePortfolioItem:', error);
-    throw error;
+    console.error('Exception deleting portfolio item:', error);
+    return false;
   }
 };
