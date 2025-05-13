@@ -57,6 +57,7 @@ const ProjectApplications: React.FC<ProjectApplicationsProps> = ({ projectId, is
               userId: app.applicant_id,
               status: app.status as 'pending' | 'approved' | 'rejected',
               coverLetter: app.cover_letter || '',
+              selectedRole: app.selected_role || '',
               createdAt: new Date(app.created_at || '').getTime(),
               applicant: profileData ? {
                 id: profileData.id,
@@ -68,7 +69,14 @@ const ProjectApplications: React.FC<ProjectApplicationsProps> = ({ projectId, is
               project_id: app.project_id,
               applicant_id: app.applicant_id,
               cover_letter: app.cover_letter,
-              created_at: app.created_at
+              selected_role: app.selected_role || '',
+              created_at: app.created_at,
+              applicant_profile: profileData ? {
+                id: profileData.id,
+                full_name: profileData.full_name || 'Unnamed User',
+                avatar_url: profileData.avatar_url || '',
+                roles: profileData.roles || []
+              } : undefined
             };
           }));
 
@@ -147,15 +155,7 @@ const ProjectApplications: React.FC<ProjectApplicationsProps> = ({ projectId, is
           {applications.map((application) => (
             <ApplicationCard
               key={application.id}
-              application={{
-                ...application,
-                applicant_profile: {
-                  id: application.applicant?.id || application.userId,
-                  full_name: application.applicant?.name || 'Unknown User',
-                  avatar_url: application.applicant?.avatar || '',
-                  roles: application.applicant?.roles
-                }
-              }}
+              application={application}
               onAccept={() => handleStatusChange(application.id, "approved")}
               onReject={() => handleStatusChange(application.id, "rejected")}
               isOwner={isOwner}

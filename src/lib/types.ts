@@ -128,6 +128,14 @@ export type ProjectApplication = {
     avatar?: string;
     roles?: string[];
   };
+  
+  // Legacy field for compatibility with existing components
+  applicant_profile?: {
+    id?: string;
+    full_name?: string;
+    avatar_url?: string;
+    roles?: string[];
+  };
 };
 
 export type Notification = {

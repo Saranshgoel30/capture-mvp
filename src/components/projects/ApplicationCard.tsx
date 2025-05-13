@@ -14,13 +14,15 @@ import { getAnimalEmojiForUser } from '@/lib/animalAvatars';
 interface ApplicationCardProps {
   application: ProjectApplication;
   isOwner: boolean;
-  onStatusChange?: () => void;
+  onAccept?: () => void;
+  onReject?: () => void;
 }
 
 const ApplicationCard: React.FC<ApplicationCardProps> = ({ 
   application, 
   isOwner,
-  onStatusChange
+  onAccept,
+  onReject
 }) => {
   const { toast } = useToast();
   const [showMessageDialog, setShowMessageDialog] = React.useState(false);
@@ -39,8 +41,10 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
           description: `You have successfully ${newStatus} the application.`
         });
         
-        if (onStatusChange) {
-          onStatusChange();
+        if (newStatus === 'approved' && onAccept) {
+          onAccept();
+        } else if (newStatus === 'rejected' && onReject) {
+          onReject();
         }
       } else {
         toast({
@@ -69,8 +73,12 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
     }
   };
   
-  const avatarImage = application.applicant?.avatar;
+  const avatarImage = application.applicant?.avatar || 
+                      application.applicant_profile?.avatar_url;
   const avatarFallback = getAnimalEmojiForUser(application.userId);
+  const applicantName = application.applicant?.name || 
+                        application.applicant_profile?.full_name || 
+                        'Unknown User';
   
   return (
     <Card className="mb-4">
@@ -82,7 +90,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
               <AvatarFallback>{avatarFallback}</AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-semibold">{application.applicant?.name || 'Unknown User'}</p>
+              <p className="font-semibold">{applicantName}</p>
               <div className="flex gap-2 flex-wrap mt-1">
                 {application.selectedRole && (
                   <Badge variant="outline" className="text-xs">
@@ -92,7 +100,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
                 <Badge className={`text-xs ${getStatusBadgeColor()}`}>
                   {application.status.charAt(0).toUpperCase() + application.status.slice(1)}
                 </Badge>
-                {application.applicant?.roles?.map((role, index) => (
+                {(application.applicant?.roles || []).map((role, index) => (
                   <Badge variant="secondary" key={index} className="text-xs">
                     {role}
                   </Badge>
@@ -148,13 +156,14 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
               Message Applicant
             </Button>
             
-            <MessageDialog 
-              isOpen={showMessageDialog}
-              onClose={() => setShowMessageDialog(false)}
-              projectId={application.projectId}
-              applicantId={application.userId}
-              applicantName={application.applicant?.name || 'Applicant'}
-            />
+            {showMessageDialog && (
+              <MessageDialog 
+                projectId={application.projectId}
+                applicantId={application.userId}
+                applicantName={applicantName}
+                onClose={() => setShowMessageDialog(false)}
+              />
+            )}
           </div>
         )}
       </CardContent>

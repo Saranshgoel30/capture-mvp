@@ -1,79 +1,109 @@
 
-import React from 'react';
-import { Clock, MessageSquare } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { 
+import React, { useState } from 'react';
+import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { ProjectApplication } from '@/lib/types';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { startMessageWithApplicant } from '@/lib/supabase/projectApplications';
 
 interface MessageDialogProps {
-  selectedApplication: ProjectApplication | null;
-  message: string;
-  onMessageChange: (value: string) => void;
-  onSendMessage: () => Promise<void>;
-  onCancel: () => void;
-  isActionInProgress: boolean;
+  projectId: string;
+  applicantId: string;
+  applicantName: string;
+  onClose: () => void;
 }
 
-const MessageDialog: React.FC<MessageDialogProps> = ({
-  selectedApplication,
-  message,
-  onMessageChange,
-  onSendMessage,
-  onCancel,
-  isActionInProgress
+const MessageDialog: React.FC<MessageDialogProps> = ({ 
+  projectId, 
+  applicantId, 
+  applicantName,
+  onClose
 }) => {
+  const [message, setMessage] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const { toast } = useToast();
+  const [isOpen, setIsOpen] = useState(true);
+  
+  const handleClose = () => {
+    setIsOpen(false);
+    onClose();
+  };
+  
+  const handleSendMessage = async () => {
+    if (!message.trim()) {
+      toast({
+        title: "Empty message",
+        description: "Please enter a message.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsSending(true);
+    try {
+      const success = await startMessageWithApplicant(projectId, applicantId, message);
+      
+      if (success) {
+        toast({
+          title: "Message sent",
+          description: `Your message has been sent to ${applicantName}.`,
+        });
+        handleClose();
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to send message. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   return (
-    <DialogContent>
-      <DialogHeader>
-        <DialogTitle>Message to {selectedApplication?.applicant?.name || 'Applicant'}</DialogTitle>
-        <DialogDescription>
-          This will start a conversation with the applicant.
-        </DialogDescription>
-      </DialogHeader>
-      
-      <div className="space-y-4 py-2">
-        <Textarea
-          placeholder="Write your message here..."
-          value={message}
-          onChange={(e) => onMessageChange(e.target.value)}
-          rows={5}
-          className="w-full"
-        />
-      </div>
-      
-      <DialogFooter>
-        <Button
-          variant="outline"
-          onClick={onCancel}
-        >
-          Cancel
-        </Button>
-        <Button
-          onClick={onSendMessage}
-          disabled={!message.trim() || isActionInProgress}
-        >
-          {isActionInProgress ? (
-            <>
-              <Clock className="animate-spin h-4 w-4 mr-1" /> Sending...
-            </>
-          ) : (
-            <>
-              <MessageSquare className="h-4 w-4 mr-1" /> Send Message
-            </>
-          )}
-        </Button>
-      </DialogFooter>
-    </DialogContent>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Message to {applicantName}</DialogTitle>
+          <DialogDescription>
+            Send a direct message regarding this project application.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="py-4">
+          <Textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Enter your message here..."
+            rows={5}
+          />
+        </div>
+        <DialogFooter className="gap-2 sm:justify-end">
+          <Button variant="outline" onClick={handleClose}>Cancel</Button>
+          <Button 
+            onClick={handleSendMessage} 
+            disabled={isSending || !message.trim()}
+          >
+            {isSending ? 'Sending...' : 'Send Message'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
-};
+}
 
 export default MessageDialog;

@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 import { ProjectApplication } from '@/lib/types';
 import { fetchUserProfile } from './users';
@@ -31,7 +30,7 @@ export const fetchProjectApplications = async (projectId: string): Promise<Proje
           userId: app.applicant_id,
           status: app.status as 'pending' | 'approved' | 'rejected',
           coverLetter: app.cover_letter,
-          selectedRole: app.selected_role,
+          selectedRole: app.selected_role || '',
           createdAt: new Date(app.created_at).getTime(),
           applicant: profile ? {
             id: profile.id,
@@ -39,12 +38,18 @@ export const fetchProjectApplications = async (projectId: string): Promise<Proje
             avatar: profile.avatar_url,
             roles: profile.roles || []
           } : undefined,
-          // Keep original fields for compatibility
+          // Keep original fields and add legacy compatibility
           project_id: app.project_id,
           applicant_id: app.applicant_id,
           cover_letter: app.cover_letter,
-          selected_role: app.selected_role,
-          created_at: app.created_at
+          selected_role: app.selected_role || '',
+          created_at: app.created_at,
+          applicant_profile: profile ? {
+            id: profile.id,
+            full_name: profile.full_name || 'Unnamed User',
+            avatar_url: profile.avatar_url,
+            roles: profile.roles || []
+          } : undefined
         };
       })
     );
@@ -86,53 +91,19 @@ export const startMessageWithApplicant = async (
   message: string
 ): Promise<boolean> => {
   try {
-    const { data: userData, error: userError } = await supabase.auth.getUser();
+    // Get the current user
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData?.user) return false;
     
-    if (userError || !userData.user) {
-      console.error('User not authenticated');
-      return false;
-    }
+    // Send message to the applicant
+    const { error } = await supabase.from('messages').insert({
+      sender_id: userData.user.id,
+      receiver_id: applicantId,
+      content: message
+    });
     
-    const currentUserId = userData.user.id;
-    
-    // Make sure we're sending to the right person
-    const { data: application, error: appError } = await supabase
-      .from('applications')
-      .select('*')
-      .eq('project_id', projectId)
-      .eq('applicant_id', applicantId)
-      .single();
-      
-    if (appError || !application) {
-      console.error('Application not found');
-      return false;
-    }
-    
-    // Get project info to include in the message
-    const { data: project, error: projectError } = await supabase
-      .from('projects')
-      .select('title')
-      .eq('id', projectId)
-      .single();
-      
-    if (projectError || !project) {
-      console.error('Project not found');
-      return false;
-    }
-    
-    const initialMessage = message || `Hello! I'm reaching out about your application to the project "${project.title}".`;
-    
-    // Send the message
-    const { error: messageError } = await supabase
-      .from('messages')
-      .insert({
-        sender_id: currentUserId,
-        receiver_id: applicantId,
-        content: initialMessage,
-      });
-    
-    if (messageError) {
-      console.error('Error sending message:', messageError);
+    if (error) {
+      console.error('Error sending message to applicant:', error);
       return false;
     }
     
