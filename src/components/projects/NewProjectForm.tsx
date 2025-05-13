@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { X, Calendar, Plus, Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -19,9 +18,10 @@ import { useNavigate } from 'react-router-dom';
 interface NewProjectFormProps {
   isOpen: boolean;
   onClose: () => void;
+  onProjectCreated?: () => void; // Added optional onProjectCreated prop
 }
 
-const NewProjectForm: React.FC<NewProjectFormProps> = ({ isOpen, onClose }) => {
+const NewProjectForm: React.FC<NewProjectFormProps> = ({ isOpen, onClose, onProjectCreated }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
@@ -106,9 +106,14 @@ const NewProjectForm: React.FC<NewProjectFormProps> = ({ isOpen, onClose }) => {
       resetForm();
       onClose();
       
-      // Redirect to projects page and refresh to see the new project
-      navigate('/projects');
-      window.location.reload();
+      // Call the onProjectCreated callback if provided
+      if (onProjectCreated) {
+        onProjectCreated();
+      } else {
+        // Redirect to projects page and refresh to see the new project only if onProjectCreated is not provided
+        navigate('/projects');
+        window.location.reload();
+      }
     } catch (error: any) {
       console.error('Error posting project:', error);
       toast({

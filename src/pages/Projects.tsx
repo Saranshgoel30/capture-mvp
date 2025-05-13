@@ -141,10 +141,7 @@ const Projects: React.FC = () => {
                   <NewProjectForm 
                     isOpen={showCreateForm} 
                     onClose={() => setShowCreateForm(false)} 
-                    onProjectCreated={() => {
-                      setShowCreateForm(false);
-                      refreshProjects();
-                    }}
+                    onProjectCreated={refreshProjects}
                   />
                 </DialogContent>
               </Dialog>
