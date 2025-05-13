@@ -1,3 +1,4 @@
+
 import { supabase } from './client';
 import { PortfolioProject } from '../types';
 
@@ -26,7 +27,7 @@ export const fetchPortfolioItems = async (userId: string): Promise<PortfolioProj
       description: item.description || '',
       collaborators: item.collaborators || [],
       thumbnail: item.media_url,
-      mediaType: item.media_type || 'link',
+      mediaType: (item.media_type || 'link') as 'image' | 'video' | 'link',
       createdAt: item.created_at ? new Date(item.created_at).getTime() : Date.now(),
       // Keep original fields for compatibility
       profile_id: item.profile_id,

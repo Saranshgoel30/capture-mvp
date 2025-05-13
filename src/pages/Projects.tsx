@@ -13,7 +13,7 @@ import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchProjects } from '@/lib/supabase/projects';
 import { Project } from '@/lib/types';
-import NewProjectForm from '@/components/NewProjectForm';
+import NewProjectForm from '@/components/projects/NewProjectForm';
 
 const Projects: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
