@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -126,4 +125,61 @@ export const uploadPortfolioMedia = async (userId: string, file: File) => {
     console.error('Exception in uploadPortfolioMedia:', error);
     throw error;
   }
+};
+
+export const initializeStorage = async () => {
+  try {
+    // Check if all necessary storage buckets exist
+    console.log('Starting storage initialization...');
+    
+    // Define the buckets we need for the application
+    const requiredBuckets = ['avatars', 'portfolio_images', 'portfolio_videos', 'portfolio_files'];
+    
+    const results = await Promise.all(
+      requiredBuckets.map(async (bucketId) => {
+        try {
+          // Try to get the bucket to see if it exists
+          const { data: existingBucket, error: getBucketError } = await supabase
+            .storage
+            .getBucket(bucketId);
+            
+          if (!getBucketError && existingBucket) {
+            return { id: bucketId, status: 'exists' };
+          }
+          
+          // If the bucket doesn't exist, create it
+          const { data, error } = await supabase
+            .storage
+            .createBucket(bucketId, { 
+              public: true,
+              fileSizeLimit: bucketId === 'avatars' ? 5242880 : 10485760 // 5MB for avatars, 10MB for others
+            });
+            
+          if (error) {
+            return { id: bucketId, status: 'error', message: error.message };
+          }
+          
+          return { id: bucketId, status: 'created' };
+        } catch (error: any) {
+          return { id: bucketId, status: 'error', message: error.message || 'Unknown error' };
+        }
+      })
+    );
+    
+    console.log('Storage buckets initialized:', {
+      message: 'Storage bucket initialization complete',
+      results
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Error initializing storage:', error);
+    return false;
+  }
+};
+
+export const uploadImageToStorage = uploadProfileImage;
+export const getPublicUrlForFile = (filePath: string) => {
+  const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
+  return data.publicUrl;
 };

@@ -23,7 +23,7 @@ function determineProjectType(title: string): string {
   }
 }
 
-// Function to add a new project
+// Ensure the addProject function is exported (it already exists in the file)
 export const addProject = async (projectData: any) => {
   try {
     const { data: userData, error: userError } = await supabase.auth.getUser();

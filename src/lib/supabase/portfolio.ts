@@ -1,6 +1,11 @@
-
 import { supabase } from './client';
 import { PortfolioProject } from '../types';
+
+// Rename function to match what's imported in index.ts
+export const fetchPortfolioProjects = async (userId: string): Promise<PortfolioProject[]> => {
+  // Alias to the existing function
+  return fetchPortfolioItems(userId);
+};
 
 export const fetchPortfolioItems = async (userId: string): Promise<PortfolioProject[]> => {
   try {
@@ -43,6 +48,22 @@ export const fetchPortfolioItems = async (userId: string): Promise<PortfolioProj
   }
 };
 
+// Rename function to match what's imported in index.ts
+export const addPortfolioProject = async (item: {
+  profileId: string;
+  title: string;
+  type: string;
+  role?: string;
+  date?: string;
+  description?: string;
+  collaborators?: string[];
+  mediaType: 'image' | 'video' | 'link';
+  thumbnail: string;
+}): Promise<string | null> => {
+  // Alias to the existing function
+  return addPortfolioItem(item);
+};
+
 export const addPortfolioItem = async (item: {
   profileId: string;
   title: string;
@@ -80,6 +101,47 @@ export const addPortfolioItem = async (item: {
   } catch (error) {
     console.error('Exception adding portfolio item:', error);
     throw error;
+  }
+};
+
+// Add this function to match what's imported in index.ts
+export const getPortfolioItemDetails = async (itemId: string): Promise<PortfolioProject | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('portfolio_items')
+      .select('*')
+      .eq('id', itemId)
+      .maybeSingle();
+      
+    if (error || !data) {
+      console.error('Error fetching portfolio item details:', error);
+      return null;
+    }
+    
+    // Transform to match our frontend types
+    const portfolioItem: PortfolioProject = {
+      id: data.id,
+      userId: data.profile_id,
+      title: data.title,
+      type: data.type,
+      role: data.role || '',
+      date: data.date || '',
+      description: data.description || '',
+      collaborators: data.collaborators || [],
+      thumbnail: data.media_url,
+      mediaType: (data.media_type || 'link') as 'image' | 'video' | 'link',
+      createdAt: data.created_at ? new Date(data.created_at).getTime() : Date.now(),
+      // Keep original fields for compatibility
+      profile_id: data.profile_id,
+      media_url: data.media_url,
+      media_type: data.media_type,
+      created_at: data.created_at
+    };
+    
+    return portfolioItem;
+  } catch (error) {
+    console.error('Exception fetching portfolio item details:', error);
+    return null;
   }
 };
 

@@ -40,3 +40,58 @@ export const fetchAllUserProfiles = async () => {
     return [];
   }
 };
+
+// Add these new functions
+export const fetchCurrentProjects = async (userId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('current_projects')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+      
+    if (error) {
+      console.error('Error fetching current projects:', error);
+      return [];
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('Exception fetching current projects:', error);
+    return [];
+  }
+};
+
+export const addCurrentProject = async (projectData: {
+  userId: string;
+  title: string;
+  role: string;
+  timeline: string;
+  description: string;
+  status?: string;
+}) => {
+  try {
+    const { data, error } = await supabase
+      .from('current_projects')
+      .insert({
+        user_id: projectData.userId,
+        title: projectData.title,
+        role: projectData.role,
+        timeline: projectData.timeline,
+        description: projectData.description,
+        status: projectData.status || 'In Production'
+      })
+      .select()
+      .maybeSingle();
+      
+    if (error) {
+      console.error('Error adding current project:', error);
+      throw error;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Exception adding current project:', error);
+    throw error;
+  }
+};

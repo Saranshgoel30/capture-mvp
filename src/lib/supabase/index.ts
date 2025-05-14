@@ -1,15 +1,33 @@
 
 // Re-export all functions from supabase subdirectories
 import { fetchUserProfile, updateUserProfile } from './users';
-import { fetchProjects, fetchProjectById, applyForProject } from './projects';
-import { fetchPortfolioProjects, addPortfolioProject, getPortfolioItemDetails } from './portfolio';
-import { uploadImageToStorage, getPublicUrlForFile } from './storage';
-import { fetchCurrentProjects, addCurrentProject } from './creators';
-import { fetchMessages, sendMessage } from './messages';
+import { fetchProjects, fetchProjectById, applyForProject, addProject } from './projects';
+import { 
+  fetchPortfolioItems as fetchPortfolioProjects, 
+  addPortfolioItem as addPortfolioProject, 
+  getPortfolioItemDetails 
+} from './portfolio';
+import { 
+  uploadProfileImage as uploadImageToStorage, 
+  getPublicUrlForFile,
+  initializeStorage 
+} from './storage';
+import { 
+  fetchCurrentProjects, 
+  addCurrentProject 
+} from './creators';
+import { 
+  getMessages as fetchMessages, 
+  sendMessage 
+} from './messages';
 import { fetchNotifications, markNotificationAsRead, markAllNotificationsAsRead } from './notifications';
 import { fetchProjectApplications, updateApplicationStatus, startMessageWithApplicant } from './projectApplications';
+import { supabase } from './client';
 
 export {
+  // Client
+  supabase,
+  
   // Users
   fetchUserProfile,
   updateUserProfile,
@@ -18,6 +36,7 @@ export {
   fetchProjects,
   fetchProjectById,
   applyForProject,
+  addProject,
   
   // Portfolio
   fetchPortfolioProjects,
@@ -27,6 +46,7 @@ export {
   // Storage
   uploadImageToStorage,
   getPublicUrlForFile,
+  initializeStorage,
   
   // Creators
   fetchCurrentProjects,
