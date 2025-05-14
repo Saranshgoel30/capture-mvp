@@ -1,9 +1,8 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { User, Session } from '@supabase/supabase-js';
-import { fetchUserProfile, updateUserProfile } from '@/lib/supabase';
+import { fetchUserProfile, updateUserProfile, extractNameFromEmail } from '@/lib/supabase';
 
 type Profile = {
   id: string;
@@ -60,11 +59,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     setProfileLoading(true);
     try {
-      const userProfile = await fetchUserProfile(user.id);
+      let userProfile = await fetchUserProfile(user.id);
+      
+      // If profile exists, use it
       if (userProfile) {
         setProfile(userProfile as Profile);
       } else {
-        setProfile(null);
+        // If no profile and user has email, create one with name from email
+        if (user.email) {
+          const extractedName = extractNameFromEmail(user.email);
+          
+          console.log('Creating new profile with name:', extractedName);
+          
+          // Initialize profile with name extracted from email
+          const newProfile = {
+            id: user.id,
+            full_name: extractedName
+          };
+          
+          try {
+            // Update the profile in Supabase
+            await updateUserProfile(user.id, { full_name: extractedName });
+            setProfile(newProfile as Profile);
+            
+            toast({
+              title: 'Profile created',
+              description: 'Welcome! We\'ve set up your profile.',
+            });
+          } catch (error) {
+            console.error('Error creating initial profile:', error);
+            // Still set the local profile even if update fails
+            setProfile(newProfile as Profile);
+          }
+        } else {
+          setProfile(null);
+        }
       }
     } catch (error) {
       console.error('Error loading profile:', error);

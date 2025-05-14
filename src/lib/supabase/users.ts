@@ -1,3 +1,4 @@
+
 import { supabase } from './client';
 
 export const getCurrentUser = async () => {
@@ -49,6 +50,29 @@ export const updateUserProfile = async (userId: string, updates: any) => {
     console.error('Exception updating user profile:', error);
     throw error;
   }
+};
+
+/**
+ * Extracts a name from an email address by taking the part before @ and formatting it
+ * @param email The email address to extract a name from
+ * @returns A formatted name extracted from the email
+ */
+export const extractNameFromEmail = (email: string): string => {
+  if (!email || !email.includes('@')) return '';
+  
+  // Get the part before the @ symbol
+  const namePart = email.split('@')[0];
+  
+  // Replace dots, underscores, dashes, and numbers with spaces
+  const nameWithSpaces = namePart.replace(/[._-]/g, ' ').replace(/[0-9]/g, '');
+  
+  // Capitalize each word
+  const formattedName = nameWithSpaces.split(' ')
+    .filter(word => word.length > 0)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+    
+  return formattedName || '';
 };
 
 // Rename this function to be clearer about its source and purpose

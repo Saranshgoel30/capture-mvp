@@ -1,14 +1,14 @@
 
 // Re-export all functions from supabase subdirectories
-import { fetchUserProfile, updateUserProfile } from './users';
+import { fetchUserProfile, updateUserProfile, extractNameFromEmail } from './users';
 import { fetchProjects, fetchProjectById, applyForProject, addProject } from './projects';
 import { 
-  fetchPortfolioItems as fetchPortfolioProjects, 
-  addPortfolioItem as addPortfolioProject, 
+  fetchPortfolioItems, 
+  addPortfolioItem, 
   getPortfolioItemDetails 
 } from './portfolio';
 import { 
-  uploadProfileImage as uploadImageToStorage, 
+  uploadProfileImage, 
   getPublicUrlForFile,
   initializeStorage 
 } from './storage';
@@ -17,7 +17,7 @@ import {
   addCurrentProject 
 } from './creators';
 import { 
-  getMessages as fetchMessages, 
+  getMessages, 
   sendMessage 
 } from './messages';
 import { fetchNotifications, markNotificationAsRead, markAllNotificationsAsRead } from './notifications';
@@ -31,6 +31,7 @@ export {
   // Users
   fetchUserProfile,
   updateUserProfile,
+  extractNameFromEmail,
   
   // Projects
   fetchProjects,
@@ -39,12 +40,12 @@ export {
   addProject,
   
   // Portfolio
-  fetchPortfolioProjects,
-  addPortfolioProject,
+  fetchPortfolioItems,
+  addPortfolioItem,
   getPortfolioItemDetails,
   
   // Storage
-  uploadImageToStorage,
+  uploadProfileImage,
   getPublicUrlForFile,
   initializeStorage,
   
@@ -53,7 +54,7 @@ export {
   addCurrentProject,
   
   // Messages
-  fetchMessages,
+  getMessages,
   sendMessage,
   
   // Notifications
