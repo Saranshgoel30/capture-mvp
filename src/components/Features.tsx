@@ -1,95 +1,90 @@
 
 import React from 'react';
-import { Users, Camera, Sparkles, Megaphone, Globe, Heart } from 'lucide-react';
-import FadeIn from './ui-custom/FadeIn';
+import { Card, CardContent } from '@/components/ui/card';
+import { Search, Users, MessageCircle, Star, Shield, Zap } from 'lucide-react';
+import FadeIn from '@/components/ui-custom/FadeIn';
 
-interface FeatureCardProps {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  delay: number;
-}
-
-const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, delay }) => {
-  return (
-    <FadeIn delay={delay} direction="up">
-      <div className="h-full group p-6 rounded-xl border border-border bg-card/50 hover:bg-card hover:shadow-md transition-all duration-300">
-        <div className="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-all duration-300">
-          {icon}
-        </div>
-        <h3 className="text-xl font-semibold mb-2">{title}</h3>
-        <p className="text-muted-foreground">{description}</p>
-      </div>
-    </FadeIn>
-  );
-};
-
-const Features: React.FC = () => {
+const Features = () => {
+  // Following Miller's Law - limit to 6 key features (7±2)
   const features = [
     {
-      icon: <Users size={24} />,
-      title: "Creative Community",
-      description: "Connect with passionate creators in India who share your artistic vision for collaborative projects."
+      icon: Search,
+      title: 'Smart Matching',
+      description: 'AI-powered project matching based on your skills, interests, and availability.',
+      gradient: 'from-blue-500 to-cyan-500'
     },
     {
-      icon: <Camera size={24} />,
-      title: "Portfolio Showcase",
-      description: "Build a portfolio that highlights your skills and attracts collaborative opportunities across India."
+      icon: Users,
+      title: 'Verified Creators',
+      description: 'Connect with verified professionals and talented emerging artists.',
+      gradient: 'from-purple-500 to-pink-500'
     },
     {
-      icon: <Sparkles size={24} />,
-      title: "Project Matching",
-      description: "Our platform helps match your unique talents with creative projects seeking your expertise."
+      icon: MessageCircle,
+      title: 'Real-time Chat',
+      description: 'Communicate seamlessly with instant messaging and project updates.',
+      gradient: 'from-green-500 to-emerald-500'
     },
     {
-      icon: <Megaphone size={24} />,
-      title: "Direct Networking",
-      description: "Connect directly with project leads and fellow creators without unnecessary barriers."
+      icon: Star,
+      title: 'Portfolio Showcase',
+      description: 'Display your best work and discover others\' creative portfolios.',
+      gradient: 'from-orange-500 to-red-500'
     },
     {
-      icon: <Globe size={24} />,
-      title: "National & Global Reach",
-      description: "Find projects in your local community or collaborate with creators across India and beyond."
+      icon: Shield,
+      title: 'Secure Platform',
+      description: 'Protected transactions and verified identities for safe collaboration.',
+      gradient: 'from-indigo-500 to-purple-500'
     },
     {
-      icon: <Heart size={24} />,
-      title: "Supportive Network",
-      description: "Join a community of creative professionals who understand and support your artistic journey."
+      icon: Zap,
+      title: 'Fast Setup',
+      description: 'Get started in minutes with our streamlined onboarding process.',
+      gradient: 'from-yellow-500 to-orange-500'
     }
   ];
 
   return (
-    <section id="features" className="py-24 px-6 md:px-12 bg-secondary/30">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <FadeIn>
-            <span className="inline-block text-sm font-medium text-primary bg-primary/10 px-3 py-1 rounded-full mb-3">
-              Platform Features
-            </span>
-          </FadeIn>
-          
-          <FadeIn delay={100}>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Designed for Creative Collaboration
+    <section className="py-24 bg-background relative overflow-hidden">
+      {/* Background Elements */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-accent/5 to-transparent"></div>
+      
+      <div className="container mx-auto px-4 relative z-10">
+        <FadeIn>
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-bebas font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              Everything You Need to Create
             </h2>
-          </FadeIn>
-          
-          <FadeIn delay={200}>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Our platform brings together all the tools and connections you need to find your next creative collaboration and build your artistic career.
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Powerful tools and features designed to make creative collaboration effortless and inspiring.
             </p>
-          </FadeIn>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          </div>
+        </FadeIn>
+
+        {/* Features Grid - Following Gestalt's Law (grouped by similarity) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => (
-            <FeatureCard 
-              key={index}
-              icon={feature.icon}
-              title={feature.title}
-              description={feature.description}
-              delay={100 * (index + 1)}
-            />
+            <FadeIn key={feature.title} delay={index * 0.1}>
+              <Card className="group h-full border-0 bg-card/50 backdrop-blur-sm hover:bg-card/80 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+                <CardContent className="p-8">
+                  <div className="flex flex-col items-center text-center">
+                    {/* Icon with gradient background */}
+                    <div className={`p-4 rounded-full bg-gradient-to-r ${feature.gradient} mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                      <feature.icon className="h-8 w-8 text-white" />
+                    </div>
+                    
+                    <h3 className="font-bebas text-xl mb-3 text-foreground group-hover:text-primary transition-colors">
+                      {feature.title}
+                    </h3>
+                    
+                    <p className="text-muted-foreground leading-relaxed">
+                      {feature.description}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </FadeIn>
           ))}
         </div>
       </div>

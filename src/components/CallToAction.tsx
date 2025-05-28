@@ -1,95 +1,70 @@
 
 import React from 'react';
-import { ArrowRight } from 'lucide-react';
-import Button from './ui-custom/Button';
-import FadeIn from './ui-custom/FadeIn';
+import { Button } from '@/components/ui/button';
+import { ArrowRight, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import FadeIn from '@/components/ui-custom/FadeIn';
 
-const CallToAction: React.FC = () => {
-  const { user } = useAuth();
-
+const CallToAction = () => {
   return (
-    <section id="cta" className="py-24 px-6 md:px-12">
-      <div className="max-w-7xl mx-auto">
-        <div className="relative bg-primary/10 rounded-3xl overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent"></div>
-          
-          <div className="relative z-10 p-12 md:p-16">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-              <div>
-                <FadeIn>
-                  <h2 className="text-4xl md:text-5xl font-bebas tracking-wider mb-6">
-                    READY TO START YOUR CREATIVE JOURNEY?
-                  </h2>
-                </FadeIn>
-                
-                <FadeIn delay={100}>
-                  <p className="text-lg mb-8">
-                    Join our community of artists, filmmakers, photographers, and creators bringing their visions to life through collaboration.
-                  </p>
-                </FadeIn>
-                
-                <FadeIn delay={200}>
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    {!user ? (
-                      <>
-                        <Link to="/signup">
-                          <Button size="lg" icon={<ArrowRight size={18} />} iconPosition="right" className="rounded-full">
-                            Create Account
-                          </Button>
-                        </Link>
-                        <Link to="/projects">
-                          <Button size="lg" variant="outline" className="rounded-full">
-                            Browse Projects
-                          </Button>
-                        </Link>
-                      </>
-                    ) : (
-                      <>
-                        <Link to="/projects">
-                          <Button size="lg" icon={<ArrowRight size={18} />} iconPosition="right" className="rounded-full">
-                            Explore Projects
-                          </Button>
-                        </Link>
-                        <Link to="/my-projects">
-                          <Button size="lg" variant="outline" className="rounded-full">
-                            My Projects
-                          </Button>
-                        </Link>
-                      </>
-                    )}
-                  </div>
-                </FadeIn>
+    <section className="py-24 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+      
+      <div className="container mx-auto px-4 relative z-10">
+        <FadeIn>
+          <div className="text-center max-w-4xl mx-auto">
+            {/* Visual indicator */}
+            <div className="flex justify-center mb-6">
+              <div className="p-3 rounded-full bg-primary/20 backdrop-blur-sm">
+                <Sparkles className="h-8 w-8 text-primary" />
               </div>
+            </div>
+            
+            <h2 className="text-3xl md:text-5xl font-bebas font-bold mb-6 text-foreground">
+              Ready to Create Something Amazing?
+            </h2>
+            
+            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+              Join thousands of creators who are already collaborating and bringing their visions to life.
+            </p>
+            
+            {/* Primary CTA - Following Fitts Law (large target) */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Link to="/signup">
+                <Button 
+                  size="lg" 
+                  className="w-full sm:w-auto text-lg px-10 py-4 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 group"
+                >
+                  Get Started Free
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
               
-              <div className="hidden md:block">
-                <FadeIn delay={300}>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-background/80 backdrop-blur-sm rounded-xl p-6 border border-white/10">
-                      <h3 className="font-semibold mb-2">For Creators</h3>
-                      <ul className="space-y-2 text-sm">
-                        <li>• Find paid opportunities</li>
-                        <li>• Build your portfolio</li>
-                        <li>• Connect with like-minded artists</li>
-                        <li>• Grow your network</li>
-                      </ul>
-                    </div>
-                    <div className="bg-background/80 backdrop-blur-sm rounded-xl p-6 border border-white/10">
-                      <h3 className="font-semibold mb-2">For Project Owners</h3>
-                      <ul className="space-y-2 text-sm">
-                        <li>• Find talented creators</li>
-                        <li>• Post project needs</li>
-                        <li>• Direct collaboration</li>
-                        <li>• Build your creative team</li>
-                      </ul>
-                    </div>
-                  </div>
-                </FadeIn>
+              <Link to="/projects">
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="w-full sm:w-auto text-lg px-10 py-4 border-2 hover:bg-background/50 transition-all duration-300"
+                >
+                  Explore Projects
+                </Button>
+              </Link>
+            </div>
+            
+            {/* Trust indicators */}
+            <div className="mt-12 pt-8 border-t border-border/50">
+              <p className="text-sm text-muted-foreground mb-4">Trusted by creators worldwide</p>
+              <div className="flex justify-center items-center space-x-8 opacity-60">
+                <div className="text-2xl font-bebas">1000+ Projects</div>
+                <div className="w-1 h-1 bg-muted-foreground rounded-full"></div>
+                <div className="text-2xl font-bebas">500+ Creators</div>
+                <div className="w-1 h-1 bg-muted-foreground rounded-full"></div>
+                <div className="text-2xl font-bebas">50+ Cities</div>
               </div>
             </div>
           </div>
-        </div>
+        </FadeIn>
       </div>
     </section>
   );
