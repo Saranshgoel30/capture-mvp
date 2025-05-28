@@ -2,10 +2,10 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ThemeToggle } from '@/components/ThemeToggle';
+import ThemeToggle from '@/components/ThemeToggle';
 import { useAuth } from '@/contexts/AuthContext';
 import { NotificationsDropdown } from '@/components/NotificationsDropdown';
-import { Menu, X, User, LogOut, Settings, Briefcase, Users, MessageCircle } from 'lucide-react';
+import { Menu, X, User, LogOut, Settings, Briefcase, Users, MessageCircle, ArrowRight } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -46,22 +47,22 @@ const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo - Following Fitts Law (large, easy to click) */}
-          <Link to="/" className="flex items-center space-x-2 group">
-            <div className="p-2 rounded-lg bg-primary text-primary-foreground group-hover:bg-primary/90 transition-colors">
+          <Link to="/" className="flex items-center space-x-3 group">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground group-hover:shadow-lg group-hover:scale-105 transition-all duration-200">
               <span className="font-bebas text-xl font-bold">C</span>
             </div>
-            <span className="font-bebas text-xl font-bold text-foreground group-hover:text-primary transition-colors">
+            <span className="font-bebas text-2xl font-bold text-foreground group-hover:text-primary transition-colors">
               Capture
             </span>
           </Link>
 
           {/* Desktop Navigation - Following Miller's Law (limited items) */}
-          <div className="hidden md:flex items-center space-x-1">
+          <div className="hidden md:flex items-center space-x-2">
             {navItems.map((item) => (
               <Link key={item.to} to={item.to}>
                 <Button
                   variant={isActive(item.to) ? "default" : "ghost"}
-                  className="flex items-center space-x-2 px-4 py-2"
+                  className="flex items-center space-x-2 px-4 py-2 transition-all duration-200 hover:scale-105"
                 >
                   <item.icon className="h-4 w-4" />
                   <span>{item.label}</span>
@@ -83,7 +84,7 @@ const Navbar = () => {
                     <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                       <Avatar className="h-10 w-10">
                         <AvatarImage src={profile?.avatar_url} alt={profile?.full_name || 'User'} />
-                        <AvatarFallback>
+                        <AvatarFallback className="bg-primary/20">
                           {profile?.full_name?.split(' ').map(n => n[0]).join('') || 'U'}
                         </AvatarFallback>
                       </Avatar>
@@ -120,10 +121,15 @@ const Navbar = () => {
             ) : (
               <div className="hidden md:flex items-center space-x-2">
                 <Link to="/login">
-                  <Button variant="ghost">Sign In</Button>
+                  <Button variant="ghost" className="transition-all duration-200 hover:scale-105">
+                    Sign In
+                  </Button>
                 </Link>
                 <Link to="/signup">
-                  <Button>Sign Up</Button>
+                  <Button className="group transition-all duration-200 hover:scale-105">
+                    Sign Up
+                    <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                  </Button>
                 </Link>
               </div>
             )}
