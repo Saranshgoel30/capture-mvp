@@ -1,53 +1,46 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { UserPlus, Search, MessageCircle, Rocket, Sparkles } from 'lucide-react';
 import FadeIn from '@/components/ui-custom/FadeIn';
-
 const HowItWorks = () => {
-  const steps = [
-    {
-      icon: UserPlus,
-      title: 'Create Your Profile',
-      description: 'Craft a stunning profile that showcases your unique creative vision, skills, and portfolio pieces that define your artistic journey.',
-      number: '01',
-      gradient: 'from-violet-500 to-purple-600',
-      delay: 0.2
-    },
-    {
-      icon: Search,
-      title: 'Discover Opportunities',
-      description: 'Explore handpicked projects or let our AI matchmaker connect you with opportunities that align with your creative DNA.',
-      number: '02',
-      gradient: 'from-blue-500 to-cyan-600',
-      delay: 0.4
-    },
-    {
-      icon: MessageCircle,
-      title: 'Connect & Collaborate',
-      description: 'Engage with visionary creators, share ideas, and build meaningful relationships that transcend traditional boundaries.',
-      number: '03',
-      gradient: 'from-emerald-500 to-teal-600',
-      delay: 0.6
-    },
-    {
-      icon: Rocket,
-      title: 'Create Magic Together',
-      description: 'Transform ideas into reality with seamless collaboration tools and watch your creative dreams come to life.',
-      number: '04',
-      gradient: 'from-orange-500 to-red-600',
-      delay: 0.8
-    }
-  ];
-
-  return (
-    <section className="py-32 relative overflow-hidden">
+  const steps = [{
+    icon: UserPlus,
+    title: 'Create Your Profile',
+    description: 'Craft a stunning profile that showcases your unique creative vision, skills, and portfolio pieces that define your artistic journey.',
+    number: '01',
+    gradient: 'from-violet-500 to-purple-600',
+    delay: 0.2
+  }, {
+    icon: Search,
+    title: 'Discover Opportunities',
+    description: 'Explore handpicked projects or let our AI matchmaker connect you with opportunities that align with your creative DNA.',
+    number: '02',
+    gradient: 'from-blue-500 to-cyan-600',
+    delay: 0.4
+  }, {
+    icon: MessageCircle,
+    title: 'Connect & Collaborate',
+    description: 'Engage with visionary creators, share ideas, and build meaningful relationships that transcend traditional boundaries.',
+    number: '03',
+    gradient: 'from-emerald-500 to-teal-600',
+    delay: 0.6
+  }, {
+    icon: Rocket,
+    title: 'Create Magic Together',
+    description: 'Transform ideas into reality with seamless collaboration tools and watch your creative dreams come to life.',
+    number: '04',
+    gradient: 'from-orange-500 to-red-600',
+    delay: 0.8
+  }];
+  return <section className="py-32 relative overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-violet-900/5 via-purple-900/5 to-pink-900/5"></div>
       
       {/* Floating Elements */}
       <div className="absolute top-40 left-10 w-64 h-64 bg-gradient-to-r from-violet-400 to-purple-600 rounded-full blur-3xl opacity-10 animate-float"></div>
-      <div className="absolute bottom-40 right-10 w-80 h-80 bg-gradient-to-r from-pink-400 to-rose-600 rounded-full blur-3xl opacity-10 animate-float" style={{ animationDelay: '2s' }}></div>
+      <div className="absolute bottom-40 right-10 w-80 h-80 bg-gradient-to-r from-pink-400 to-rose-600 rounded-full blur-3xl opacity-10 animate-float" style={{
+      animationDelay: '2s'
+    }}></div>
       
       <div className="container mx-auto px-4 relative z-10">
         <FadeIn>
@@ -76,8 +69,7 @@ const HowItWorks = () => {
           <div className="hidden lg:block absolute top-1/2 left-0 right-0 h-1 bg-gradient-to-r from-violet-500 via-blue-500 via-emerald-500 to-orange-500 opacity-20 -translate-y-1/2 z-0"></div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative z-10">
-            {steps.map((step, index) => (
-              <FadeIn key={step.title} delay={step.delay}>
+            {steps.map((step, index) => <FadeIn key={step.title} delay={step.delay}>
                 <Card className="group h-full border-0 bg-background/80 backdrop-blur-sm hover:bg-background transition-all duration-500 hover:shadow-2xl hover:-translate-y-4 relative overflow-hidden">
                   {/* Gradient Glow */}
                   <div className={`absolute inset-0 bg-gradient-to-r ${step.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500 rounded-lg`}></div>
@@ -85,9 +77,7 @@ const HowItWorks = () => {
                   <CardContent className="p-8 relative z-10">
                     <div className="flex flex-col items-center text-center">
                       {/* Step Number */}
-                      <div className={`absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-gradient-to-r ${step.gradient} text-white rounded-full flex items-center justify-center text-lg font-bold shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                        {step.number}
-                      </div>
+                      
                       
                       {/* Icon */}
                       <div className={`p-6 rounded-2xl bg-gradient-to-r ${step.gradient} mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-xl mt-6`}>
@@ -104,13 +94,10 @@ const HowItWorks = () => {
                     </div>
                   </CardContent>
                 </Card>
-              </FadeIn>
-            ))}
+              </FadeIn>)}
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default HowItWorks;

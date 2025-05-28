@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -6,51 +5,53 @@ import ThemeToggle from '@/components/ThemeToggle';
 import { useAuth } from '@/contexts/AuthContext';
 import { NotificationsDropdown } from '@/components/NotificationsDropdown';
 import { Menu, X, User, LogOut, Settings, Briefcase, Users, MessageCircle, ArrowRight } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, profile, signOut } = useAuth();
+  const {
+    user,
+    profile,
+    signOut
+  } = useAuth();
   const location = useLocation();
-
   const isActive = (path: string) => location.pathname === path;
 
   // Following Gestalt's Law - group related navigation items
-  const publicNavItems = [
-    { to: '/projects', label: 'Projects', icon: Briefcase },
-    { to: '/find-creators', label: 'Creators', icon: Users },
-  ];
-
-  const authenticatedNavItems = [
-    { to: '/projects', label: 'Projects', icon: Briefcase },
-    { to: '/find-creators', label: 'Creators', icon: Users },
-    { to: '/messages', label: 'Messages', icon: MessageCircle },
-  ];
-
+  const publicNavItems = [{
+    to: '/projects',
+    label: 'Projects',
+    icon: Briefcase
+  }, {
+    to: '/find-creators',
+    label: 'Creators',
+    icon: Users
+  }];
+  const authenticatedNavItems = [{
+    to: '/projects',
+    label: 'Projects',
+    icon: Briefcase
+  }, {
+    to: '/find-creators',
+    label: 'Creators',
+    icon: Users
+  }, {
+    to: '/messages',
+    label: 'Messages',
+    icon: MessageCircle
+  }];
   const navItems = user ? authenticatedNavItems : publicNavItems;
-
   const handleSignOut = async () => {
     await signOut();
     setIsMenuOpen(false);
   };
-
-  return (
-    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+  return <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo - Following Fitts Law (large, easy to click) */}
           <Link to="/" className="flex items-center space-x-3 group">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground group-hover:shadow-lg group-hover:scale-105 transition-all duration-200">
-              <span className="font-bebas text-xl font-bold">C</span>
-            </div>
+            
             <span className="font-bebas text-2xl font-bold text-foreground group-hover:text-primary transition-colors">
               Capture
             </span>
@@ -58,25 +59,19 @@ const Navbar = () => {
 
           {/* Desktop Navigation - Following Miller's Law (limited items) */}
           <div className="hidden md:flex items-center space-x-2">
-            {navItems.map((item) => (
-              <Link key={item.to} to={item.to}>
-                <Button
-                  variant={isActive(item.to) ? "default" : "ghost"}
-                  className="flex items-center space-x-2 px-4 py-2 transition-all duration-200 hover:scale-105"
-                >
+            {navItems.map(item => <Link key={item.to} to={item.to}>
+                <Button variant={isActive(item.to) ? "default" : "ghost"} className="flex items-center space-x-2 px-4 py-2 transition-all duration-200 hover:scale-105">
                   <item.icon className="h-4 w-4" />
                   <span>{item.label}</span>
                 </Button>
-              </Link>
-            ))}
+              </Link>)}
           </div>
 
           {/* User Actions */}
           <div className="flex items-center space-x-2">
             <ThemeToggle />
             
-            {user ? (
-              <div className="flex items-center space-x-2">
+            {user ? <div className="flex items-center space-x-2">
                 <NotificationsDropdown />
                 
                 <DropdownMenu>
@@ -117,9 +112,7 @@ const Navbar = () => {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-              </div>
-            ) : (
-              <div className="hidden md:flex items-center space-x-2">
+              </div> : <div className="hidden md:flex items-center space-x-2">
                 <Link to="/login">
                   <Button variant="ghost" className="transition-all duration-200 hover:scale-105">
                     Sign In
@@ -131,39 +124,26 @@ const Navbar = () => {
                     <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
-              </div>
-            )}
+              </div>}
 
             {/* Mobile Menu Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="md:hidden h-10 w-10 p-0"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
+            <Button variant="ghost" size="sm" className="md:hidden h-10 w-10 p-0" onClick={() => setIsMenuOpen(!isMenuOpen)}>
               {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
           </div>
         </div>
 
         {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <div className="md:hidden py-4 border-t bg-background/95 backdrop-blur">
+        {isMenuOpen && <div className="md:hidden py-4 border-t bg-background/95 backdrop-blur">
             <div className="flex flex-col space-y-2">
-              {navItems.map((item) => (
-                <Link key={item.to} to={item.to} onClick={() => setIsMenuOpen(false)}>
-                  <Button
-                    variant={isActive(item.to) ? "default" : "ghost"}
-                    className="w-full justify-start"
-                  >
+              {navItems.map(item => <Link key={item.to} to={item.to} onClick={() => setIsMenuOpen(false)}>
+                  <Button variant={isActive(item.to) ? "default" : "ghost"} className="w-full justify-start">
                     <item.icon className="mr-2 h-4 w-4" />
                     {item.label}
                   </Button>
-                </Link>
-              ))}
+                </Link>)}
               
-              {!user && (
-                <>
+              {!user && <>
                   <div className="border-t pt-2 mt-2">
                     <Link to="/login" onClick={() => setIsMenuOpen(false)}>
                       <Button variant="ghost" className="w-full justify-start">
@@ -176,14 +156,10 @@ const Navbar = () => {
                       </Button>
                     </Link>
                   </div>
-                </>
-              )}
+                </>}
             </div>
-          </div>
-        )}
+          </div>}
       </div>
-    </nav>
-  );
+    </nav>;
 };
-
 export default Navbar;
