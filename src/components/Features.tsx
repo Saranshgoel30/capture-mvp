@@ -51,62 +51,82 @@ const Features = () => {
   ];
 
   return (
-    <section className="py-32 relative overflow-hidden">
-      {/* Background Elements */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-violet-50/30 to-background dark:via-violet-950/30"></div>
-      <div className="absolute top-20 left-20 w-72 h-72 bg-gradient-to-r from-violet-400 to-purple-600 rounded-full blur-3xl opacity-10 animate-float"></div>
-      <div className="absolute bottom-20 right-20 w-96 h-96 bg-gradient-to-r from-blue-400 to-cyan-600 rounded-full blur-3xl opacity-10 animate-float" style={{ animationDelay: '3s' }}></div>
-      
-      <div className="container mx-auto px-4 relative z-10">
-        <FadeIn>
-          <div className="text-center mb-20">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-violet-100 to-purple-100 dark:from-violet-900/30 dark:to-purple-900/30 border border-violet-200 dark:border-violet-800 mb-6">
-              <Star className="h-4 w-4 text-violet-600" />
-              <span className="text-sm font-medium text-violet-700 dark:text-violet-300">Premium Features</span>
+    <section className="py-32 relative overflow-hidden bg-gradient-to-b from-background to-violet-50/30">
+      <div className="container mx-auto px-6 relative z-10 max-w-7xl">
+        {/* Section Header with Thoughtful Spacing */}
+        <div className="text-center mb-24">
+          <FadeIn>
+            <div className="space-y-8">
+              {/* Category Badge */}
+              <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-violet-50 border border-violet-100">
+                <div className="w-2 h-2 bg-violet-500 rounded-full"></div>
+                <span className="text-sm font-medium text-violet-700">Premium Features</span>
+              </div>
+              
+              {/* Main Title with Better Typography Hierarchy */}
+              <div className="space-y-6">
+                <h2 className="text-5xl md:text-6xl font-bebas font-bold leading-tight tracking-tight">
+                  <span className="block text-foreground">Everything You Need</span>
+                  <span className="block bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                    To Create Magic
+                  </span>
+                </h2>
+                
+                {/* Decorative Accent */}
+                <div className="flex justify-center">
+                  <div className="w-32 h-1 bg-gradient-to-r from-violet-500 via-purple-500 to-pink-500 rounded-full"></div>
+                </div>
+              </div>
+              
+              {/* Refined Description */}
+              <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed font-light">
+                Discover powerful tools and features designed to elevate your creative journey and transform collaboration into an art form.
+              </p>
             </div>
-            
-            <h2 className="text-4xl md:text-6xl font-bebas font-bold mb-8">
-              <span className="bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                Everything You Need
-              </span>
-              <br />
-              <span className="text-foreground">To Create Magic</span>
-            </h2>
-            
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              Discover powerful tools and features designed to elevate your creative journey and transform collaboration into an art form.
-            </p>
-          </div>
-        </FadeIn>
+          </FadeIn>
+        </div>
 
+        {/* Features Grid with Asymmetric Layout */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => (
             <FadeIn key={feature.title} delay={feature.delay}>
-              <Card className="group h-full border-0 bg-background/60 backdrop-blur-sm hover:bg-background/80 transition-all duration-500 hover:shadow-2xl hover:-translate-y-3 relative overflow-hidden">
-                {/* Gradient Border Effect */}
-                <div className={`absolute inset-0 bg-gradient-to-r ${feature.gradient} opacity-0 group-hover:opacity-20 transition-opacity duration-500 rounded-lg`}></div>
-                <div className="absolute inset-[1px] bg-background rounded-lg"></div>
-                
-                <CardContent className="p-8 relative z-10">
-                  <div className="flex flex-col items-center text-center">
-                    {/* Animated Icon */}
-                    <div className={`relative p-6 rounded-2xl bg-gradient-to-r ${feature.gradient} mb-8 group-hover:scale-110 transition-all duration-500 shadow-xl group-hover:shadow-2xl`}>
-                      <feature.icon className="h-8 w-8 text-white relative z-10" />
+              {/* Varying heights for visual interest */}
+              <div className={`${index === 1 || index === 4 ? 'lg:mt-12' : ''} ${index === 2 || index === 5 ? 'lg:mt-6' : ''}`}>
+                <Card className="group h-full border-0 bg-white/60 backdrop-blur-sm hover:bg-white/80 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 relative overflow-hidden">
+                  {/* Subtle gradient border on hover */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-violet-100 via-purple-100 to-pink-100 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-lg"></div>
+                  <div className="absolute inset-[1px] bg-white/90 rounded-lg group-hover:bg-white transition-colors duration-500"></div>
+                  
+                  <CardContent className="p-8 relative z-10">
+                    <div className="space-y-6">
+                      {/* Icon with thoughtful positioning */}
+                      <div className="flex justify-between items-start">
+                        <div className={`p-4 rounded-2xl bg-gradient-to-r ${feature.gradient} shadow-lg group-hover:shadow-xl transition-all duration-500`}>
+                          <feature.icon className="h-6 w-6 text-white" />
+                        </div>
+                        
+                        {/* Feature number */}
+                        <div className="text-6xl font-bebas text-gray-100 group-hover:text-gray-200 transition-colors duration-500">
+                          {String(index + 1).padStart(2, '0')}
+                        </div>
+                      </div>
                       
-                      {/* Glow Effect */}
-                      <div className={`absolute inset-0 bg-gradient-to-r ${feature.gradient} rounded-2xl blur-xl opacity-0 group-hover:opacity-60 transition-opacity duration-500`}></div>
+                      {/* Content with refined spacing */}
+                      <div className="space-y-4">
+                        <h3 className="font-bebas text-2xl text-foreground group-hover:bg-gradient-to-r group-hover:from-violet-600 group-hover:to-purple-600 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">
+                          {feature.title}
+                        </h3>
+                        
+                        <div className="w-12 h-0.5 bg-gradient-to-r from-gray-300 to-gray-200 group-hover:from-violet-400 group-hover:to-purple-400 transition-all duration-300"></div>
+                        
+                        <p className="text-muted-foreground leading-relaxed text-sm">
+                          {feature.description}
+                        </p>
+                      </div>
                     </div>
-                    
-                    <h3 className="font-bebas text-2xl mb-4 text-foreground group-hover:bg-gradient-to-r group-hover:from-violet-600 group-hover:to-purple-600 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">
-                      {feature.title}
-                    </h3>
-                    
-                    <p className="text-muted-foreground leading-relaxed text-center">
-                      {feature.description}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </div>
             </FadeIn>
           ))}
         </div>
