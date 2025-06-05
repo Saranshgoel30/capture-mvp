@@ -127,7 +127,11 @@ const ProfileImage: React.FC<ProfileImageProps> = ({
     <div className="relative">
       <Avatar className={sizeClasses[size]}>
         {/* Use the local state for display to avoid flickering during upload */}
-        <AvatarImage src={avatarUrl || undefined} alt={name || animalEmoji} />
+        <AvatarImage 
+          src={avatarUrl || undefined} 
+          alt={name || animalEmoji}
+          className="object-cover"
+        />
         <AvatarFallback className="bg-primary text-primary-foreground">
           {/* Always show animal emoji as fallback when no valid avatar URL */}
           <div className={`animate-pulse ${size === 'sm' ? 'text-lg' : size === 'md' ? 'text-2xl' : 'text-3xl'}`}>{animalEmoji}</div>
