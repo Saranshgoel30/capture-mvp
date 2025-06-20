@@ -17,7 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { X } from 'lucide-react';
+import { X, Plus } from 'lucide-react';
 import ProfileImage from '@/components/profile/ProfileImage';
 
 const formSchema = z.object({
@@ -117,17 +117,17 @@ const ProfileSettingsForm: React.FC = () => {
   };
 
   if (!user || !profile) {
-    return <div>Loading...</div>;
+    return <div className="p-4">Loading...</div>;
   }
 
   return (
-    <div className="space-y-6">
-      {/* Profile Image Section */}
-      <div className="flex flex-col items-center space-y-4">
-        <div className="text-center">
+    <div className="space-y-6 p-4 sm:p-6 max-w-2xl mx-auto">
+      {/* Profile Image Section - Mobile Optimized */}
+      <div className="flex flex-col items-center space-y-4 text-center">
+        <div>
           <h3 className="text-lg font-semibold mb-2">Profile Picture</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            Click the camera icon to upload a new profile picture
+          <p className="text-sm text-muted-foreground mb-4 px-4">
+            Tap the camera icon to upload a new profile picture
           </p>
         </div>
         <ProfileImage 
@@ -146,9 +146,13 @@ const ProfileSettingsForm: React.FC = () => {
             name="full_name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Name</FormLabel>
+                <FormLabel className="text-base">Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Your name" {...field} />
+                  <Input 
+                    placeholder="Your name" 
+                    className="h-12 text-base"
+                    {...field} 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -160,11 +164,11 @@ const ProfileSettingsForm: React.FC = () => {
             name="bio"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Bio</FormLabel>
+                <FormLabel className="text-base">Bio</FormLabel>
                 <FormControl>
                   <Textarea 
                     placeholder="Tell us about yourself" 
-                    className="resize-none" 
+                    className="resize-none min-h-[100px] text-base"
                     {...field} 
                   />
                 </FormControl>
@@ -178,23 +182,28 @@ const ProfileSettingsForm: React.FC = () => {
             name="city"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Location</FormLabel>
+                <FormLabel className="text-base">Location</FormLabel>
                 <FormControl>
-                  <Input placeholder="Your city" {...field} />
+                  <Input 
+                    placeholder="Your city" 
+                    className="h-12 text-base"
+                    {...field} 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          <div>
-            <FormLabel>Skills</FormLabel>
-            <div className="flex items-center gap-2 mb-2">
+          {/* Skills Section - Mobile Optimized */}
+          <div className="space-y-3">
+            <FormLabel className="text-base">Skills</FormLabel>
+            <div className="flex flex-col sm:flex-row gap-2">
               <Input
                 value={newSkill}
                 onChange={(e) => setNewSkill(e.target.value)}
                 placeholder="Add a skill"
-                className="flex-1"
+                className="flex-1 h-12 text-base"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
@@ -202,29 +211,44 @@ const ProfileSettingsForm: React.FC = () => {
                   }
                 }}
               />
-              <Button type="button" onClick={addSkill}>Add</Button>
+              <Button 
+                type="button" 
+                onClick={addSkill}
+                className="h-12 px-6 whitespace-nowrap"
+              >
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Add</span>
+              </Button>
             </div>
-            <div className="flex flex-wrap gap-2 mt-2">
+            <div className="flex flex-wrap gap-2 mt-3">
               {form.watch('skills')?.map((skill) => (
-                <Badge key={skill} variant="secondary" className="flex items-center gap-1">
-                  {skill}
-                  <X 
-                    className="h-3 w-3 cursor-pointer" 
-                    onClick={() => removeSkill(skill)} 
-                  />
+                <Badge 
+                  key={skill} 
+                  variant="secondary" 
+                  className="flex items-center gap-2 py-2 px-3 text-sm"
+                >
+                  <span>{skill}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeSkill(skill)}
+                    className="hover:text-destructive transition-colors"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
                 </Badge>
               ))}
             </div>
           </div>
 
-          <div>
-            <FormLabel>Roles</FormLabel>
-            <div className="flex items-center gap-2 mb-2">
+          {/* Roles Section - Mobile Optimized */}
+          <div className="space-y-3">
+            <FormLabel className="text-base">Roles</FormLabel>
+            <div className="flex flex-col sm:flex-row gap-2">
               <Input
                 value={newRole}
                 onChange={(e) => setNewRole(e.target.value)}
                 placeholder="Add a role"
-                className="flex-1"
+                className="flex-1 h-12 text-base"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
@@ -232,22 +256,38 @@ const ProfileSettingsForm: React.FC = () => {
                   }
                 }}
               />
-              <Button type="button" onClick={addRole}>Add</Button>
+              <Button 
+                type="button" 
+                onClick={addRole}
+                className="h-12 px-6 whitespace-nowrap"
+              >
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Add</span>
+              </Button>
             </div>
-            <div className="flex flex-wrap gap-2 mt-2">
+            <div className="flex flex-wrap gap-2 mt-3">
               {form.watch('roles')?.map((role) => (
-                <Badge key={role} variant="secondary" className="flex items-center gap-1">
-                  {role}
-                  <X 
-                    className="h-3 w-3 cursor-pointer" 
-                    onClick={() => removeRole(role)} 
-                  />
+                <Badge 
+                  key={role} 
+                  variant="secondary" 
+                  className="flex items-center gap-2 py-2 px-3 text-sm"
+                >
+                  <span>{role}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeRole(role)}
+                    className="hover:text-destructive transition-colors"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
                 </Badge>
               ))}
             </div>
           </div>
 
-          <Button type="submit" className="w-full">Save Changes</Button>
+          <Button type="submit" className="w-full h-12 text-base font-medium">
+            Save Changes
+          </Button>
         </form>
       </Form>
     </div>

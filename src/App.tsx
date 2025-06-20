@@ -50,7 +50,7 @@ function App() {
   }, [toast]);
 
   return (
-    <>
+    <div className="min-h-screen w-full">
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/login" element={<Login />} />
@@ -69,7 +69,7 @@ function App() {
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Toaster />
-    </>
+    </div>
   );
 }
 
