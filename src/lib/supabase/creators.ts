@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 import { UserProfile } from '@/lib/types';
 
@@ -41,7 +40,36 @@ export const fetchAllUserProfiles = async () => {
   }
 };
 
-// Add these new functions
+// Add the fetchCreators function that FindCreators.tsx expects
+export const fetchCreators = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .order('updated_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching creators:', error);
+      return [];
+    }
+    
+    // Transform to match the Creator interface expected by FindCreators
+    return (data || []).map(profile => ({
+      id: profile.id,
+      full_name: profile.full_name || 'Anonymous Creator',
+      roles: profile.roles || [],
+      skills: profile.skills || [],
+      city: profile.city || '',
+      bio: profile.bio || '',
+      avatar_url: profile.avatar_url,
+      portfolio_count: 0, // We could fetch this from portfolio_items table if needed
+    }));
+  } catch (error) {
+    console.error('Exception fetching creators:', error);
+    return [];
+  }
+};
+
 export const fetchCurrentProjects = async (userId: string) => {
   try {
     const { data, error } = await supabase

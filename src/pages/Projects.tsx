@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -105,22 +104,13 @@ const Projects: React.FC = () => {
             </div>
             
             {user && (
-              <Dialog open={showNewProjectForm} onOpenChange={setShowNewProjectForm}>
-                <DialogTrigger asChild>
-                  <Button 
-                    className="w-full sm:w-auto bg-warm-gradient hover:shadow-warm text-white shadow-lg transition-all duration-300 min-h-[48px] touch-auto"
-                  >
-                    <Plus className="mr-2 h-5 w-5" />
-                    <span className="font-medium">New Project</span>
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto mx-4">
-                  <DialogHeader>
-                    <DialogTitle className="text-xl sm:text-2xl font-bebas">Create New Project</DialogTitle>
-                  </DialogHeader>
-                  <NewProjectForm onProjectCreated={handleNewProject} />
-                </DialogContent>
-              </Dialog>
+              <Button 
+                onClick={() => setShowNewProjectForm(true)}
+                className="w-full sm:w-auto bg-warm-gradient hover:shadow-warm text-white shadow-lg transition-all duration-300 min-h-[48px] touch-auto"
+              >
+                <Plus className="mr-2 h-5 w-5" />
+                <span className="font-medium">New Project</span>
+              </Button>
             )}
           </div>
 
@@ -307,6 +297,14 @@ const Projects: React.FC = () => {
           )}
         </div>
       </div>
+      
+      {/* New Project Form */}
+      <NewProjectForm 
+        isOpen={showNewProjectForm}
+        onClose={() => setShowNewProjectForm(false)}
+        onProjectCreated={handleNewProject}
+      />
+      
       <Footer />
     </div>
   );
