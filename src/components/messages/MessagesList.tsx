@@ -1,6 +1,6 @@
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, MessageCircle } from 'lucide-react';
 import { Message } from '@/lib/types';
 import { getMessages, listenToMessages } from '@/lib/supabase/messages';
 import { useAuth } from '@/contexts/AuthContext';
@@ -52,23 +52,29 @@ const MessagesList: React.FC<MessagesListProps> = ({ otherId }) => {
   
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-full">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex justify-center items-center h-full py-16">
+        <div className="text-center">
+          <Loader2 className="h-10 w-10 animate-spin text-amber-600 mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading messages...</p>
+        </div>
       </div>
     );
   }
   
   if (messages.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
-        <p className="mb-2">No messages yet</p>
-        <p className="text-sm">Send a message to start the conversation</p>
+      <div className="flex flex-col items-center justify-center h-full text-center py-16 px-6">
+        <MessageCircle className="h-20 w-20 text-amber-500/50 mb-6" />
+        <h3 className="text-xl font-semibold mb-3">No messages yet</h3>
+        <p className="text-muted-foreground leading-relaxed max-w-sm">
+          Send a message below to start your conversation
+        </p>
       </div>
     );
   }
   
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-4">
       {messages.map((message) => {
         const isCurrentUser = message.senderId === user?.id;
         const senderAvatar = getAnimalAvatarForUser(message.senderId);
@@ -76,32 +82,39 @@ const MessagesList: React.FC<MessagesListProps> = ({ otherId }) => {
         return (
           <div 
             key={message.id} 
-            className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
+            className={`flex gap-3 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
           >
             {!isCurrentUser && (
-              <Avatar className="h-8 w-8 mr-2">
+              <Avatar className="h-10 w-10 border-2 border-amber-200/50 flex-shrink-0">
                 <AvatarImage src={message.sender?.avatar_url || senderAvatar} />
-                {/* Use message.senderId here */}
-                <AvatarFallback>{getAnimalEmojiForUser(message.senderId)}</AvatarFallback>
+                <AvatarFallback className="bg-warm-gradient text-white font-semibold text-sm">
+                  {getAnimalEmojiForUser(message.senderId)}
+                </AvatarFallback>
               </Avatar>
             )}
+            
             <div 
-              className={`max-w-[80%] rounded-lg px-4 py-2 ${
+              className={`max-w-[85%] sm:max-w-[70%] rounded-2xl px-4 py-3 shadow-sm ${
                 isCurrentUser 
-                  ? 'bg-primary text-primary-foreground' 
-                  : 'bg-secondary text-secondary-foreground'
+                  ? 'bg-warm-gradient text-white rounded-br-md' 
+                  : 'bg-white border border-amber-200/50 text-foreground rounded-bl-md'
               }`}
             >
-              <p>{message.content}</p>
-              <p className="text-xs opacity-80 mt-1">
-                {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              <p className="text-base leading-relaxed break-words">{message.content}</p>
+              <p className={`text-xs mt-2 ${isCurrentUser ? 'text-white/80' : 'text-muted-foreground'}`}>
+                {new Date(message.createdAt).toLocaleTimeString([], { 
+                  hour: '2-digit', 
+                  minute: '2-digit' 
+                })}
               </p>
             </div>
+            
             {isCurrentUser && (
-              <Avatar className="h-8 w-8 ml-2">
+              <Avatar className="h-10 w-10 border-2 border-amber-200/50 flex-shrink-0">
                 <AvatarImage src={profile?.avatar_url || senderAvatar} />
-                 {/* Use user.id here */}
-                <AvatarFallback>{getAnimalEmojiForUser(user.id)}</AvatarFallback>
+                <AvatarFallback className="bg-warm-gradient text-white font-semibold text-sm">
+                  {getAnimalEmojiForUser(user.id)}
+                </AvatarFallback>
               </Avatar>
             )}
           </div>
