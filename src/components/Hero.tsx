@@ -1,102 +1,134 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Sparkles, Star } from 'lucide-react';
+import { ArrowRight, Sparkles, Star, Users, Trophy, Globe } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import FadeIn from '@/components/ui-custom/FadeIn';
 
 const Hero = () => {
   return (
-    <section className="relative min-h-screen-mobile flex items-center justify-center overflow-hidden bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 px-4 sm:px-6 safe-area-inset-top safe-area-inset-bottom">
-      {/* Enhanced Background Pattern */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-10 sm:opacity-20"></div>
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-amber-50/50 via-orange-50/30 to-background">
+      {/* Subtle background pattern */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
       
-      {/* Floating Elements - More subtle on mobile */}
-      <div className="absolute inset-0">
-        <div className="absolute top-20 left-10 w-3 h-3 sm:w-4 sm:h-4 bg-amber-400 rounded-full animate-float opacity-40 sm:opacity-60"></div>
-        <div className="absolute top-40 right-20 w-4 h-4 sm:w-6 sm:h-6 bg-orange-400 rounded-full animate-pulse-subtle opacity-30 sm:opacity-40"></div>
-        <div className="absolute bottom-32 left-20 w-2 h-2 sm:w-3 sm:h-3 bg-red-400 rounded-full animate-float opacity-35 sm:opacity-50"></div>
-        <div className="absolute bottom-20 right-40 w-3 h-3 sm:w-5 sm:h-5 bg-yellow-400 rounded-full animate-pulse-subtle opacity-25 sm:opacity-30"></div>
+      {/* Floating accent elements */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/4 left-[10%] w-2 h-2 bg-amber-400/40 rounded-full animate-pulse-subtle"></div>
+        <div className="absolute top-1/3 right-[15%] w-3 h-3 bg-orange-400/30 rounded-full animate-float"></div>
+        <div className="absolute bottom-1/3 left-[20%] w-1.5 h-1.5 bg-red-400/35 rounded-full animate-pulse-subtle"></div>
+        <div className="absolute bottom-1/4 right-[25%] w-2.5 h-2.5 bg-yellow-400/25 rounded-full animate-float"></div>
       </div>
 
-      <div className="container mx-auto relative z-10 max-w-7xl">
-        <div className="text-center space-y-6 sm:space-y-8 lg:space-y-12 py-8 sm:py-12 lg:py-16">
-          {/* Badge - Enhanced Mobile Design */}
+      <div className="container mx-auto px-4 sm:px-6 relative z-10 max-w-6xl">
+        <div className="text-center space-y-8 sm:space-y-12 py-16 sm:py-20">
+          
+          {/* Professional badge */}
           <FadeIn>
-            <div className="inline-flex items-center gap-2 px-4 py-3 sm:px-5 sm:py-3 rounded-full glass-warm text-sm sm:text-base shadow-lg hover:shadow-xl transition-all duration-300 touch-auto">
-              <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
-              <span className="font-semibold text-amber-700">Creative Platform</span>
+            <div className="inline-flex items-center gap-3 px-6 py-4 rounded-full glass-warm shadow-lg hover:shadow-xl transition-all duration-500 border border-amber-200/30">
+              <div className="w-2.5 h-2.5 bg-amber-500 rounded-full animate-pulse"></div>
+              <span className="text-sm sm:text-base font-semibold text-amber-700 tracking-wide">
+                Professional Creative Network
+              </span>
             </div>
           </FadeIn>
 
-          {/* Main Headline - Better Mobile Typography */}
-          <FadeIn delay={0.2}>
-            <div className="space-y-4 sm:space-y-6">
-              <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-bebas font-bold leading-[0.85] tracking-tight px-2">
-                <span className="block text-foreground mb-3 sm:mb-4">Where Creativity</span>
-                <span className="block text-warm-gradient drop-shadow-sm">Meets Collaboration</span>
+          {/* Main headline - Professional typography */}
+          <FadeIn delay={0.15}>
+            <div className="space-y-6 sm:space-y-8">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bebas font-bold leading-[0.9] tracking-tight">
+                <span className="block text-foreground mb-2 sm:mb-3">
+                  Where Creativity
+                </span>
+                <span className="block text-warm-gradient drop-shadow-sm">
+                  Meets Excellence
+                </span>
               </h1>
               
-              {/* Enhanced decorative underline */}
+              {/* Professional accent line */}
               <div className="flex justify-center">
-                <div className="w-24 sm:w-32 lg:w-40 h-2 bg-warm-gradient rounded-full shadow-warm animate-pulse-subtle"></div>
+                <div className="w-16 sm:w-24 h-1 bg-warm-gradient rounded-full shadow-warm"></div>
               </div>
             </div>
           </FadeIn>
 
-          {/* Subtitle - Better Mobile Readability */}
-          <FadeIn delay={0.4}>
-            <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-muted-foreground max-w-4xl mx-auto leading-relaxed font-light px-4 drop-shadow-sm">
-              Connect with visionary creators, discover extraordinary projects, and bring your most ambitious creative dreams to life through the power of collaboration.
-            </p>
+          {/* Professional subtitle */}
+          <FadeIn delay={0.3}>
+            <div className="max-w-3xl mx-auto space-y-6">
+              <p className="text-lg sm:text-xl lg:text-2xl text-muted-foreground leading-relaxed font-light">
+                Connect with world-class creators, collaborate on groundbreaking projects, and transform your creative vision into reality through our professional network.
+              </p>
+            </div>
           </FadeIn>
 
-          {/* Enhanced CTA Buttons */}
-          <FadeIn delay={0.6}>
-            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center px-4 pt-6 sm:pt-8">
-              <Link to="/signup" className="w-full sm:w-auto max-w-sm">
+          {/* Professional CTA buttons */}
+          <FadeIn delay={0.45}>
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center pt-4 sm:pt-6">
+              <Link to="/signup" className="w-full sm:w-auto">
                 <Button 
                   size="lg" 
-                  className="w-full sm:w-auto text-lg sm:text-xl px-8 sm:px-12 lg:px-14 py-6 sm:py-7 lg:py-8 bg-warm-gradient hover:shadow-warm text-white shadow-2xl hover:shadow-3xl transition-all duration-500 group relative overflow-hidden btn-primary min-h-[60px] sm:min-h-[64px] touch-auto rounded-xl"
+                  className="w-full sm:w-auto text-base sm:text-lg font-semibold px-8 sm:px-12 py-4 sm:py-5 bg-warm-gradient hover:shadow-warm text-white shadow-xl hover:shadow-2xl transition-all duration-500 group rounded-xl min-h-[56px] sm:min-h-[64px] border-0"
                 >
-                  <Sparkles className="mr-3 h-6 w-6 group-hover:rotate-180 transition-transform duration-500" />
-                  <span className="font-bold">Start Creating</span>
-                  <ArrowRight className="ml-3 h-6 w-6 group-hover:translate-x-2 transition-transform duration-300" />
+                  <Sparkles className="mr-3 h-5 w-5 group-hover:rotate-12 transition-transform duration-300" />
+                  <span>Start Creating</span>
+                  <ArrowRight className="ml-3 h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
                 </Button>
               </Link>
               
-              <Link to="/projects" className="w-full sm:w-auto max-w-sm">
+              <Link to="/find-creators" className="w-full sm:w-auto">
                 <Button 
                   variant="outline" 
                   size="lg" 
-                  className="w-full sm:w-auto text-lg sm:text-xl px-8 sm:px-12 lg:px-14 py-6 sm:py-7 lg:py-8 border-2 border-amber-600/60 hover:border-amber-500 hover:bg-amber-900/20 transition-all duration-500 group min-h-[60px] sm:min-h-[64px] touch-auto rounded-xl backdrop-blur-sm"
+                  className="w-full sm:w-auto text-base sm:text-lg font-semibold px-8 sm:px-12 py-4 sm:py-5 border-2 border-amber-300/60 hover:border-amber-400 hover:bg-amber-50 transition-all duration-300 group rounded-xl min-h-[56px] sm:min-h-[64px] backdrop-blur-sm"
                 >
-                  <span className="font-semibold">Explore Projects</span>
-                  <Star className="ml-3 h-6 w-6 group-hover:rotate-12 transition-transform duration-300" />
+                  <span>Explore Network</span>
+                  <Star className="ml-3 h-5 w-5 group-hover:rotate-12 transition-transform duration-300" />
                 </Button>
               </Link>
             </div>
           </FadeIn>
 
-          {/* Enhanced Stats - Better Mobile Layout */}
-          <FadeIn delay={0.8}>
-            <div className="pt-12 sm:pt-16 lg:pt-20 border-t border-amber-600/30 max-w-4xl mx-auto">
-              <p className="text-sm sm:text-base text-muted-foreground mb-8 sm:mb-10 opacity-90 font-medium">Trusted by creators worldwide</p>
+          {/* Professional stats section */}
+          <FadeIn delay={0.6}>
+            <div className="pt-16 sm:pt-20 border-t border-amber-200/30 max-w-4xl mx-auto">
+              <p className="text-sm sm:text-base text-muted-foreground mb-10 sm:mb-12 font-medium opacity-80">
+                Trusted by creative professionals worldwide
+              </p>
               
-              <div className="grid grid-cols-3 gap-6 sm:gap-8 lg:gap-12 px-4">
-                <div className="text-center group hover:scale-110 transition-all duration-300 touch-auto cursor-pointer">
-                  <div className="text-3xl sm:text-4xl lg:text-6xl font-bebas text-warm-gradient mb-2 sm:mb-3 drop-shadow-lg">5,000+</div>
-                  <div className="text-xs sm:text-sm text-muted-foreground uppercase tracking-wider font-medium">Creators</div>
+              <div className="grid grid-cols-3 gap-8 sm:gap-12">
+                <div className="text-center group">
+                  <div className="mb-3 sm:mb-4">
+                    <Users className="h-8 w-8 sm:h-10 sm:w-10 text-amber-600 mx-auto mb-3 group-hover:scale-110 transition-transform duration-300" />
+                  </div>
+                  <div className="text-2xl sm:text-3xl lg:text-4xl font-bebas text-warm-gradient mb-2 drop-shadow-sm">
+                    5,000+
+                  </div>
+                  <div className="text-xs sm:text-sm text-muted-foreground font-medium uppercase tracking-wider">
+                    Active Creators
+                  </div>
                 </div>
                 
-                <div className="text-center group hover:scale-110 transition-all duration-300 touch-auto cursor-pointer">
-                  <div className="text-3xl sm:text-4xl lg:text-6xl font-bebas bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent mb-2 sm:mb-3 drop-shadow-lg">1,500+</div>
-                  <div className="text-xs sm:text-sm text-muted-foreground uppercase tracking-wider font-medium">Projects</div>
+                <div className="text-center group">
+                  <div className="mb-3 sm:mb-4">
+                    <Trophy className="h-8 w-8 sm:h-10 sm:w-10 text-orange-600 mx-auto mb-3 group-hover:scale-110 transition-transform duration-300" />
+                  </div>
+                  <div className="text-2xl sm:text-3xl lg:text-4xl font-bebas bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent mb-2 drop-shadow-sm">
+                    1,500+
+                  </div>
+                  <div className="text-xs sm:text-sm text-muted-foreground font-medium uppercase tracking-wider">
+                    Projects Done
+                  </div>
                 </div>
                 
-                <div className="text-center group hover:scale-110 transition-all duration-300 touch-auto cursor-pointer">
-                  <div className="text-3xl sm:text-4xl lg:text-6xl font-bebas bg-gradient-to-r from-yellow-500 to-amber-500 bg-clip-text text-transparent mb-2 sm:mb-3 drop-shadow-lg">100+</div>
-                  <div className="text-xs sm:text-sm text-muted-foreground uppercase tracking-wider font-medium">Countries</div>
+                <div className="text-center group">
+                  <div className="mb-3 sm:mb-4">
+                    <Globe className="h-8 w-8 sm:h-10 sm:w-10 text-yellow-600 mx-auto mb-3 group-hover:scale-110 transition-transform duration-300" />
+                  </div>
+                  <div className="text-2xl sm:text-3xl lg:text-4xl font-bebas bg-gradient-to-r from-yellow-500 to-amber-500 bg-clip-text text-transparent mb-2 drop-shadow-sm">
+                    100+
+                  </div>
+                  <div className="text-xs sm:text-sm text-muted-foreground font-medium uppercase tracking-wider">
+                    Countries
+                  </div>
                 </div>
               </div>
             </div>
